@@ -1,0 +1,185 @@
+scanner3d {
+  scanner2d {
+    frequency_hz: 7920
+    nscans: 256
+    line_duty_cycle: 0.95
+    daq {
+      kind: Simulated #NIDAQ #Simulated
+      nidaq { # 6259
+        ao_samples_per_waveform: 16384
+        trigger:  "APFI0"
+        clock:    "Ctr1InternalOutput"
+        ctr:      "ctr0"
+        ctr_alt:  "ctr1"
+        armstart: "PFI15"
+        name:     "Dev2"
+        frame_trigger_out: "PFI1"
+      }
+      simulated {
+        samples_per_record: 16384
+        sample_frequency_hz: 1000000
+      }
+    }
+    digitizer {
+      kind: NIScope #Simulated #NIScope #Alazar
+      niscope {
+        name: "Dev3" # PCI-5105
+        sample_rate: 60000000
+        record_size: 7196
+        num_records: 256
+        reference: 0
+        chan_names: "0,1,2"
+        nchannels: 1								   # this should correspond to the number of data channels acquired.  Used to guess memory requirements.  If it's wrong that's ok.
+        line_trigger_src: 1
+        channel { name: "0" range: 0.2 enabled: true }
+        channel { name: "1" range: 2.0 enabled: true
+                  trigger {
+                    level_volts     : 0.0;
+                    slope           : RISING;
+                    holdoff_seconds : 0.0;
+                    delay_seconds   : 0.0;
+                  }
+                }
+        channel { name: "2" range: 2.0 enabled: true }
+        channel { name: "2" range: 2.0 enabled: true }
+      }
+      alazar {
+        system_id: 1
+        sample_rate: SAMPLE_RATE_125MSPS
+        channels {
+          board_id: 0
+          chan_id:  CHANNEL_A
+          range:    INPUT_RANGE_PM_1_V
+          enabled:  true
+        }
+        channels {
+          board_id: 1
+          chan_id:  CHANNEL_A
+          range:    INPUT_RANGE_PM_1_V
+          enabled:  true
+        }
+      }
+      simulated {
+        width:  1024
+        number: 0
+        sample_rate: 1000000
+      }
+    }
+    pockels {
+      kind: Simulated #NIDAQ #Simulated
+      name: "Chameleon"
+      laser: Chameleon
+      calibration {
+        calibrated: true
+        v_zero:     0.0
+        v_max:      0.75
+      }
+      nidaq {
+        v_lim_max: 2
+        v_lim_min: 0
+        v_open: 0
+        v_closed: 0
+        ao_channel: "ao2"
+        ai_channel: "ai16"
+      }
+    }
+    pockels {
+      kind: Simulated #NIDAQ #Simulated
+      name: "Fianium (1064nm)"
+      laser: Fianium
+      calibration {
+        calibrated: true
+        v_zero:     0.0
+        v_max:      1.5
+      }
+      nidaq {
+        v_lim_max: 2
+        v_lim_min: 0
+        v_open: 0
+        v_closed: 0
+        ao_channel: "ao3"
+        ai_channel: ""
+      }
+    }
+    shutter {
+      kind: Simulated #NIDAQ #Simulated
+      nidaq {
+        open: 1
+        closed: 0
+        do_channel: "/Dev1/port0/line8"
+      }
+      simulated {
+        state: false
+      }
+    }
+    linear_scan_mirror {
+      kind: Simulated  #NIDAQ #Simulated
+      nidaq {
+        v_lim_max:  10
+        v_lim_min: -10
+        vpp: 10
+        ao_channel: "ao0"
+      }
+      simulated {
+        val: 0
+      }
+    }
+  }
+  zpiezo {
+    kind: Simulated  #NIDAQ #Simulated
+    nidaq {
+      um2v:       0.025    #V/um: 400um*0.025 = 10.0V
+      v_lim_max:  12
+      v_lim_min: -3
+      v_offset:   0
+      channel:   "ao1"
+    }
+    simulated {
+    }
+    um_max:     5
+    um_min:     0
+    um_step:    0.005
+  }
+  zref_um: 0
+}
+stage {
+    kind: Simulated   #C843 #Simulated
+    c843 {
+      id: 1
+        axis {id: 1   stage: "M-511.DD_NEW"}
+        axis {id: 2   stage: "M-511.DD_NEW"}
+        axis {id: 3   stage: "M-501.1DG"}
+    }
+  simulated {
+    axis { min_mm: 0.0  max_mm: 100.0}
+    axis { min_mm: 0.0  max_mm: 100.0}
+    axis { min_mm: 0.0  max_mm: 12.5 }
+  }
+
+  tilemode: PixelAligned #StageAligned #PixelAligned
+}
+vibratome {
+  kind: Simulated
+  serial {
+  }
+  feed_axis: X
+}
+fov {
+    x_size_um: 500.0
+    y_size_um: 400.0
+    z_size_um: 400.0
+    x_overlap_um: 20.0
+    y_overlap_um: 20.0
+    rotation_radians: 0.2 #0.785398163
+  }
+file_series {
+  root:     "D:\\temp"
+  date:     "unknown"
+  seriesno:  0
+  pathsep:  "\\"
+}
+file_prefix:      "derp"
+stack_extension:  ".tif"
+config_extension: ".microscope"
+autotile {}
+surface_scan {}

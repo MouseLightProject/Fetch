@@ -1,0 +1,42 @@
+package fetch.cfg.device;
+
+message PockelsCalibration
+{ optional bool   calibrated = 1 [default=false];
+  optional double v_zero     = 2 [default=0.0];
+  optional double v_max      = 3 [default=0.0];
+}
+
+message NIDAQPockels
+{ 
+  optional  double    v_lim_max   = 1 [default=2.0];          // safety limit - high value
+  optional  double    v_lim_min   = 2 [default=0.0];          // safety limit - low  value
+  optional  double    v_open      = 3 [default=0.0];          // control voltage when pockels is maximally transmissive
+  optional  double    v_closed    = 4 [default=0.0];          // control voltage when pockels is minimally transmissive
+  optional  string    ao_channel  = 5 [default="/Dev1/ao2"];  // control channel
+  optional  string    ai_channel  = 6 [default="/Dev1/ai16"]; // channel for reading off transmission
+}
+
+message SimulatedPockels
+{
+  optional double val = 1 [default=0.0];
+}
+
+message Pockels
+{ enum PockelsType
+  {
+    Simulated = 0;
+    NIDAQ     = 1;
+  }
+  enum LaserLineIdentifier
+  { Chameleon = 0;
+    Fianium   = 1;
+  }
+  optional PockelsType         kind        = 1 [default=Simulated];
+
+  required LaserLineIdentifier laser       = 2;
+  optional string              name        = 3 [default="default"];
+  optional PockelsCalibration  calibration = 4;
+
+  optional NIDAQPockels        nidaq       = 5;
+  optional SimulatedPockels    simulated   = 6;
+}

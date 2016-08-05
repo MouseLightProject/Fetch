@@ -1,0 +1,44 @@
+package fetch.cfg.device;
+
+message SimulatedVibratome
+{ optional string token = 1 [default="Simulated"];
+}
+
+message SerialControlVibratome
+{
+  optional string port          = 1 [default="COM3"];      // serial communications port for controller.  
+  optional uint32 baud          = 2 [default=9600];        // baud rate - not sure this matters.          
+  optional uint32 amplitude     = 3 [default=255];         // amplitude in controller units (0-255)       
+  optional double amp2mm        = 4 [default=0.000392156]; // (units/percent) - Convert controller units to length.  amplitude * pct2mm = amplitude in mm.
+}
+
+message Point2d
+{ optional double x = 1 [default = 0.0];
+  optional double y = 2 [default = 0.0];
+}
+
+message VibratomeGeometry
+{ optional Point2d cut_pos_mm = 1;                         // The sample should be positioned here before cutting
+  optional double  dz_mm      = 2 [default=0.0];           // The vertical distance between the imaging and cutting planes.
+  repeated Point2d bounds_mm  = 3;                         // During normal operation the stage should not move into this region (for all z).
+}
+
+message Vibratome
+{ enum VibratomeType
+  {
+    Simulated = 0;
+    Serial    = 1;
+  }
+  enum VibratomeFeedAxis
+  { X = 0;
+    Y = 1;
+  }
+  optional VibratomeType                      kind = 1 [default=Serial];
+  optional SerialControlVibratome           serial = 2;
+  optional SimulatedVibratome            simulated = 3;
+  optional VibratomeFeedAxis             feed_axis = 4;
+  optional double              feed_vel_mm_per_sec = 5 [default=1.0];
+  optional double                          feed_mm = 6 [default=10.0];
+  optional VibratomeGeometry              geometry = 7;
+  optional double                 cut_thickness_um = 8 [default=100.0];
+}

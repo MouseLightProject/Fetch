@@ -1,0 +1,171 @@
+package fetch.cfg.device;
+
+
+////////////////////////
+
+// Notes
+// -----
+//
+// * May be able to eliminate the nchannels field.  Protobuf will generate a channel_size()
+//   method that gives the correct value.
+// * rename channel to channels
+message NIScopeDigitizer
+{
+  message Trigger
+  { enum Slope
+    {
+      RISING  = 0; // default
+      FALLING = 1;
+    }
+    optional double level_volts     = 1  [default=0.0];
+    optional Slope  slope           = 2;
+    optional double holdoff_seconds = 3  [default=0.0];   // length of time before re-enable
+    optional double delay_seconds   = 4  [default=0.0];   // length of time before start acquire
+  }
+
+  message Channel
+  {
+    enum Coupling {                                       // NISCOPE_ATTR_VERTICAL_COUPLING. ENUM values conform to NIScope
+      AC = 0;
+      DC = 1;
+      GND = 2;
+    }
+    optional string   name     = 1 [default = "0"];       // Null terminated string with channel syntax: e.g. "0-2,7"
+    optional double   range    = 2 [default = 1.0];       // Volts peak to peak.  (NI-5105) Can be 0.05, 0.2, 1, or 6 V for 50 Ohm.  Resolution is 0.1% dB.
+    optional Coupling coupling = 3 [default = DC];        // Specifies how to couple the input signal. Refer to NISCOPE_ATTR_VERTICAL_COUPLING for more information.
+    optional bool     enabled  = 4 [default = false];     // Specifies whether the channel is enabled for acquisition. Refer to NISCOPE_ATTR_CHANNEL_ENABLED for more information.
+    optional Trigger  trigger  = 5;                       // if channel is used for triggering, these are the settings to use
+  }
+
+  optional string   name        = 1 [default = "Dev3"];   // NI device name: e.g. "Dev6"
+  optional double   sample_rate = 2 [default = 60000000]; // samples/second
+  optional uint32   record_size = 3 [default = 7196];     // samples per scan
+  optional uint32   num_records = 4 [default = 256];      // number of records per acquire call.
+  optional double   reference   = 5 [default = 0.0];      // as a percentage
+  optional string   chan_names  = 6 [default = "0"];      // the channels to acquire data on (NI Channel String syntax)
+  optional uint32   nchannels   = 7 [default = 1];        // number of acquired channels.  This excludes triggering channels, etc...
+  repeated Channel  channel     = 8;                      // array of channel configurations
+
+  optional uint32   line_trigger_src = 9  [default=1];      // Digitizer channel corresponding to resonant velocity input
+
+}
+
+///////////////////////
+message AlazarDigitizer
+{
+  enum ClockSource { // Specific to the ATS9350
+    INTERNAL_CLOCK                                = 1;
+    SLOW_EXTERNAL_CLOCK                           = 4;
+    EXTERNAL_CLOCK_AC                             = 5;
+    EXTERNAL_CLOCK_10MHz_REF                      = 7;
+  }
+  enum SampleRate { // Specific to the ATS9350
+    SAMPLE_RATE_1KSPS                             = 0x1;
+    SAMPLE_RATE_2KSPS                             = 0x2;
+    SAMPLE_RATE_5KSPS                             = 0x4;
+    SAMPLE_RATE_10KSPS                            = 0x8;
+    SAMPLE_RATE_100KSPS                           = 0xA;
+    SAMPLE_RATE_200KSPS                           = 0x10;
+    SAMPLE_RATE_500KSPS                           = 0x12;
+    SAMPLE_RATE_1MSPS                             = 0x14;
+    SAMPLE_RATE_2MSPS                             = 0x18;
+    SAMPLE_RATE_5MSPS                             = 0x1A;
+    SAMPLE_RATE_10MSPS                            = 0x1C;
+    SAMPLE_RATE_20MSPS                            = 0x1E;
+    SAMPLE_RATE_50MSPS                            = 0x22;
+    SAMPLE_RATE_100MSPS                           = 0x24;
+    SAMPLE_RATE_125MSPS                           = 0x25;
+    SAMPLE_RATE_250MSPS                           = 0x2B;
+    SAMPLE_RATE_500MSPS                           = 0x30;
+    SAMPLE_RATE_USER_DEF                          = 0x40;
+    SAMPLE_RATE_MAX                               = 500000000;
+  }
+  enum ClockEdge {
+    CLOCK_EDGE_RISING                             = 0;
+    CLOCK_EDGE_FALLING                            = 1;
+  }
+  enum ChannelID {
+    CHANNEL_A                                     = 1;
+    CHANNEL_B                                     = 2;
+  }
+  enum Coupling {
+    AC_COUPLING                                   = 1;
+    DC_COUPLING                                   = 2;
+  }
+  enum Range
+  {
+    INPUT_RANGE_PM_20_MV  = 1;
+    INPUT_RANGE_PM_40_MV  = 2;
+    INPUT_RANGE_PM_50_MV  = 3;
+    INPUT_RANGE_PM_100_MV = 5;
+    INPUT_RANGE_PM_200_MV = 6;
+    INPUT_RANGE_PM_400_MV = 7;
+    INPUT_RANGE_PM_500_MV = 8;
+    INPUT_RANGE_PM_800_MV = 9;
+    INPUT_RANGE_PM_1_V    = 10;
+    INPUT_RANGE_PM_2_V    = 11;
+    INPUT_RANGE_PM_4_V    = 12;
+    INPUT_RANGE_PM_5_V    = 13;
+    INPUT_RANGE_PM_8_V    = 14;
+    INPUT_RANGE_PM_10_V   = 15;
+    INPUT_RANGE_PM_20_V   = 16;
+    INPUT_RANGE_PM_40_V   = 17;
+    INPUT_RANGE_PM_16_V   = 18;
+    INPUT_RANGE_HIFI      = 32; // for amplifier bypass
+  }
+  enum Impedance
+  {
+    IMPEDANCE_1M_OHM      = 1;
+    IMPEDANCE_50_OHM      = 2;
+  }
+
+  message Channel {
+    optional uint32     board_id  = 1 [default = 1];
+    optional ChannelID  chan_id   = 2 [default = CHANNEL_A];
+    optional Coupling   coupling  = 3 [default = DC_COUPLING];
+    optional Range      range     = 4 [default = INPUT_RANGE_PM_200_MV];
+    optional Impedance  impedance = 5 [default = IMPEDANCE_50_OHM];
+    optional bool       enabled   = 6 [default = true];    // indicates this channel will be used to collect data.  Triggering channels _do not_ need to be enabled.
+  }
+
+  optional uint32 system_id           = 1 [default = 1];
+
+  // timebase
+  optional SampleRate sample_rate     = 2 [default = SAMPLE_RATE_MAX];
+  optional ClockEdge  clock_edge      = 3 [default = CLOCK_EDGE_RISING];
+  optional float      ext_clock_level = 4 [default = 0.0];
+  optional double     ext_clock_rate  = 5 [default = 0.0]; // only used if you're using an external clock
+  optional uint32     decimation      = 6 [default = 1];   // may be 1,2,4,or any multiple of 5 up to 100k.  Only used with SAMPLE_RATE_MAX
+
+  repeated Channel    channels        = 7;
+
+  // triggers, aux io
+  // some triggers must be on master board, so these aren't configurable
+  optional uint32     aux_out_board_id  =8 [default=1];
+  optional double     trigger_lvl_volts =9 [default=0.5];
+}
+
+//////////////////////////
+message SimulatedDigitizer
+{
+  optional uint32 number      = 1 [default=0];       // placeholder
+  optional double sample_rate = 2 [default=1000000];
+  optional int32  nchan       = 3 [default=1];       // number of channels
+  optional int32  width       = 4 [default=512];     // pixels per line
+}
+
+/////////////////
+message Digitizer
+{
+  enum DigitizerType
+  {
+    Simulated = 0;
+    NIScope   = 1;
+    Alazar    = 2;
+  }
+  optional DigitizerType  kind =  1 [default = NIScope];
+
+  optional NIScopeDigitizer   niscope   = 2;
+  optional AlazarDigitizer    alazar    = 3;
+  optional SimulatedDigitizer simulated = 4;
+}

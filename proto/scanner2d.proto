@@ -1,0 +1,20 @@
+package fetch.cfg.device;
+
+import "digitizer.proto";
+import "pockels.proto";
+import "shutter.proto";
+import "linear_scan_mirror.proto";
+import "daq.proto";
+
+message Scanner2D
+{
+  optional double    frequency_hz         = 1  [default=7920.0];              // Hz
+  optional uint32    nscans               = 2  [default=512];                 // Number of full resonant periods that make up a frame
+  optional float     line_duty_cycle      = 3  [default=0.95];                // Fraction of resonant period to acquire (must be less than one)
+
+  required DAQ              daq                = 4;
+  required Digitizer        digitizer          = 5;
+  repeated Pockels          pockels            = 6;
+  required Shutter          shutter            = 7;
+  required LinearScanMirror linear_scan_mirror = 8;
+}
