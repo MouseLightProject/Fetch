@@ -15,6 +15,7 @@
 #include "StageDockWidget.h"
 #include "AutoTileDockWidget.h"
 #include "HistogramDockWidget.h"
+#include "DavidTestDockWidget.h"
 #include "TimeSeriesDockWidget.h"
 #include "AdaptiveTilingdockWidget.h"
 #include "StageController.h"
@@ -116,6 +117,7 @@ fetch::ui::MainWindow::MainWindow(device::Microscope *dc)
   ,_autoTileDockWidget(0)
   ,_timeSeriesDockWidget(0)
   ,_histogramDockWidget(0)
+  , _davidTestDockWidget(0)
   ,_display(0)
   ,_player(0)
   ,_scope_state_controller(&dc->__self_agent)
@@ -405,6 +407,13 @@ void fetch::ui::MainWindow::createDockWidgets()
     _histogramDockWidget=w;
   }
 
+  { DavidTestDockWidget *w = new DavidTestDockWidget(this);
+  addDockWidget(Qt::LeftDockWidgetArea, w);
+  viewMenu->addAction(w->toggleViewAction());
+  w->setObjectName("_davidTestDockWidget");
+  _davidTestDockWidget = w;
+  }
+
 }
 
 void fetch::ui::MainWindow::createViews()
@@ -663,6 +672,10 @@ void
       _player             ,SIGNAL(imageReady(mylib::Array*)),
       _histogramDockWidget,SLOT  (set(mylib::Array*)),
       Qt::BlockingQueuedConnection));
+  TRY(connect(
+	  _player, SIGNAL(imageReady(mylib::Array*)),
+	  _davidTestDockWidget, SLOT(set(mylib::Array*)),
+	  Qt::BlockingQueuedConnection));
 Error:
   _player->start();
 }
@@ -675,6 +688,7 @@ void
   _player->disconnect();
   _display->disconnect();
   _histogramDockWidget->disconnect(_player,SIGNAL(imageReady(mylib::Array*)));
+  _davidTestDockWidget->disconnect(_player, SIGNAL(imageReady(mylib::Array*)));
   connect(_player,SIGNAL(finished()),this,SLOT(clearDeadPlayers()));//,Qt::DirectConnection);
   //connect(_player,SIGNAL(terminated()),this,SLOT(clearDeadPlayers())); //,Qt::DirectConnection);
   _player->stop();

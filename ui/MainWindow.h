@@ -19,6 +19,7 @@ class AutoTileDockWidget;
 class StageDockWidget;
 class SurfaceScanDockWidget;
 class HistogramDockWidget;
+class DavidTestDockWidget; //Forward declaration to tell it to expect DavidTestDockWidget class with later definition in this namespace
 class TimeSeriesDockWidget;
 class Figure;
 class IPlayerThread;
@@ -94,6 +95,7 @@ public: // semi-private
   AutoTileDockWidget           *_autoTileDockWidget;
   TimeSeriesDockWidget         *_timeSeriesDockWidget;
   HistogramDockWidget          *_histogramDockWidget;
+  DavidTestDockWidget          *_davidTestDockWidget; //_davidTestDockWidget is a pointer to type DavidTestDockWidget
   Figure                       *_display;
   IPlayerThread                *_player;
 
