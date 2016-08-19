@@ -470,20 +470,24 @@ Error:
 
 
     FileSeries& FileSeries::inc( void )
-    {
-      VALIDATE;
-      int n = _desc->seriesno();
+	{ QSettings settings;
 
+      VALIDATE;
+
+      int seriesno = _desc->seriesno();
+	  _lastpath = _desc->root() + _desc->pathsep() + _desc->date();
       // reset series number when series path changes
       updateDate();                // get the current date
       std::string seriespath = _desc->root() + _desc->pathsep() + _desc->date();
-      if(seriespath.compare(_lastpath)!=0)
-      { _desc->set_seriesno(0);
+      if(seriespath.compare(_lastpath)!=0) // If is in a different directory, can restart numbering at 0
+	  { seriesno = 0;
         _lastpath = seriespath;
-      } else
-      { _desc->set_seriesno(n+1);
+	  } else if (_haveBeenInIncMethod)
+	  { seriesno = (seriesno + 1) ;// increment
       }
-      _prev.set_seriesno(_desc->seriesno());
+	  settings.setValue("seriesno", seriesno);
+	  _desc->set_seriesno(seriesno);
+	  _haveBeenInIncMethod = true;
       notify();
       return *this;
     }
@@ -536,15 +540,20 @@ Error:
       char datestr[] = "0000-00-00";
       sprintf_s(datestr,sizeof(datestr),"%04d-%02d-%02d",t->tm_year+1900,t->tm_mon+1,t->tm_mday);
       _desc->set_date(datestr);
-      _prev.set_date(_desc->date());
     }
 
     bool FileSeries::updateDesc(cfg::FileSeries *desc)
-    {
-      if(_desc)
-        desc->set_seriesno(_prev.seriesno()); // keep old series no
+	{
+	  QSettings settings; // Want to always have seriesno increment so as to avoid accidentally overwriting files
+	//  settings.remove("seriesno"); 
+	  bool ok = 0;
+	  int seriesno = settings.value("seriesno").toInt(&ok); //Converts from Qvariant to int; ok will be true if it worked, and if seriesno has not been set yet, will return Null, which is converted to 0
+	  if (!ok)  //If conversion fails and/or first time seriesno created
+		  seriesno = -1; //Set to -1, so that it will be incremented to 0
+	  seriesno = (seriesno + 1); //increment
+	  settings.setValue("seriesno", seriesno); //Set the settings value "seriesno" to the value of seriesno.
+	  desc->set_seriesno(seriesno); //Set the the series number in desc
       _desc = desc;
-      _prev.CopyFrom(*_desc);
       updateDate();
       //ensurePathExists();
       notify();

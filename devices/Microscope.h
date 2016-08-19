@@ -63,8 +63,8 @@ namespace fetch
     {
       typedef std::set<FileSeriesListener*> TListeners;
     public:
-      FileSeries() :_desc(&__default_desc), _lastpath("lastpath"), _is_valid(false), _prev(__default_desc)  {_lastpath=_desc->root() + _desc->pathsep() + _desc->date();}
-      FileSeries(cfg::FileSeries *desc) :_desc(desc), _lastpath("lastpath"), _is_valid(false)               {Guarded_Assert(_desc!=NULL);_lastpath=_desc->root() + _desc->pathsep() + _desc->date(); _prev.CopyFrom(*_desc);}
+	  FileSeries() :_desc(&__default_desc), _lastpath("lastpath"), _is_valid(false), _haveBeenInIncMethod(false) { _lastpath = _desc->root() + _desc->pathsep() + _desc->date(); };
+	  FileSeries(cfg::FileSeries *desc) :_desc(desc), _lastpath("lastpath"), _is_valid(false), _haveBeenInIncMethod(false)               { Guarded_Assert(_desc != NULL); _lastpath = _desc->root() + _desc->pathsep() + _desc->date(); }
 
       FileSeries& inc(void);
       const std::string getFullPath(const std::string& prefix, const std::string& ext);
@@ -82,12 +82,12 @@ namespace fetch
       std::string _lastpath;
       cfg::FileSeries __default_desc;
       bool _is_valid;
+	  bool _haveBeenInIncMethod;
 
       void notify();
 
     public: // pseudo-private
       cfg::FileSeries *_desc;
-      cfg::FileSeries  _prev;
       TListeners _listeners;
     };
 

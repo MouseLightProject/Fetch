@@ -701,7 +701,7 @@ Error:
         }
 #endif
         // Write out channel
-        { mylib::Tiff* w = dc->_writers[i];
+        { mylib::Tiff* w = dc->_writers[0];//can change i to 0 to get it to work.
           Array_Bundle tmp = dummy;
           TIFFTRY(0==Add_IFD_Channel(w,Get_Array_Plane(&tmp,i),PLAIN_CHAN));
           Update_Tiff(w,DONT_PRESS);

@@ -402,7 +402,7 @@ Error:
 
         template<class TPixel>
         unsigned int fetch::task::scanner::ScanStack<TPixel>::run_simulated( device::Scanner3D *d )
-        {
+		{ 
           Chan *qdata = Chan_Open(d->_out->contents[0],CHAN_WRITE);
           Frame *frm   = NULL;
           device::SimulatedDigitizer *dig = d->_scanner2d._digitizer._simulated;
