@@ -393,7 +393,7 @@ ESCAN:
       // 3. Wait for result
       TRY(frm=(Frame*) Chan_Token_Buffer_Alloc(c));
       //TRY(CHAN_SUCCESS(Chan_Next(c,(void**)&frm,Chan_Buffer_Size_Bytes(c))));
-      TRY(CHAN_SUCCESS(Chan_Next_Timed(c,(void**)&frm,Chan_Buffer_Size_Bytes(c),timeout_ms)));
+	  TRY(CHAN_SUCCESS(Chan_Next_Timed(c,(void**)&frm,Chan_Buffer_Size_Bytes(c),timeout_ms)));
       { mylib::Array dummy;
         mylib::Dimn_Type dims[3];
         mylib::castFetchFrameToDummyArray(&dummy,frm,dims);
@@ -544,7 +544,7 @@ Error:
 
     bool FileSeries::updateDesc(cfg::FileSeries *desc)
 	{
-	  QSettings settings; // Want to always have seriesno increment so as to avoid accidentally overwriting files
+	  QSettings settings; //DGA: Want to always have seriesno increment so as to avoid accidentally overwriting files
 	//  settings.remove("seriesno"); 
 	  bool ok = 0;
 	  int seriesno = settings.value("seriesno").toInt(&ok); //Converts from Qvariant to int; ok will be true if it worked, and if seriesno has not been set yet, will return Null, which is converted to 0
