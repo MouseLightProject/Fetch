@@ -1,0 +1,270 @@
+scanner3d {
+  scanner2d {
+    frequency_hz: 7920
+    nscans: 64
+    line_duty_cycle: 0.95
+    daq {
+      kind: Simulated
+      nidaq {
+        ao_samples_per_waveform: 16384
+        trigger: "APFI0"
+        clock: "Ctr1InternalOutput"
+        ctr: "ctr0"
+        ctr_alt: "ctr1"
+        armstart: "PFI15"
+        name: "Dev2"
+        frame_trigger_out: "PFI1"
+      }
+      simulated {
+        samples_per_record: 16384
+        sample_frequency_hz: 1000000
+      }
+    }
+    digitizer {
+      kind: Simulated
+      niscope {
+        name: "Dev3"
+        sample_rate: 60000000
+        record_size: 7196
+        num_records: 256
+        reference: 0
+        chan_names: "0,1,2"
+        nchannels: 1
+        channel {
+          name: "0"
+          range: 0.2
+          enabled: true
+        }
+        channel {
+          name: "1"
+          range: 2
+          enabled: true
+          trigger {
+            level_volts: 0
+            slope: RISING
+            holdoff_seconds: 0
+            delay_seconds: 0
+          }
+        }
+        channel {
+          name: "2"
+          range: 2
+          enabled: true
+        }
+        channel {
+          name: "2"
+          range: 2
+          enabled: true
+        }
+        line_trigger_src: 1
+      }
+      alazar {
+        system_id: 1
+        sample_rate: SAMPLE_RATE_125MSPS
+        channels {
+          board_id: 0
+          chan_id: CHANNEL_A
+          range: INPUT_RANGE_PM_1_V
+          enabled: true
+        }
+        channels {
+          board_id: 1
+          chan_id: CHANNEL_A
+          range: INPUT_RANGE_PM_1_V
+          enabled: true
+        }
+      }
+      simulated {
+        number: 1536
+        sample_rate: 10000000
+        nchan: 3
+        width: 1024
+      }
+    }
+    pockels {
+      kind: Simulated
+      laser: Chameleon
+      name: "Chameleon"
+      calibration {
+        calibrated: true
+        v_zero: 0
+        v_max: 0.75
+      }
+      nidaq {
+        v_lim_max: 2
+        v_lim_min: 0
+        v_open: 0
+        v_closed: 0
+        ao_channel: "ao2"
+        ai_channel: "ai16"
+      }
+      simulated {
+      }
+    }
+    pockels {
+      kind: Simulated
+      laser: Fianium
+      name: "Fianium (1064nm)"
+      calibration {
+        calibrated: true
+        v_zero: 0
+        v_max: 1.5
+      }
+      nidaq {
+        v_lim_max: 2
+        v_lim_min: 0
+        v_open: 0
+        v_closed: 0
+        ao_channel: "ao3"
+        ai_channel: ""
+      }
+      simulated {
+      }
+    }
+    shutter {
+      kind: Simulated
+      nidaq {
+        open: 1
+        closed: 0
+        do_channel: "/Dev1/port0/line8"
+      }
+      simulated {
+        state: false
+      }
+    }
+    linear_scan_mirror {
+      kind: Simulated
+      nidaq {
+        v_lim_max: 10
+        v_lim_min: -10
+        vpp: 10
+        ao_channel: "ao0"
+      }
+      simulated {
+        val: 0
+      }
+    }
+  }
+  zpiezo {
+    kind: Simulated
+    nidaq {
+      um2v: 0.025
+      v_lim_max: 12
+      v_lim_min: -3
+      v_offset: 0
+      channel: "ao1"
+    }
+    simulated {
+    }
+    um_max: 2
+    um_min: 0
+    um_step: 1
+  }
+  zref_um: 0
+}
+stage {
+  kind: Simulated
+  c843 {
+    id: 1
+    axis {
+      id: 1
+      stage: "M-511.DD_NEW"
+    }
+    axis {
+      id: 2
+      stage: "M-511.DD_NEW"
+    }
+    axis {
+      id: 3
+      stage: "M-501.1DG"
+    }
+  }
+  simulated {
+    axis {
+      min_mm: 0
+      max_mm: 100
+    }
+    axis {
+      min_mm: 0
+      max_mm: 100
+    }
+    axis {
+      min_mm: 0
+      max_mm: 15
+    }
+  }
+  last_target_mm {
+    x: 0.5
+    y: 0.5
+    z: 0.5
+  }
+  tilemode: PixelAligned
+}
+vibratome {
+  kind: Simulated
+  serial {
+  }
+  simulated {
+  }
+  feed_axis: X
+}
+fov {
+  x_size_um: 500
+  y_size_um: 400
+  z_size_um: 400
+  x_overlap_um: 20
+  y_overlap_um: 20
+  rotation_radians: 0
+}
+pipeline {
+  frame_average_count: 1
+  downsample_count: 1
+  invert_intensity: false
+}
+file_series {
+  root: "C:\\FetchTemp"
+  date: "2016-08-25"
+  seriesno: 3
+  pathsep: "\\"
+}
+file_prefix: "derp"
+stack_extension: ".tif"
+config_extension: ".microscope"
+autotile {
+  z_um: 150
+  maxz_mm: 2
+  timeout_ms: 15000
+  ichan: 0
+  intensity_threshold: 15700
+  area_threshold: 0.1
+  search_radius: 2
+  use_adaptive_tiling: true
+  use_explore: true
+}
+surface_probe {
+  simulated {
+  }
+}
+surface_scan {
+}
+surface_find {
+  backup_frac: 0.8
+  max_backup_um: 1
+  min_um: 0
+  max_um: 5
+  dz_um: 1
+  ichan: 0
+  intensity_threshold: 10000
+  area_threshold: 0.1
+  offset_um: 0
+}
+adaptive_tiling {
+  every: 7
+  mindist: 0
+}
+trip_detect {
+}
+pmt {
+  simulated {
+  }
+}
