@@ -440,7 +440,7 @@ Error:
 				  if (ummin == ummax) //DGA: Then it is not taking a stack
 					  *c = (TPixel) ((ptp*rand() / (float)RAND_MAX) + low); //DGA: When not in surface find mode, just do the normal frame generation
 				  else
-					  *c = (TPixel) ((ptp*rand() / (float)RAND_MAX)*(z_um / ummax) + low); //DGA: In surface find mode, this ensures the surface is not found in the first tile, which would require stage movement, which I have not tested in simulation mode */
+					  *c = (TPixel) ((ptp*rand() / (float)RAND_MAX)*((z_um - ummin) / (ummax-ummin)) + low); //DGA: In surface find mode, this ensures the surface is not found in the first tile, which would require stage movement, which I have not tested in simulation mode */
 			  }
 			}
 			
