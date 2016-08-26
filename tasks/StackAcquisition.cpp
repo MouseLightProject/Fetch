@@ -402,7 +402,7 @@ Error:
 
         template<class TPixel>
         unsigned int fetch::task::scanner::ScanStack<TPixel>::run_simulated( device::Scanner3D *d )
-        {
+		{ 
           Chan *qdata = Chan_Open(d->_out->contents[0],CHAN_WRITE);
           Frame *frm   = NULL;
           device::SimulatedDigitizer *dig = d->_scanner2d._digitizer._simulated;
@@ -411,7 +411,7 @@ Error:
             d->_scanner2d.get_config().nscans()*2,
             3,TypeID<TPixel>());
           size_t nbytes;
-          int status = 1; // status == 0 implies success, error otherwise
+          int status = 0; // status == 0 implies success, error otherwise. DGA changed this from 1 to 0 so that it would not return an error during simulation mode
           f64 z_um,ummax,ummin,umstep;
 
           nbytes = ref.size_bytes();
@@ -422,8 +422,7 @@ Error:
           debug("Simulated Stack!"ENDL);
           HERE;
           d->_zpiezo.getScanRange(&ummin,&ummax,&umstep);
-          for(z_um=ummin+umstep;z_um<ummax && !d->_agent->is_stopping();z_um+=umstep)
-          //for(int d=0;d<100;++d)
+		  for (z_um = ummin; ((ummax - z_um) / umstep) >= -0.5f && !d->_agent->is_stopping(); z_um += umstep) // DGA: Now this is inclusive of ummin and ummax
           { size_t pitch[4];
             size_t n[3];
             frm->compute_pitches(pitch);
@@ -437,17 +436,21 @@ Error:
                         rmx = RAND_MAX;
               c=e=(TPixel*)frm->data;
               e+=pitch[0]/pitch[3];
-              for(;c<e;++c)
-                *c = (TPixel) ((ptp*rand()/(float)RAND_MAX) + low);
-            }
-
-            if(CHAN_FAILURE( SCANNER_PUSH(qdata,(void**)&frm,nbytes) ))
-            { warning("Scanner output frame queue overflowed."ENDL"\tAborting acquisition task."ENDL);
-              goto Error;
-            }
-            ref.format(frm);
-            DBG("Task: ScanStack<%s>: pushing frame"ENDL,TypeStr<TPixel>());
-          }
+			  for (; c < e; ++c){
+				  if (ummin == ummax) //DGA: Then it is not taking a stack
+					  *c = (TPixel) ((ptp*rand() / (float)RAND_MAX) + low); //DGA: When not in surface find mode, just do the normal frame generation
+				  else
+					  *c = (TPixel) ((ptp*rand() / (float)RAND_MAX)*(z_um / ummax) + low); //DGA: In surface find mode, this ensures the surface is not found in the first tile, which would require stage movement, which I have not tested in simulation mode */
+			  }
+			}
+			
+		    if (CHAN_FAILURE(SCANNER_PUSH(qdata, (void**)&frm, nbytes)))
+		    { warning("Scanner output frame queue overflowed."ENDL"\tAborting acquisition task."ENDL);
+			    goto Error;
+		    }
+		    ref.format(frm);
+		    DBG("Task: ScanStack<%s>: pushing frame"ENDL, TypeStr<TPixel>());
+		  }
           HERE;
 Finalize:
           Chan_Close(qdata);
