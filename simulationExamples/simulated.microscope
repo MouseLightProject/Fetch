@@ -224,7 +224,7 @@ pipeline {
 file_series {
   root: "C:\\FetchTemp"
   date: "2016-08-25"
-  seriesno: 5626
+  seriesno: 3
   pathsep: "\\"
 }
 file_prefix: "derp"

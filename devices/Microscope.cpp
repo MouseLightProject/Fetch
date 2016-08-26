@@ -479,12 +479,12 @@ Error:
       // reset series number when series path changes
       updateDate();                // get the current date
       std::string seriespath = _desc->root() + _desc->pathsep() + _desc->date();
-      if(seriespath.compare(_lastpath)!=0) // If is in a different directory, can restart numbering at 0
+     /* if(seriespath.compare(_lastpath)!=0) // If is in a different directory, can restart numbering at 0
 	  { seriesno = 0;
         _lastpath = seriespath;
 	  } else if (_haveBeenInIncMethod)
 	  { seriesno = (seriesno + 1) ;// increment
-      }
+      }*/
 	  settings.setValue("seriesno", seriesno);
 	  _desc->set_seriesno(seriesno);
 	  _haveBeenInIncMethod = true;
@@ -544,6 +544,7 @@ Error:
 
     bool FileSeries::updateDesc(cfg::FileSeries *desc)
 	{
+//		int temp=desc->seriesno();
 	  QSettings settings; //DGA: Want to always have seriesno increment so as to avoid accidentally overwriting files
 	//  settings.remove("seriesno"); 
 	  bool ok = 0;
