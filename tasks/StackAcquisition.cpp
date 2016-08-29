@@ -413,8 +413,10 @@ Error:
           size_t nbytes;
           int status = 0; // status == 0 implies success, error otherwise. DGA changed this from 1 to 0 so that it would not return an error during simulation mode
           f64 z_um,ummax,ummin,umstep;
+		  bool isTakingStack = false; //DGA: Used to determine if stack is being acquired 
+		  float randomNumber; //DGA: Used for simulating stack
 
-          nbytes = ref.size_bytes();
+		  nbytes = ref.size_bytes();
           Chan_Resize(qdata, nbytes);
           frm = (Frame*)Chan_Token_Buffer_Alloc(qdata);
           ref.format(frm);
@@ -422,7 +424,13 @@ Error:
           debug("Simulated Stack!"ENDL);
           HERE;
           d->_zpiezo.getScanRange(&ummin,&ummax,&umstep);
-		  for (z_um = ummin; ((ummax - z_um) / umstep) >= -0.5f && !d->_agent->is_stopping(); z_um += umstep) // DGA: Now this is inclusive of ummin and ummax
+		  if (ummin != ummax){
+			  //Then it is taking a stack
+			   srand(GetCurrentThreadId()); //DGA: This is necessary because otherwise each thread starts with the same seed
+			   randomNumber = rand()/(float)RAND_MAX;
+			   isTakingStack = true;
+		  }
+		  for (z_um = ummin; ((ummax - z_um) / umstep) >= -0.5f && !d->_agent->is_stopping(); z_um += umstep) //DGA: Now this is inclusive of ummin and ummax
           { size_t pitch[4];
             size_t n[3];
             frm->compute_pitches(pitch);
@@ -430,17 +438,30 @@ Error:
 
             //Fill frame w random colors.
             { TPixel *c,*e;
-              const f32 low = TypeMin<TPixel>(),
-                       high = TypeMax<TPixel>(),
-                        ptp = high - low,
-                        rmx = RAND_MAX;
+			  const f32 low = TypeMin<TPixel>(),
+					   high = TypeMax<TPixel>(),
+						ptp = high - low,
+						rmx = RAND_MAX;
               c=e=(TPixel*)frm->data;
               e+=pitch[0]/pitch[3];
 			  for (; c < e; ++c){
-				  if (ummin == ummax) //DGA: Then it is not taking a stack
-					  *c = (TPixel) ((ptp*rand() / (float)RAND_MAX) + low); //DGA: When not in surface find mode, just do the normal frame generation
-				  else
-					  *c = (TPixel) ((ptp*rand() / (float)RAND_MAX)*((z_um - ummin) / (ummax-ummin)) + low); //DGA: In surface find mode, this ensures the surface is not found in the first tile, which would require stage movement, which I have not tested in simulation mode */
+				  if (!isTakingStack){ //DGA: Then it is not taking a stack
+					  *c = (TPixel)((ptp*rand() / (float)RAND_MAX) + low); //DGA: When not in surface find mode, just do the normal frame generation
+				  }
+				  else{
+					  if (randomNumber < 0.1){
+						  //DGA: Then will make it be too_inside; that is, the first frame will be the surface and the stage should move down
+						  *c = (TPixel)ptp + low;
+					  }
+					  else if (randomNumber < 0.7){
+						  //DGA: Then will make it be too_outside; that is, it wont be found in any frame and the stage will move up
+						  *c = low;
+					  }
+					  else{
+						  //DGA: In surface find mode, this ensures the surface is not found in the first frame and will likely be found in the middle of stack and the stage should move down
+						  *c = (TPixel)(((ptp*rand() / (float)RAND_MAX)*((z_um - ummin) / (ummax - ummin)))*randomNumber + low); 
+					  }
+				  }
 			  }
 			}
 			

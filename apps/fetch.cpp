@@ -121,7 +121,7 @@ Success:
 }
 
 int main(int argc, char *argv[])
-{ //[deprecated] -- QGL::setPreferredPaintEngine(QPaintEngine::OpenGL);
+{//[deprecated] -- QGL::setPreferredPaintEngine(QPaintEngine::OpenGL);
   QCoreApplication::setOrganizationName("Howard Hughes Medical Institute");
   QCoreApplication::setOrganizationDomain("janelia.hhmi.org");
   QCoreApplication::setApplicationName("Fetch");
