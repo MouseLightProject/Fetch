@@ -884,9 +884,9 @@ DoneOutlining:
     const unsigned w=attr_->dims[0],
                    h=attr_->dims[1];
     const int offsets[] = {-w-1,-w,-w+1,-1,1,w-1,w,w+1}; // moves
-    uint32_t *c = AUINT32(attr_)+cursor_, // DGA: Current tile address?
-             *beg = AUINT32(attr_)+current_plane_offset_, // DGA: First tile in current plane
-             *end = beg+sz_plane_nelem_; // DGA: Last tile in current plane, sz_plane_nelem_ is number of tiles in plane
+	uint32_t *c = AUINT32(attr_) + cursor_, // DGA: Current tile address?
+		   	 *beg = AUINT32(attr_) + current_plane_offset_, // DGA: First tile in current plane
+		     *end = beg + sz_plane_nelem_; // DGA: Last tile in current plane, sz_plane_nelem_ is number of tiles in plane
     q_t q(w*h); // DGA: q is of class q_t with input size n = width * height (number of frames?). class variable estore_i set to 0
     
     for(uint32_t *t=(uint32_t*)beg;t<end;++t) // Reset Reserved
@@ -895,55 +895,24 @@ DoneOutlining:
     #define isvalid(p)    ((*(p)&(search_mask|Reserved)) == search_flags)
     #define isinbounds(p) (beg<=(p) && (p)<end)
     #define maybe(p)      ( (isvalid(p)&&isinbounds(p)) ?(p):NULL)
-	uint32_t cursor = cursor_;
-	if (cursor == (uint32_t)5566901)
-		int temp = 1;
-	bool areAnyInactive = false;
-	int numInactive = 0 , numReserved = 0;
-	for (uint32_t *t = (uint32_t*)beg; t<end; ++t){
-		if ((*t&query_mask) == query_flags){
-			areAnyInactive = true;
-		}
-	}
-	if (!areAnyInactive)
-		int why = 1;
-      
+	
+	// DGA: maybeAndReserve will check if the tile is in bounds and valid. If it is, then it will mark the tile as reserved and return it, otherwise it will return NULL
+	// Before, tiles were reserved only after popped leading to them being pushed to the stack many times, leading to the allocation error being thrown
+	#define maybeAndReserve(p) ( (isvalid(p)&&isinbounds(p)) ? &(*(p) |=Reserved ):NULL)
 
 	try
-	{
-		int count = 0;
-		q.push(maybe(c),0); // DGA: maybe(c) will return c if it is valid and in bounds, NULL otherwise. Makes c next tile in stack of e_t structs
-	*c |= Reserved;
-	while(c=q.pop(&dist)) // DGA: Pops off the head, setting c to the pointer to the former head's tile, continuing in loop if it is not the NULL pointer
-      { //*c |= Reserved; // mark it as looked at. DGA: sets 10th? bit to 1, so you don't recheck them when searching
+	{ q.push(maybeAndReserve(c),0); // DGA: maybeAndReserve(c) will mark c as reserved and return it if it is valid and in bounds, NULL otherwise. c is then pushed as next tile in stack of e_t structs  
+	  while(c=q.pop(&dist)) // DGA: Pops off the head, setting c to the pointer to the former head's tile, continuing in loop if it is not the NULL pointer
+      {// *c |= Reserved; // mark it as looked at. DGA: sets 10th? bit to 1, so you don't recheck them when searching
         if((*c&query_mask)==query_flags) {goto Finalize;} // DGA: If condition met, then will return distance
 		for (int i = 0; i < countof(offsets); ++i){
-
-			q.push(maybe(c + offsets[i]), dist + 1); // DGA: Push all the neighbors of c to the stack, with a distance of c's distance+1 (only if they are valid and inbounds)
-			uint32_t * temp = maybe(c + offsets[i]);
-			if (temp){
-				*temp |= Reserved;
-				count++;
-				if (count > 210 * 265 - 100)
-					int pausing = 1;
-			}
-			//PRINT OUT STUFF
+			q.push(maybeAndReserve(c + offsets[i]), dist + 1); // DGA: Push all the neighbors of c to the stack, with a distance of c's distance+1 (only if they are valid, inbounds); they are also marked as reserved
 		}
-
       } // DGA: Stops when no more tiles found that are inbounds and valid
       dist=0; // - no tiles found or started in a bad spot
     }
     catch(const char* msg)
-    { 	
-		for (uint32_t *t = (uint32_t*)beg; t<end; ++t){
-			if ((*t&query_mask) == query_flags){
-				numInactive++;
-			}
-			if (((*t)&Reserved)){
-				numReserved++;
-			}
-		}
-		debug("%s(%d): %s()\r\n\t%s\r\n",__FILE__,__LINE__,__FUNCTION__,msg);
+    { debug("%s(%d): %s()\r\n\t%s\r\n",__FILE__,__LINE__,__FUNCTION__,msg);
       dist = -1;
     }
     #undef isvalid

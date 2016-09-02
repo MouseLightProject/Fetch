@@ -412,10 +412,9 @@ Error:
             3,TypeID<TPixel>());
           size_t nbytes;
           int status = 0; // status == 0 implies success, error otherwise. DGA changed this from 1 to 0 so that it would not return an error during simulation mode
-          f64 z_um,ummax,ummin,umstep;
+		  f64 z_um, ummax, ummin, umstep, z_ummax;
 		  bool isTakingStack = false; //DGA: Used to determine if stack is being acquired 
 		  float randomNumber; //DGA: Used for simulating stack
-		  int sleepTimeMS = 10;
 
 		  nbytes = ref.size_bytes();
           Chan_Resize(qdata, nbytes);
@@ -425,14 +424,19 @@ Error:
           debug("Simulated Stack!"ENDL);
           HERE;
           d->_zpiezo.getScanRange(&ummin,&ummax,&umstep);
+		  srand(GetCurrentThreadId()); //DGA: This is necessary because otherwise each thread starts with the same seed
+		  z_ummax = ummax;
 		  if (ummin != ummax){
 			  //Then it is taking a stack
-			  srand(1);// GetCurrentThreadId()); //DGA: This is necessary because otherwise each thread starts with the same seed
-			  randomNumber = rand()/(float)RAND_MAX;
 			  isTakingStack = true;
-			  sleepTimeMS = 1000;
+			  z_ummax = ummax - umstep;
 		  }
-		  for (z_um = ummin; ((ummax - z_um) / umstep) >= -0.5f && !d->_agent->is_stopping(); z_um += umstep) //DGA: Now this is inclusive of ummin and ummax
+		  if (ummin == ummax)
+			  ummin -= 2*umstep;
+	
+		//  for (z_um = ummin; ((ummax - z_um) / umstep) >= 0.5f && !d->_agent->is_stopping(); z_um += umstep) //DGA: Now this is inclusive of ummin and ummax
+		//  for (z_um = ummin; z_um<=z_ummax && !d->_agent->is_stopping(); z_um += umstep) //DGA: Now this is inclusive of ummin and ummax
+		  for (z_um = ummin + umstep; z_um < ummax && !d->_agent->is_stopping(); z_um+=umstep)
           { size_t pitch[4];
             size_t n[3];
             frm->compute_pitches(pitch);
@@ -451,22 +455,10 @@ Error:
 					  *c = (TPixel)((ptp*rand() / (float)RAND_MAX) + low); //DGA: When not in surface find mode, just do the normal frame generation
 				  }
 				  else{
-					 /* if (randomNumber < 0.4){
-						  //DGA: Then will make it be too_inside; that is, the first frame will be the surface and the stage should move down
-						  *c = (TPixel)(ptp + low);
-					  }
-					  else if (randomNumber < 0.5){
-						  //DGA: Then will make it be too_outside; that is, it wont be found in any frame and the stage will move up
-						  *c = (TPixel)low;
-					  }
-					  else{*/
-						  //DGA: In surface find mode, this ensures the surface is not found in the first frame and will likely be found in the middle of stack and the stage should move up
-						  // such that the surface would be expected in the first frame (too_inside)
-					  *c = (TPixel)(((ptp*rand() / (float)RAND_MAX)*((z_um - ummin) / (ummax - ummin))) + low);// *randomNumber + low);
-					//  						  *c = (TPixel)low;
-
-					//  }
-				  }
+					  // DGA: In surface find mode, this ensures the surface is not found in the first frame and will likely be found in the middle of stack and the stage should move up
+					  // such that the surface would be expected in the next first frame
+					  *c = (TPixel)(((ptp*rand() / (float)RAND_MAX)*((z_um - ummin) / (ummax - ummin))) + low);
+				 }
 			  }
 			}
 			
@@ -480,10 +472,9 @@ Error:
           HERE;
 	  Finalize:
 		  Chan_Close(qdata);
-		  		  Sleep(sleepTimeMS); //DGA: Added sleep to prevent error message "Attempted to run an unarmed or already running Agent."
           free( frm );
           return status; // status == 0 implies success, error otherwise
-Error:
+	  Error:
           warning("Error occurred during ScanStack<%s> task."ENDL,TypeStr<TPixel>());
           goto Finalize;
         }
