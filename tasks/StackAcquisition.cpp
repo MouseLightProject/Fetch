@@ -219,7 +219,7 @@ Error:
       template<class TPixel> unsigned int ScanStack<TPixel>::run    (IDevice *d)
       {
         device::Scanner3D *s = dynamic_cast<device::Scanner3D*>(d);
-        device::Digitizer::Config digcfg = s->_scanner2d._digitizer.get_config();
+        device::Digitizer::Config digcfg = s->_scanner2d._digitizer.get_config(); 
         unsigned int ecode=1;
         switch(digcfg.kind())
         {
@@ -415,6 +415,7 @@ Error:
           f64 z_um,ummax,ummin,umstep;
 		  bool isTakingStack = false; //DGA: Used to determine if stack is being acquired 
 		  float randomNumber; //DGA: Used for simulating stack
+		  int sleepTimeMS = 10;
 
 		  nbytes = ref.size_bytes();
           Chan_Resize(qdata, nbytes);
@@ -426,9 +427,10 @@ Error:
           d->_zpiezo.getScanRange(&ummin,&ummax,&umstep);
 		  if (ummin != ummax){
 			  //Then it is taking a stack
-			   srand(GetCurrentThreadId()); //DGA: This is necessary because otherwise each thread starts with the same seed
-			   randomNumber = rand()/(float)RAND_MAX;
-			   isTakingStack = true;
+			  srand(1);// GetCurrentThreadId()); //DGA: This is necessary because otherwise each thread starts with the same seed
+			  randomNumber = rand()/(float)RAND_MAX;
+			  isTakingStack = true;
+			  sleepTimeMS = 1000;
 		  }
 		  for (z_um = ummin; ((ummax - z_um) / umstep) >= -0.5f && !d->_agent->is_stopping(); z_um += umstep) //DGA: Now this is inclusive of ummin and ummax
           { size_t pitch[4];
@@ -449,18 +451,21 @@ Error:
 					  *c = (TPixel)((ptp*rand() / (float)RAND_MAX) + low); //DGA: When not in surface find mode, just do the normal frame generation
 				  }
 				  else{
-					  if (randomNumber < 0.1){
+					 /* if (randomNumber < 0.4){
 						  //DGA: Then will make it be too_inside; that is, the first frame will be the surface and the stage should move down
-						  *c = (TPixel)ptp + low;
+						  *c = (TPixel)(ptp + low);
 					  }
-					  else if (randomNumber < 0.7){
+					  else if (randomNumber < 0.5){
 						  //DGA: Then will make it be too_outside; that is, it wont be found in any frame and the stage will move up
-						  *c = low;
+						  *c = (TPixel)low;
 					  }
-					  else{
-						  //DGA: In surface find mode, this ensures the surface is not found in the first frame and will likely be found in the middle of stack and the stage should move down
-						  *c = (TPixel)(((ptp*rand() / (float)RAND_MAX)*((z_um - ummin) / (ummax - ummin)))*randomNumber + low); 
-					  }
+					  else{*/
+						  //DGA: In surface find mode, this ensures the surface is not found in the first frame and will likely be found in the middle of stack and the stage should move up
+						  // such that the surface would be expected in the first frame (too_inside)
+					  *c = (TPixel)(((ptp*rand() / (float)RAND_MAX)*((z_um - ummin) / (ummax - ummin))) + low);// *randomNumber + low);
+					//  						  *c = (TPixel)low;
+
+					//  }
 				  }
 			  }
 			}
@@ -473,8 +478,9 @@ Error:
 		    DBG("Task: ScanStack<%s>: pushing frame"ENDL, TypeStr<TPixel>());
 		  }
           HERE;
-Finalize:
-          Chan_Close(qdata);
+	  Finalize:
+		  Chan_Close(qdata);
+		  		  Sleep(sleepTimeMS); //DGA: Added sleep to prevent error message "Attempted to run an unarmed or already running Agent."
           free( frm );
           return status; // status == 0 implies success, error otherwise
 Error:

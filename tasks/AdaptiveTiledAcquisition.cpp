@@ -117,7 +117,7 @@ Error:
         {           
           if(adapt_mindist<=tiling->minDistTo( 0,0,  // domain query   -- do not restrict to a particular tile type
                      device::StageTiling::Active,0)) // boundary query -- this is defines what is "outside"
-          {        
+		  {
             if(++adapt_count>adapt_thresh) // is it time to try?
             { adapt_count=0;
               // M O V E
