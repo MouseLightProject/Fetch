@@ -414,7 +414,6 @@ Error:
           int status = 0; // status == 0 implies success, error otherwise. DGA changed this from 1 to 0 so that it would not return an error during simulation mode
 		  f64 z_um, ummax, ummin, umstep;
 		  bool isTakingStack = false; //DGA: Used to determine if stack is being acquired 
-		  float randomNumber; //DGA: Used for simulating stack
 
 		  nbytes = ref.size_bytes();
           Chan_Resize(qdata, nbytes);
@@ -424,17 +423,13 @@ Error:
           debug("Simulated Stack!"ENDL);
           HERE;
           d->_zpiezo.getScanRange(&ummin,&ummax,&umstep);
-		  srand(1);// GetCurrentThreadId()); //DGA: This is necessary because otherwise each thread starts with the same seed
+		  srand(GetCurrentThreadId()); //DGA: This is necessary because otherwise each thread starts with the same seed
 		  if (ummin != ummax){
 			  //Then it is taking a stack
 			  isTakingStack = true;
 		  }
-		  /*if (ummin == ummax)
-			  ummin -= 2*umstep;*/
 	
 		  for (z_um = ummin; ((ummax - z_um) / umstep) >= -0.5f && !d->_agent->is_stopping(); z_um += umstep) //DGA: Now this is inclusive of ummin and ummax
-		  //for (z_um = ummin; z_um<=z_ummax && !d->_agent->is_stopping(); z_um += umstep) //DGA: Now this is inclusive of ummin and ummax
-		  //for (z_um = ummin + umstep; z_um < ummax && !d->_agent->is_stopping(); z_um+=umstep)
           { size_t pitch[4];
             size_t n[3];
             frm->compute_pitches(pitch);
