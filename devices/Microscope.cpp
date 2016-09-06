@@ -474,20 +474,24 @@ Error:
 
       VALIDATE;
 
-      int seriesno = _desc->seriesno();
-	  _lastpath = _desc->root() + _desc->pathsep() + _desc->date();
-      // reset series number when series path changes
+	  int seriesno = settings.value("seriesno").toInt();
+	  std::string lastpath = settings.value("lastpath").toString().toStdString();
       updateDate();                // get the current date
       std::string seriespath = _desc->root() + _desc->pathsep() + _desc->date();
-     /* if(seriespath.compare(_lastpath)!=0) // If is in a different directory, can restart numbering at 0
+
+	  // reset series number when series path changes
+	  if (!settings.contains("lastpath")){
+		  lastpath = _desc->root() + _desc->pathsep() + _desc->date();
+	  }
+      else if (seriespath.compare(lastpath)!=0) // If is in a different directory, can restart numbering at 0
 	  { seriesno = 0;
-        _lastpath = seriespath;
-	  } else if (_haveBeenInIncMethod)
+        lastpath = seriespath;
+	  } else
 	  { seriesno = (seriesno + 1) ;// increment
-      }*/
+      }
+	  settings.setValue("lastpath", QString::fromStdString(lastpath));
 	  settings.setValue("seriesno", seriesno);
 	  _desc->set_seriesno(seriesno);
-	  _haveBeenInIncMethod = true;
       notify();
       return *this;
     }
@@ -543,15 +547,14 @@ Error:
     }
 
     bool FileSeries::updateDesc(cfg::FileSeries *desc)
-	{
-		if (_desc)
-			int hi = 1;
-	  QSettings settings; //DGA: Want to always have seriesno increment so as to avoid accidentally overwriting files
+	{ QSettings settings; //DGA: Want to always have seriesno increment so as to avoid accidentally overwriting files
 	//  settings.remove("seriesno"); 
 	  bool ok = 0;
+	 // settings.remove("seriesno");
+	  //settings.remove("lastpath");
 	  int seriesno = settings.value("seriesno").toInt(&ok); //Converts from Qvariant to int; ok will be true if it worked, and if seriesno has not been set yet, will return Null, which is converted to 0
 	  if (!ok){  //If conversion fails and/or first time seriesno created
-		  seriesno = 1; //Set to 1
+		  seriesno = 0; //Set to 0
 		  settings.setValue("seriesno", seriesno); //Set the settings value "seriesno" to the value of seriesno.
 	  }
 	  
