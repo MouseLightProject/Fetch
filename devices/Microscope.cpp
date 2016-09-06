@@ -471,24 +471,29 @@ Error:
 
     FileSeries& FileSeries::inc( void )
 	{ QSettings settings;
-
-      VALIDATE;
-
-	  int seriesno = settings.value("seriesno").toInt();
-	  std::string lastpath = settings.value("lastpath").toString().toStdString();
+      
+	  VALIDATE;
+	  int seriesno = settings.value("seriesno").toInt(); //DGA: Get the series number from settings
       updateDate();                // get the current date
-      std::string seriespath = _desc->root() + _desc->pathsep() + _desc->date();
+      std::string lastpath, seriespath = _desc->root() + _desc->pathsep() + _desc->date(); //DGA: Get the current series path
 
 	  // reset series number when series path changes
-	  if (!settings.contains("lastpath")){
-		  lastpath = _desc->root() + _desc->pathsep() + _desc->date();
+	  if (!settings.contains("lastpath")){//DGA: First time lastpath is created
+		  lastpath = _desc->root() + _desc->pathsep() + _desc->date(); //DGA: Set lastpath
+		  seriesno = 0;
 	  }
-      else if (seriespath.compare(lastpath)!=0) // If is in a different directory, can restart numbering at 0
-	  { seriesno = 0;
-        lastpath = seriespath;
-	  } else
-	  { seriesno = (seriesno + 1) ;// increment
-      }
+	  else{ //DGA: Then lastpath setting has been set
+		  lastpath = settings.value("lastpath").toString().toStdString(); //DGA: Get the last path
+		  if (seriespath.compare(lastpath) != 0){ // If new date, can restart numbering at 0
+			  seriesno = 0;
+			  lastpath = seriespath; //DGA: Reset lastpath
+		  }
+		  else{
+			  seriesno = (seriesno + 1);// increment
+		  }
+	  }
+
+	  //DGA: set the settings based on new values
 	  settings.setValue("lastpath", QString::fromStdString(lastpath));
 	  settings.setValue("seriesno", seriesno);
 	  _desc->set_seriesno(seriesno);
@@ -547,18 +552,16 @@ Error:
     }
 
     bool FileSeries::updateDesc(cfg::FileSeries *desc)
-	{ QSettings settings; //DGA: Want to always have seriesno increment so as to avoid accidentally overwriting files
-	//  settings.remove("seriesno"); 
+	{ QSettings settings; //DGA: Want to always have seriesno increment so as to avoid accidentally overwriting files, so store it in settings
+
 	  bool ok = 0;
-	 // settings.remove("seriesno");
-	  //settings.remove("lastpath");
-	  int seriesno = settings.value("seriesno").toInt(&ok); //Converts from Qvariant to int; ok will be true if it worked, and if seriesno has not been set yet, will return Null, which is converted to 0
-	  if (!ok){  //If conversion fails and/or first time seriesno created
-		  seriesno = 0; //Set to 0
-		  settings.setValue("seriesno", seriesno); //Set the settings value "seriesno" to the value of seriesno.
+	  int seriesno = settings.value("seriesno").toInt(&ok); //DGA: Converts from Qvariant to int; ok will be true if it worked, and if seriesno has not been set yet, will return Null, which is converted to 0
+	  if (!ok){  //DGA: If first time seriesno created
+		  seriesno = 0; //DGA: Set to 0
+		  settings.setValue("seriesno", seriesno); //DGA: Set the settings value "seriesno" to the value of seriesno.
 	  }
-	  
-	  desc->set_seriesno(seriesno); //Set the the series number in desc
+
+	  desc->set_seriesno(seriesno); //DGA: Set the the series number in desc
       _desc = desc;
       updateDate();
       //ensurePathExists();
