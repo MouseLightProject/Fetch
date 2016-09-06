@@ -393,7 +393,7 @@ ESCAN:
       // 3. Wait for result
       TRY(frm=(Frame*) Chan_Token_Buffer_Alloc(c));
       //TRY(CHAN_SUCCESS(Chan_Next(c,(void**)&frm,Chan_Buffer_Size_Bytes(c))));
-      TRY(CHAN_SUCCESS(Chan_Next_Timed(c,(void**)&frm,Chan_Buffer_Size_Bytes(c),timeout_ms)));
+	  TRY(CHAN_SUCCESS(Chan_Next_Timed(c,(void**)&frm,Chan_Buffer_Size_Bytes(c),timeout_ms)));
       { mylib::Array dummy;
         mylib::Dimn_Type dims[3];
         mylib::castFetchFrameToDummyArray(&dummy,frm,dims);
@@ -470,20 +470,33 @@ Error:
 
 
     FileSeries& FileSeries::inc( void )
-    {
-      VALIDATE;
-      int n = _desc->seriesno();
-
-      // reset series number when series path changes
+	{ QSettings settings;
+      
+	  VALIDATE;
+	  int seriesno = settings.value("seriesno").toInt(); //DGA: Get the series number from settings
       updateDate();                // get the current date
-      std::string seriespath = _desc->root() + _desc->pathsep() + _desc->date();
-      if(seriespath.compare(_lastpath)!=0)
-      { _desc->set_seriesno(0);
-        _lastpath = seriespath;
-      } else
-      { _desc->set_seriesno(n+1);
-      }
-      _prev.set_seriesno(_desc->seriesno());
+      std::string lastpath, seriespath = _desc->root() + _desc->pathsep() + _desc->date(); //DGA: Get the current series path
+
+	  // reset series number when series path changes
+	  if (!settings.contains("lastpath")){//DGA: First time lastpath is created
+		  lastpath = _desc->root() + _desc->pathsep() + _desc->date(); //DGA: Set lastpath
+		  seriesno = 0;
+	  }
+	  else{ //DGA: Then lastpath setting has been set
+		  lastpath = settings.value("lastpath").toString().toStdString(); //DGA: Get the last path
+		  if (seriespath.compare(lastpath) != 0){ // If new date, can restart numbering at 0
+			  seriesno = 0;
+			  lastpath = seriespath; //DGA: Reset lastpath
+		  }
+		  else{
+			  seriesno = (seriesno + 1);// increment
+		  }
+	  }
+
+	  //DGA: set the settings based on new values
+	  settings.setValue("lastpath", QString::fromStdString(lastpath));
+	  settings.setValue("seriesno", seriesno);
+	  _desc->set_seriesno(seriesno);
       notify();
       return *this;
     }
@@ -536,15 +549,20 @@ Error:
       char datestr[] = "0000-00-00";
       sprintf_s(datestr,sizeof(datestr),"%04d-%02d-%02d",t->tm_year+1900,t->tm_mon+1,t->tm_mday);
       _desc->set_date(datestr);
-      _prev.set_date(_desc->date());
     }
 
     bool FileSeries::updateDesc(cfg::FileSeries *desc)
-    {
-      if(_desc)
-        desc->set_seriesno(_prev.seriesno()); // keep old series no
+	{ QSettings settings; //DGA: Want to always have seriesno increment so as to avoid accidentally overwriting files, so store it in settings
+
+	  bool ok = 0;
+	  int seriesno = settings.value("seriesno").toInt(&ok); //DGA: Converts from Qvariant to int; ok will be true if it worked, and if seriesno has not been set yet, will return Null, which is converted to 0
+	  if (!ok){  //DGA: If first time seriesno created
+		  seriesno = 0; //DGA: Set to 0
+		  settings.setValue("seriesno", seriesno); //DGA: Set the settings value "seriesno" to the value of seriesno.
+	  }
+
+	  desc->set_seriesno(seriesno); //DGA: Set the the series number in desc
       _desc = desc;
-      _prev.CopyFrom(*_desc);
       updateDate();
       //ensurePathExists();
       notify();
