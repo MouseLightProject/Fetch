@@ -1,7 +1,7 @@
 Fetch
 =====
 
-Fetch is a program developed to image entire mouse brains by repeatedly alternating between imaging, and removing, the top brain layer. Fetch allows for control over the microscope, stage and brain slicing.
+Fetch is a program developed to image entire mouse brains by repeatedly alternating between imaging, and removing,the top brain layer. Fetch allows for control over the microscope, stage and brain slicing.
 
 
 System Requirements
@@ -26,8 +26,19 @@ Fetch is currently developed by David Ackerman.
 Version History
 _______________
 
-1.0    Aug 5, 2016    Initial commit, based on fully functional 					code from local microscope machine, written 				by Nathan Clack.
+1.0    Aug 5, 2016    Initial commit, based on fully functional 
+		      code from local microscope machine, written
+		      by Nathan Clack.
 
-1.01   Sep 7, 2016    Changed folder numbering so that numbering 					always increases, resetting to 0 when a 					new day begins; seriesno in .microscope 					file is now unused. Updated simulation mode 				so that a complete autotile simulation 					(exploration, surface find and image stack 					acquisition) is possible. Fixed issue with 					distance-to-edge calculation in Tiling.cpp. 				Added this README, and LICENSE from Nathan 					Clack's repository.
+1.01   Sep 7, 2016    Changed folder numbering so that numbering
+		      always increases, resetting to 0 when a
+		      new day begins; seriesno in .microscope
+		      file is now unused. Updated simulation mode
+		      so that a complete autotile simulation
+		      (exploration, surface find and image stack
+		      acquisition) is possible. Fixed issue with
+		      distance-to-edge calculation in Tiling.cpp.
+		      Added this README, and LICENSE from Nathan 
+		      Clack's repository.
                       
                       
