@@ -898,7 +898,7 @@ DoneOutlining:
 	
 	// DGA: maybeAndReserve will check if the tile is in bounds and valid. If it is, then it will mark the tile as reserved and return it, otherwise it will return NULL
 	// Before, tiles were reserved only after popped leading to them being pushed to the stack many times, leading to the allocation error being thrown
-	#define maybeAndReserve(p) ( (isvalid(p)&&isinbounds(p)) ? &(*(p) |=Reserved ):NULL)
+	#define maybeAndReserve(p) ( (isvalid(p)&&isinbounds(p)) ? &(*(p) |= Reserved ):NULL)
 
 	try
 	{ q.push(maybeAndReserve(c),0); // DGA: maybeAndReserve(c) will mark c as reserved and return it if it is valid and in bounds, NULL otherwise. c is then pushed as next tile in stack of e_t structs  
