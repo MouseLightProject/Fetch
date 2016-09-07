@@ -219,7 +219,7 @@ Error:
       template<class TPixel> unsigned int ScanStack<TPixel>::run    (IDevice *d)
       {
         device::Scanner3D *s = dynamic_cast<device::Scanner3D*>(d);
-        device::Digitizer::Config digcfg = s->_scanner2d._digitizer.get_config();
+        device::Digitizer::Config digcfg = s->_scanner2d._digitizer.get_config(); 
         unsigned int ecode=1;
         switch(digcfg.kind())
         {
@@ -402,7 +402,7 @@ Error:
 
         template<class TPixel>
         unsigned int fetch::task::scanner::ScanStack<TPixel>::run_simulated( device::Scanner3D *d )
-        {
+		{ 
           Chan *qdata = Chan_Open(d->_out->contents[0],CHAN_WRITE);
           Frame *frm   = NULL;
           device::SimulatedDigitizer *dig = d->_scanner2d._digitizer._simulated;
@@ -411,10 +411,11 @@ Error:
             d->_scanner2d.get_config().nscans()*2,
             3,TypeID<TPixel>());
           size_t nbytes;
-          int status = 1; // status == 0 implies success, error otherwise
-          f64 z_um,ummax,ummin,umstep;
+          int status = 0; // status == 0 implies success, error otherwise. DGA changed this from 1 to 0 so that it would not return an error during simulation mode
+		  f64 z_um, ummax, ummin, umstep;
+		  bool isTakingStack = false; //DGA: Used to determine if stack is being acquired 
 
-          nbytes = ref.size_bytes();
+		  nbytes = ref.size_bytes();
           Chan_Resize(qdata, nbytes);
           frm = (Frame*)Chan_Token_Buffer_Alloc(qdata);
           ref.format(frm);
@@ -422,8 +423,13 @@ Error:
           debug("Simulated Stack!"ENDL);
           HERE;
           d->_zpiezo.getScanRange(&ummin,&ummax,&umstep);
-          for(z_um=ummin+umstep;z_um<ummax && !d->_agent->is_stopping();z_um+=umstep)
-          //for(int d=0;d<100;++d)
+		  srand(GetCurrentThreadId()); //DGA: This is necessary because otherwise each thread starts with the same seed
+		  if (ummin != ummax){
+			  //Then it is taking a stack
+			  isTakingStack = true;
+		  }
+	
+		  for (z_um = ummin; ((ummax - z_um) / umstep) >= -0.5f && !d->_agent->is_stopping(); z_um += umstep) //DGA: Now this is inclusive of ummin and ummax
           { size_t pitch[4];
             size_t n[3];
             frm->compute_pitches(pitch);
@@ -431,29 +437,37 @@ Error:
 
             //Fill frame w random colors.
             { TPixel *c,*e;
-              const f32 low = TypeMin<TPixel>(),
-                       high = TypeMax<TPixel>(),
-                        ptp = high - low,
-                        rmx = RAND_MAX;
+			  const f32 low = TypeMin<TPixel>(),
+					   high = TypeMax<TPixel>(),
+						ptp = high - low,
+						rmx = RAND_MAX;
               c=e=(TPixel*)frm->data;
               e+=pitch[0]/pitch[3];
-              for(;c<e;++c)
-                *c = (TPixel) ((ptp*rand()/(float)RAND_MAX) + low);
-            }
-
-            if(CHAN_FAILURE( SCANNER_PUSH(qdata,(void**)&frm,nbytes) ))
-            { warning("Scanner output frame queue overflowed."ENDL"\tAborting acquisition task."ENDL);
-              goto Error;
-            }
-            ref.format(frm);
-            DBG("Task: ScanStack<%s>: pushing frame"ENDL,TypeStr<TPixel>());
-          }
+			  for (; c < e; ++c){
+				  if (!isTakingStack){ //DGA: Then it is not taking a stack
+					  *c = (TPixel)((ptp*rand() / (float)RAND_MAX) + low); //DGA: When not in surface find mode, just do the normal frame generation
+				  }
+				  else{
+					  // DGA: In surface find mode, this ensures the surface is not found in the first frame and will likely be found in the middle of stack and the stage should move up
+					  // such that the surface would be expected in the next first frame
+					  *c = (TPixel)(((ptp*rand() / (float)RAND_MAX)*((z_um - ummin) / (ummax - ummin))) + low);
+				 }
+			  }
+			}
+			
+		    if (CHAN_FAILURE(SCANNER_PUSH(qdata, (void**)&frm, nbytes)))
+		    { warning("Scanner output frame queue overflowed."ENDL"\tAborting acquisition task."ENDL);
+			    goto Error;
+		    }
+		    ref.format(frm);
+		    DBG("Task: ScanStack<%s>: pushing frame"ENDL, TypeStr<TPixel>());
+		  }
           HERE;
-Finalize:
-          Chan_Close(qdata);
+	  Finalize:
+		  Chan_Close(qdata);
           free( frm );
           return status; // status == 0 implies success, error otherwise
-Error:
+	  Error:
           warning("Error occurred during ScanStack<%s> task."ENDL,TypeStr<TPixel>());
           goto Finalize;
         }

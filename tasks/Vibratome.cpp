@@ -115,21 +115,21 @@ namespace microscope {
     CHK( (v = dc->vibratome()->feed_vel_mm_p_s())>0.0); // must be non-zero
 
     // Move to the start of the cut
-    bz = cz-dz+thick;
+    bz = cz-dz+thick;								// cut z position = Current Z - delta Z offset + requested slice thickness
     CHK( dc->stage()->setPos(cx,cy,14));           // Drop to safe z first
-    CHK( dc->stage()->setPos(ax,ay,14));           // Move on safe z plane
-    CHK( dc->stage()->setPos(ax,ay,bz));            // Move to final plane
+    CHK( dc->stage()->setPos(ax,ay,14));           // Move on safe z plane to cut position
+    CHK( dc->stage()->setPos(ax,ay,bz));            // Move to final plane (bz)
 
     // do the cut
     unsigned feedaxis=dc->vibratome()->getFeedAxis();
     CHK( dc->stage()->prepareForCut(feedaxis));     // adjust stage parameters to ensure stead motion during cut
     CHK( dc->vibratome()->start());
     CHK( dc->stage()->setVelocity(v));              // set feed velocity
-    CHK( dc->stage()->setPos(bx,by,bz));            // feed
+    CHK( dc->stage()->setPos(bx,by,bz));            // feed (Move to end of cut position)
     CHK( dc->stage()->setPos(bx,by,14));  // Drop to safe z first, come up at an angle -- Note: vibratome still running!
                                   //(0 to 12)   
     CHK( dc->stage()->setVelocity(vx,vy,vz));       // set back to default velocity
-    CHK( dc->vibratome()->stop());
+    CHK( dc->vibratome()->stop());					// turn off vibratome
     CHK( dc->stage()->doneWithCut(feedaxis));       // reset stage parameters
 
     // Move back

@@ -735,7 +735,7 @@ Error:
   }
 
   static int is_in_bounds(const SimulatedStage::Config& cfg, int iaxis, float v)
-  { return (cfg.axis(iaxis).min_mm()<=v) && (v<=cfg.axis(iaxis).max_mm());
+  {return (cfg.axis(iaxis).min_mm()<=v) && (v<=cfg.axis(iaxis).max_mm());
   }
 
   int SimulatedStage::setPos( float x, float y, float z,int sleep_ms )

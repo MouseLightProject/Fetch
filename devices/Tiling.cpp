@@ -833,7 +833,7 @@ DoneOutlining:
   //
 
   class q_t
-  { typedef struct e_t_ {int dist; uint32_t *tile; struct e_t_* next;}* e_t;
+  { typedef struct e_t_ {int dist; uint32_t *tile; struct e_t_* next;}* e_t; //DGA: e_t can now be used such that eg. e_t head is equivalent to e_t_ * head (a pointer to e_t_)
     e_t head,tail;
 
     // block allocate elements
@@ -845,34 +845,34 @@ DoneOutlining:
       estore_i++;
       if(estore_i>=estore_sz)
         return 0;
-      return estore+(estore_i-1);
+      return estore+(estore_i-1); // DGA: go to next address (a_pointer+a_number is actually a_pointer + (a_number*sizeof(*a_pointer))
     }
     void free_elem(e_t e) { /* release element -- no op */ }
     e_t bind(uint32_t* v,int dist) {
-      e_t e=elem();
-      if(!e) return 0;
-      e->tile=v; e->next=NULL; e->dist=dist;
+      e_t e=elem(); // DGA: e is a pointer to e_t_ structure, whose value is the next memory address
+      if(!e) return 0; // DGA: if estore_i exceeded estore_sz, then something went wrong and return 0
+      e->tile=v; e->next=NULL; e->dist=dist; // DGA: set the tile to the input tile, set next to null and dist to dist
       return e;
     }
   public:
     q_t(size_t n):head(0),tail(0),estore(0),estore_sz(n),estore_i(0) {estore=(e_t)calloc(n,sizeof(struct e_t_));}
     ~q_t() { free(estore); } //e_t e=head; while(e) {e_t t=e->next; free_elem(e); e=t; } estore_i=0;}
     q_t* push(uint32_t* v, int dist) throw(const char*) {
-      e_t e=0;
+      e_t e=0; // DGA: Creates e, which is a pointer to an e_t_ struct, initialized to NULL
       if(!v) return this; // no-op -- to allow implicit filtering of inputs
-      e=bind(v,dist);
+      e=bind(v,dist); // DGA: Makes e at the next address, with tile v and dist=dist
       if(!e) throw "allocation error";    // memory allocation error
       if(!head) { head=tail=e; }          // first elem. must test head bc of how I pop
-      else      { tail->next=e; tail=e;}
-      return this;
+      else      { tail->next=e; tail=e;}  // DGA: sets tail->next to e; then sets tail to e. Thus, each e points to next one in stack
+      return this; // DGA: Returns the current object (the whole stack)
     }
     uint32_t* pop(int *dist) {
-      uint32_t* v=0;
-      int d=-1;
-      e_t e=head;
-      if(head) { head=head->next; v=e->tile; d=e->dist; free_elem(e);}
-      if(dist) *dist=d;
-      return v;
+      uint32_t* v=0; // DGA: creates null tile pointer
+      int d=-1; // DGA: Initialize d to -1
+      e_t e=head; // DGA: e is now the head of the stack
+      if(head) { head=head->next; v=e->tile; d=e->dist; free_elem(e);} // DGA: If head is not NULL pointer, then head points to the next element in stack, v is the tile corresponding to the initial head, d is the initial head's distance
+      if(dist) *dist=d; // DGA: If dist is not NULL, then distance equals d (ie. the distance from the reference to the tile being popped)
+      return v; // DGA: Returns the tile
     }
   };
 
@@ -884,25 +884,31 @@ DoneOutlining:
     const unsigned w=attr_->dims[0],
                    h=attr_->dims[1];
     const int offsets[] = {-w-1,-w,-w+1,-1,1,w-1,w,w+1}; // moves
-    uint32_t *c = AUINT32(attr_)+cursor_,
-             *beg = AUINT32(attr_)+current_plane_offset_,
-             *end = beg+sz_plane_nelem_;    
-    q_t q(w*h);
+	uint32_t *c = AUINT32(attr_) + cursor_, // DGA: Current tile address?
+		   	 *beg = AUINT32(attr_) + current_plane_offset_, // DGA: First tile in current plane
+		     *end = beg + sz_plane_nelem_; // DGA: Last tile in current plane, sz_plane_nelem_ is number of tiles in plane
+    q_t q(w*h); // DGA: q is of class q_t with input size n = width * height (number of frames?). class variable estore_i set to 0
     
     for(uint32_t *t=(uint32_t*)beg;t<end;++t) // Reset Reserved
-      *t = t[0]&~Reserved;
+      *t = t[0]&~Reserved; // DGA: Mark all the tiles as not reserved (Reserved = 512, eg 1000000000, so ~Reserved = 0111111111, resets 10th bit to 0?)
 
     #define isvalid(p)    ((*(p)&(search_mask|Reserved)) == search_flags)
     #define isinbounds(p) (beg<=(p) && (p)<end)
     #define maybe(p)      ( (isvalid(p)&&isinbounds(p)) ?(p):NULL)
-    try
-    { q.push(maybe(c),0);
-      while(c=q.pop(&dist))
-      { *c |= Reserved; // mark it as looked at
-        if((*c&query_mask)==query_flags) {goto Finalize;}
-        for(int i=0;i<countof(offsets);++i)
-          q.push(maybe(c+offsets[i]),dist+1);
-      }
+	
+	// DGA: maybeAndReserve will check if the tile is in bounds and valid. If it is, then it will mark the tile as reserved and return it, otherwise it will return NULL
+	// Before, tiles were reserved only after popped leading to them being pushed to the stack many times, leading to the allocation error being thrown
+	#define maybeAndReserve(p) ( (isvalid(p)&&isinbounds(p)) ? &(*(p) |= Reserved ):NULL)
+
+	try
+	{ q.push(maybeAndReserve(c),0); // DGA: maybeAndReserve(c) will mark c as reserved and return it if it is valid and in bounds, NULL otherwise. c is then pushed as next tile in stack of e_t structs  
+	  while(c=q.pop(&dist)) // DGA: Pops off the head, setting c to the pointer to the former head's tile, continuing in loop if it is not the NULL pointer
+      {// *c |= Reserved; // mark it as looked at. DGA: sets 10th? bit to 1, so you don't recheck them when searching
+        if((*c&query_mask)==query_flags) {goto Finalize;} // DGA: If condition met, then will return distance
+		for (int i = 0; i < countof(offsets); ++i){
+			q.push(maybeAndReserve(c + offsets[i]), dist + 1); // DGA: Push all the neighbors of c to the stack, with a distance of c's distance+1 (only if they are valid, inbounds); they are also marked as reserved
+		}
+      } // DGA: Stops when no more tiles found that are inbounds and valid
       dist=0; // - no tiles found or started in a bad spot
     }
     catch(const char* msg)
