@@ -40,5 +40,6 @@ _______________
 		      distance-to-edge calculation in Tiling.cpp.
 		      Added this README, and LICENSE from Nathan 
 		      Clack's repository.
-                      
+
+1.011  Sep 7, 2016    Fixed README formatting.
                       
