@@ -1,0 +1,33 @@
+Fetch
+=====
+
+Fetch is a program developed to image entire mouse brains by repeatedly alternating between imaging, and removing, the top brain layer. Fetch allows for control over the microscope, stage and brain slicing.
+
+
+System Requirements
+___________________
+
+64-bit Windows 7
+Microsoft Visual Studio 12 2013
+QT 5.5
+NVIDIA CUDA 7.0 and higher
+CMAKE
+Currently, only the src directory is located in this repository; other directories are required but are too large to include in github.
+
+
+Authors
+_______
+
+Fetch was developed at the HHMI Janelia Research Campus. It was written by Nathan Clack, and the original repository can be found on his github:(https://github.com/TeravoxelTwoPhotonTomography/fetch).
+
+Fetch is currently developed by David Ackerman.
+
+
+Version History
+_______________
+
+1.0    Aug 5, 2016    Initial commit, based on fully functional 					code from local microscope machine, written 				by Nathan Clack.
+
+1.01   Sep 7, 2016    Changed folder numbering so that numbering 					always increases, resetting to 0 when a 					new day begins. Updated simulation mode so 					that a complete autotile simulation 						(exploration, surface find and image stack 					acquisition) is possible. Fixed issue with 					distance-to-edge calculation. Added this 					README, and LICENSE from Nathan Clack's 					repository.
+                      
+                      
