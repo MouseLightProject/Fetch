@@ -66,8 +66,8 @@ namespace ui {
       virtual void updateComboBox(QWidget *source) =0;
       virtual void setByDoubleSpinBox   (QWidget *source) =0;
       virtual void updateByDoubleSpinBox(QWidget *source) =0;
-	  virtual void setByCheckBox	    (QWidget *source) = 0;
-	  virtual void updateCheckBox       (QWidget *source) = 0;
+//	  virtual void setByCheckBox	    (QWidget *source) = 0;
+//	  virtual void updateCheckBox       (QWidget *source) = 0;
 
   };
 
@@ -81,12 +81,12 @@ namespace ui {
       QLineEdit      *createLineEdit();
       QDoubleSpinBox *createDoubleSpinBox();
       QComboBox      *createComboBox();
-	  QCheckBox		 *createCheckBox();
+//	  QCheckBox		 *createCheckBox();
       QLabel         *createLabelAndAddToLayout(QFormLayout *layout);
       QLineEdit      *createLineEditAndAddToLayout(QFormLayout *layout);
       QDoubleSpinBox *createDoubleSpinBoxAndAddToLayout(QFormLayout *layout);
       QComboBox      *createComboBoxAndAddToLayout(QFormLayout *layout);
-	  QCheckBox		 *createCheckBoxAndAddToLayout(QFormLayout *layout);
+//	  QCheckBox		 *createCheckBoxAndAddToLayout(QFormLayout *layout);
 
     protected:
       void updateLabel          (QWidget *source);
@@ -96,8 +96,8 @@ namespace ui {
       void updateComboBox       (QWidget *source);
       void setByDoubleSpinBox   (QWidget *source);
       void updateByDoubleSpinBox(QWidget *source);
-	  void setByCheckBox		(QWidget *source);
-	  void updateCheckBox		(QWidget *source);
+//	  void setByCheckBox		(QWidget *source);
+//	  void updateCheckBox		(QWidget *source);
 
 
     protected:
@@ -111,7 +111,7 @@ namespace ui {
       QSignalMapper lineEditSignalMapper_;
       QSignalMapper comboBoxSignalMapper_;
       QSignalMapper doubleSpinBoxSignalMapper_;
-	  QSignalMapper checkBoxSignalMapper_;
+//	  QSignalMapper checkBoxSignalMapper_;
       QSignalMapper configUpdateSignalMapper_;
 
   };
@@ -211,14 +211,14 @@ namespace ui {
   DECL_GETSET_CLASS(GetSetAutoTileChan             ,device::Microscope,unsigned);
   DECL_GETSET_CLASS(GetSetAutoTileIntesityThreshold,device::Microscope,float);
   DECL_GETSET_CLASS(GetSetAutoTileAreaThreshold    ,device::Microscope,float);
-  DECL_GETSET_CLASS(GetSetAutoTileUseCurrentZ      ,device::Microscope,bool);
+//  DECL_GETSET_CLASS(GetSetAutoTileUseCurrentZ      ,device::Microscope,bool);
   typedef DevicePropController<device::Microscope,float   ,GetSetAutoTileZOff>              AutoTileZOffController;
   typedef DevicePropController<device::Microscope,float   ,GetSetAutoTileZMax>              AutoTileZMaxController;
   typedef DevicePropController<device::Microscope,unsigned,GetSetAutoTileTimeoutMs>         AutoTileTimeoutMsController;
   typedef DevicePropController<device::Microscope,unsigned,GetSetAutoTileChan>              AutoTileChanController;
   typedef DevicePropController<device::Microscope,float   ,GetSetAutoTileIntesityThreshold> AutoTileIntensityThresholdController;
   typedef DevicePropController<device::Microscope,float   ,GetSetAutoTileAreaThreshold>     AutoTileAreaThresholdController;
-  typedef DevicePropController<device::Microscope,bool    ,GetSetAutoTileUseCurrentZ>		AutoTileUseCurrentZController;
+//  typedef DevicePropController<device::Microscope,bool    ,GetSetAutoTileUseCurrentZ>		AutoTileUseCurrentZController;
 }} //end fetch::ui
 
   ////////////////////////////////////////////////////////////////////////////
@@ -264,8 +264,8 @@ namespace ui {
     connect(&doubleSpinBoxSignalMapper_,SIGNAL(mapped(QWidget*)),this,SLOT(setByDoubleSpinBox(QWidget*)));
     connect(&configUpdateSignalMapper_,SIGNAL(mapped(QWidget*)),this,SLOT(updateByDoubleSpinBox(QWidget*)));    
 
-	connect(&checkBoxSignalMapper_, SIGNAL(mapped(QWidget*)), this, SLOT(setByCheckBox(QWidget*)));
-	connect(&configUpdateSignalMapper_, SIGNAL(mapped(QWidget*)), this, SLOT(updateCheckBox(QWidget*)));
+//	connect(&checkBoxSignalMapper_, SIGNAL(mapped(QWidget*)), this, SLOT(setByCheckBox(QWidget*)));
+//	connect(&configUpdateSignalMapper_, SIGNAL(mapped(QWidget*)), this, SLOT(updateCheckBox(QWidget*)));
 
     connect(parent,SIGNAL(configUpdated()),this,SIGNAL(configUpdated()));
   }
@@ -359,28 +359,28 @@ namespace ui {
     }
   }
 
-  template<typename TDevice, typename TConfig, class TGetSetInterface>
-  void DevicePropController<TDevice, TConfig, TGetSetInterface>::
-    setByCheckBox(QWidget* source)
-  {
-	  QCheckBox* w = qobject_cast<QCheckBox*>(source);
-	  if (!w) return;
-	//  TConfig v = (TConfig) (w->isChecked());
-	 // interface_.Set_(dc_, v);
-	  w->setText("blahblah");
-  }
+ // template<typename TDevice, typename TConfig, class TGetSetInterface>
+ // void DevicePropController<TDevice, TConfig, TGetSetInterface>::
+ //   setByCheckBox(QWidget* source)
+ // {
+	//  QCheckBox* w = qobject_cast<QCheckBox*>(source);
+	//  if (!w) return;
+	////  TConfig v = (TConfig) (w->isChecked());
+	// // interface_.Set_(dc_, v);
+	//  w->setText("blahblah");
+ // }
 
-  template<typename TDevice, typename TConfig, class TGetSetInterface>
-  void DevicePropController<TDevice, TConfig, TGetSetInterface>::
-	  updateCheckBox(QWidget* source)
-  {
-	  QCheckBox* w = qobject_cast<QCheckBox*>(source);
-	  if (w)
-	  { //bool v = interface_.Get_(dc_);
-		w->setChecked(true);
-		w->setText("blahblah");
-	  }
-  }
+  //template<typename TDevice, typename TConfig, class TGetSetInterface>
+  //void DevicePropController<TDevice, TConfig, TGetSetInterface>::
+	 // updateCheckBox(QWidget* source)
+  //{
+	 // QCheckBox* w = qobject_cast<QCheckBox*>(source);
+	 // if (w)
+	 // { //bool v = interface_.Get_(dc_);
+		//w->setChecked(true);
+		//w->setText("blahblah");
+	 // }
+  //}
 
   template<typename TDevice, typename TConfig, class TGetSetInterface>
   QLabel* 
@@ -466,35 +466,35 @@ namespace ui {
     return cmb_;
   }
 
-  template<typename TDevice, typename TConfig, class TGetSetInterface>
-  QCheckBox* DevicePropController<TDevice, TConfig, TGetSetInterface>::
-	  createCheckBox()
-  {
-	  QCheckBox * cb_ = new QCheckBox();
-	 /* cb_->setEnabled(false);
-	  QStateMachine *useCurrentZmachine = new QStateMachine(this);
-	  QState *doUseCurrentZ = new QState(),
-		  *doNotUseCurrentZ = new QState();
-	  doUseCurrentZ->addTransition(cb_, SIGNAL(stateChanged(int)), doNotUseCurrentZ);
-	  doNotUseCurrentZ->addTransition(cb_, SIGNAL(stateChanged(int)), doUseCurrentZ);
-	  //doUseCurrentZ->assignProperty(b, "text", "Using Current Z");
-	  //doNotUseCurrentZ->assignProperty(b, "text", "Not Using Current Z");
+  //template<typename TDevice, typename TConfig, class TGetSetInterface>
+  //QCheckBox* DevicePropController<TDevice, TConfig, TGetSetInterface>::
+	 // createCheckBox()
+  //{
+	 // QCheckBox * cb_ = new QCheckBox();
+	 ///* cb_->setEnabled(false);
+	 // QStateMachine *useCurrentZmachine = new QStateMachine(this);
+	 // QState *doUseCurrentZ = new QState(),
+		//  *doNotUseCurrentZ = new QState();
+	 // doUseCurrentZ->addTransition(cb_, SIGNAL(stateChanged(int)), doNotUseCurrentZ);
+	 // doNotUseCurrentZ->addTransition(cb_, SIGNAL(stateChanged(int)), doUseCurrentZ);
+	 // //doUseCurrentZ->assignProperty(b, "text", "Using Current Z");
+	 // //doNotUseCurrentZ->assignProperty(b, "text", "Not Using Current Z");
 
-	  useCurrentZmachine->addState(doUseCurrentZ);
-	  useCurrentZmachine->addState(doNotUseCurrentZ);
-	  cb_->setCheckState(Qt::Unchecked);
-	  useCurrentZmachine->setInitialState(doNotUseCurrentZ);
-	  useCurrentZmachine->start();*/
+	 // useCurrentZmachine->addState(doUseCurrentZ);
+	 // useCurrentZmachine->addState(doNotUseCurrentZ);
+	 // cb_->setCheckState(Qt::Unchecked);
+	 // useCurrentZmachine->setInitialState(doNotUseCurrentZ);
+	 // useCurrentZmachine->start();*/
 
-	  checkBoxSignalMapper_.setMapping(cb_, cb_);
-	  connect(cb_, SIGNAL(stateChanged(int)), &checkBoxSignalMapper_, SLOT(map()));
-	  //connect(cb_, SIGNAL(editingFinished()), this, SLOT(report()));
+	 // checkBoxSignalMapper_.setMapping(cb_, cb_);
+	 // connect(cb_, SIGNAL(stateChanged(int)), &checkBoxSignalMapper_, SLOT(map()));
+	 // //connect(cb_, SIGNAL(editingFinished()), this, SLOT(report()));
 
-	  configUpdateSignalMapper_.setMapping(this, cb_);
-	  connect(this, SIGNAL(configUpdated()), &configUpdateSignalMapper_, SLOT(map()));
+	 // configUpdateSignalMapper_.setMapping(this, cb_);
+	 // connect(this, SIGNAL(configUpdated()), &configUpdateSignalMapper_, SLOT(map()));
 
-	  return cb_;
-  }
+	 // return cb_;
+  //}
 
 
   template<typename TDevice, typename TConfig, class TGetSetInterface>
@@ -531,12 +531,12 @@ namespace ui {
     return w;
   }  
 
-  template<typename TDevice, typename TConfig, class TGetSetInterface>
-  QCheckBox* DevicePropController<TDevice, TConfig, TGetSetInterface>::
-	  createCheckBoxAndAddToLayout(QFormLayout *layout)
-  {
-	  QCheckBox *w = createCheckBox();
-	  layout->addRow(label_, w);
-	  return w;
-  }
+  //template<typename TDevice, typename TConfig, class TGetSetInterface>
+  //QCheckBox* DevicePropController<TDevice, TConfig, TGetSetInterface>::
+	 // createCheckBoxAndAddToLayout(QFormLayout *layout)
+  //{
+	 // QCheckBox *w = createCheckBox();
+	 // layout->addRow(label_, w);
+	 // return w;
+  //}
 }} //end fetch::ui

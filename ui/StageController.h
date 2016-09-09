@@ -252,6 +252,7 @@ namespace ui {
 
       void updateTiling()                                                  { tiling_controller_.update();}
       //void invalidateTiling()                                              { tiling_controller_.update();}
+	  void toggleUseCurrentZ(bool checkStatus)							   { stage_->_useCurrentZ = checkStatus; }
 
     private:
 

@@ -161,7 +161,7 @@ fetch::ui::MainWindow::MainWindow(device::Microscope *dc)
   _autotile_chan_control             = new AutoTileChanController(dc,"Channel to threshold",this);
   _autotile_intensity_thresh_control = new AutoTileIntensityThresholdController(dc,"Intensity threshold",this);
   _autotile_area_thresh_control      = new AutoTileAreaThresholdController(dc,"Area threshold (0-1)",this);
-  _autotile_use_current_z			 = new AutoTileUseCurrentZController(dc, "Use Current Z", this);
+ // _autotile_use_current_z			 = new AutoTileUseCurrentZController(dc, "Use Current Z", this);
 
 
   connect(_stageController,SIGNAL(moved()),          _stage_pos_x_control,SIGNAL(configUpdated()));

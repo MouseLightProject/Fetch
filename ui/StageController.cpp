@@ -665,6 +665,15 @@ void fetch::ui::TilingController::dilateActive()
     t->dilateActive(iplane);
 }
 
+//void fetch::ui::TilingController::toggleUseCurrentZ()
+//{
+//	device::StageTiling *t;
+//	if (!stage_) return;
+//	size_t iplane = stage_->getPosInLattice().z();
+//	if (t = stage_->tiling())
+//		t->dilateActive(iplane);
+//}
+
 //////////////////////////////////////////////////////////////////////////
 ///  PlanarStageController
 //////////////////////////////////////////////////////////////////////////

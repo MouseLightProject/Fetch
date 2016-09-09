@@ -41,8 +41,6 @@ namespace fetch
 
           unsigned int config(device::Microscope *agent);
           unsigned int    run(device::Microscope *agent);
-
-		  bool useCurrentZ;
       };
 
     }  // namespace microscope

@@ -15,6 +15,7 @@ namespace ui {
                      "\tA QValidator should be attached to avoid this problem.\r\n"); \
     return v
 
+
 template<> u8   QStringToValue<u8   >(QString &s,bool *ok) { CVT(u8 ,toUShort);}
 template<> u16  QStringToValue<u16  >(QString &s,bool *ok) { CVT(u16,toUShort);}
 template<> u32  QStringToValue<u32  >(QString &s,bool *ok) { CVT(u32,toUInt);}
@@ -46,7 +47,6 @@ template<> double doubleToValue(double v){return v;}
 template<> float  doubleToValue(double v){return v;}
 template<> int doubleToValue(double v){return (int)v;}
 template<> unsigned int doubleToValue(double v){return (unsigned int)v;}
-
 template<> cfg::device::Vibratome::VibratomeFeedAxis doubleToValue(double v) { return (v>0.5)?cfg::device::Vibratome_VibratomeFeedAxis_X:cfg::device::Vibratome_VibratomeFeedAxis_Y;}
 
 void DevicePropControllerBase::report() 
@@ -488,20 +488,20 @@ QValidator* GetSetAutoTileAreaThreshold::createValidator_(QObject* parent)
 { return new QDoubleValidator(0.0, 1.0, 3, parent);
 }
 
-void GetSetAutoTileUseCurrentZ::Set_(device::Microscope *dc, bool &v)
-{
-	//dc->_usingCurrentZ = v;
-}
-bool GetSetAutoTileUseCurrentZ::Get_(device::Microscope *dc)
-{
-	//return dc->_usingCurrentZ;
-	/*float x, y, z;
-	dc->getTarget(&x, &y, &z);*/
-	return true;
-}
-QValidator* GetSetAutoTileUseCurrentZ::createValidator_(QObject* parent)
-{ return new QDoubleValidator(0.0, 10.0, 1, parent);
-}
+//void GetSetAutoTileUseCurrentZ::Set_(device::Microscope *dc, bool &v)
+//{
+//	//dc->_usingCurrentZ = v;
+//}
+//bool GetSetAutoTileUseCurrentZ::Get_(device::Microscope *dc)
+//{
+//	//return dc->_usingCurrentZ;
+//	/*float x, y, z;
+//	dc->getTarget(&x, &y, &z);*/
+//	return true;
+//}
+//QValidator* GetSetAutoTileUseCurrentZ::createValidator_(QObject* parent)
+//{ return new QDoubleValidator(0.0, 10.0, 1, parent);
+//}
 
 
 }} //end fetch::ui

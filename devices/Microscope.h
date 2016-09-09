@@ -174,10 +174,6 @@ namespace fetch
       Agent __scan_agent;
       Agent __io_agent;
       Agent __vibratome_agent;
-
-	public:
-		void useCurrentZ();
-		bool _usingCurrentZ;
     };
     //end namespace fetch::device
   }

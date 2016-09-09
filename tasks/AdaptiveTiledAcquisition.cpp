@@ -110,10 +110,9 @@ Error:
 
         device::StageTiling* tiling = dc->stage()->tiling();
 
-
         // 1. iterate over tiles to measure the average tile offset
         tiling->resetCursor();
-        while(eflag==0 && !dc->_agent->is_stopping() && tiling->nextInPlanePosition(tilepos))
+        while(eflag==0 && !dc->_agent->is_stopping() && tiling->nextInPlanePosition(tilepos) && !dc->stage_._useCurrentZ)
         {           
           if(adapt_mindist<=tiling->minDistTo( 0,0,  // domain query   -- do not restrict to a particular tile type
                      device::StageTiling::Active,0)) // boundary query -- this is defines what is "outside"
