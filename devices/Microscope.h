@@ -82,7 +82,6 @@ namespace fetch
       std::string _lastpath;
       cfg::FileSeries __default_desc;
       bool _is_valid;
-	  bool _haveBeenInIncMethod;
 
       void notify();
 
@@ -175,6 +174,10 @@ namespace fetch
       Agent __scan_agent;
       Agent __io_agent;
       Agent __vibratome_agent;
+
+	public:
+		void useCurrentZ();
+		bool _usingCurrentZ;
     };
     //end namespace fetch::device
   }

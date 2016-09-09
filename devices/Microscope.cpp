@@ -58,6 +58,7 @@ namespace fetch
       ,surface_finder()
       ,trash("Trash")
       ,_end_of_pipeline(0)
+	  , _usingCurrentZ(false)
     {
       set_config(_config);
       pipeline.set_scan_rate_Hz(_config->scanner3d().scanner2d().frequency_hz());
@@ -85,6 +86,7 @@ namespace fetch
       ,trash("Trash")
       ,file_series()
       ,_end_of_pipeline(0)
+	  , _usingCurrentZ(false)
     {
       set_config(cfg);
       pipeline.set_scan_rate_Hz(_config->scanner3d().scanner2d().frequency_hz());
@@ -111,6 +113,7 @@ namespace fetch
       ,trash("Trash")
       ,file_series(cfg->mutable_file_series())
       ,_end_of_pipeline(0)
+	  ,_usingCurrentZ(false)
     {
       pipeline.set_scan_rate_Hz(_config->scanner3d().scanner2d().frequency_hz());
       pipeline.set_sample_rate_MHz(scanner.get2d()->_digitizer.sample_rate_MHz());
@@ -457,6 +460,11 @@ Error:
 Error:
       return 0;
     }
+
+	void Microscope::useCurrentZ()
+	{
+		_usingCurrentZ = !_usingCurrentZ;
+	}
 
     ///////////////////////////////////////////////////////////////////////
     // FileSeries

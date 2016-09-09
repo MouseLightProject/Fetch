@@ -235,8 +235,10 @@ Error:
         { 
           if(cfg.use_explore())
             CHKJMP(explore(dc));       // will return an error if no explorable tiles found on the plane
-          CHKJMP(   tile->config(dc));
-          CHKJMP(0==tile->run(dc));
+		  if (!dc->_usingCurrentZ){
+			  CHKJMP(tile->config(dc));
+			  CHKJMP(0 == tile->run(dc));
+		  }
 
           /* Assert the trip detector hasn't gone off.  
            * Trip detector will signal acq task and microscope tasks to stop, but 
