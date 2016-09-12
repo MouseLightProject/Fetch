@@ -236,6 +236,7 @@ namespace device {
       void     set_tiling_z_offset_mm(float dz_mm);
       void     inc_tiling_z_offset_mm(float dz_mm);
       void     getLastTarget         ( float *x, float *y, float *z)        { cfg::device::Point3d r=_config->last_target_mm(); *x=r.x();*y=r.y();*z=r.z(); }
+	  void	   enableCheckBox(bool enabled)									{ _notifyAutoTileImagingStopped(enabled); }
 
               void addListener(StageListener *listener);
               void delListener(StageListener *listener);
@@ -252,6 +253,7 @@ namespace device {
       void    _notifyReferenced();
       void    _notiveVelocityChanged();
       void    _notifyFOVGeometryChanged();
+	  void	  _notifyAutoTileImagingStopped(bool enabled);
   };
 
   //////////////////////////////////////////////////////////////////////
@@ -290,6 +292,8 @@ namespace device {
     virtual void moved() {}                                                  ///< the stage position changed
     virtual void referenced() {}                                             ///< the stage was referenced
     virtual void velocityChanged() {}                                        ///< the velocity set for an axis changed
+	
+	virtual void autoTileImagingStopped(bool enabled) {}								 ///< auto tile imaging was stopped in the middle of imaging
   };
 
   // end namespace fetch::Device

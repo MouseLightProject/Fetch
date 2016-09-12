@@ -245,6 +245,8 @@ Error:
           CHKJMP(dc->trip_detect.ok());
 
           CHKJMP(   cut.config(dc));
+		  
+	//	  bool isit = dc->moving
           CHKJMP(0==cut.run(dc));
         }
 

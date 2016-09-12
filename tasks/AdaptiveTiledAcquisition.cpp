@@ -102,6 +102,8 @@ Error:
         Vector3f tilepos;
         float tiling_offset_acc_mm=0.0f;
         float nsamp=0;
+		int nactive = 0, nimaged = 0;
+		bool startedImaging = false;
         int adapt_count=0;
         int adapt_thresh=dc->get_config().adaptive_tiling().every();
         int adapt_mindist=dc->get_config().adaptive_tiling().mindist();
@@ -113,7 +115,7 @@ Error:
         // 1. iterate over tiles to measure the average tile offset
         tiling->resetCursor();
         while(eflag==0 && !dc->_agent->is_stopping() && tiling->nextInPlanePosition(tilepos) && !dc->stage_._useCurrentZ)
-        {           
+        { nactive++;          
           if(adapt_mindist<=tiling->minDistTo( 0,0,  // domain query   -- do not restrict to a particular tile type
                      device::StageTiling::Active,0)) // boundary query -- this is defines what is "outside"
 		  {
@@ -152,13 +154,14 @@ Error:
           dc->stage()->set_tiling_z_offset_mm(tiling_offset_acc_mm/nsamp);
         }
 
-        // retore connection between end of pipeline and disk 
+		// retore connection between end of pipeline and disk 
         IDevice::connect(&dc->disk,0,dc->_end_of_pipeline,0);
 
         // 2. iterate over tiles to image
         tiling->resetCursor();
         while(eflag==0 && !dc->_agent->is_stopping() && tiling->nextInPlanePosition(tilepos))
-        { TS_TIC;
+        { startedImaging = true; nimaged++;
+		  TS_TIC;
           debug("%s(%d)"ENDL "\t[Adaptive Tiling Task] tilepos: %5.1f %5.1f %5.1f"ENDL,__FILE__,__LINE__,tilepos[0],tilepos[1],tilepos[2]);
           filename = dc->stack_filename();
           dc->file_series.ensurePathExists();
@@ -214,6 +217,9 @@ Error:
           TS_TOC;          
         } // end loop over tiles
         eflag |= dc->stopPipeline();           // wait till the  pipeline stops
+		if (nimaged < nactive && startedImaging)
+			dc->stage_.enableCheckBox(true);
+
         TS_CLOSE;
         return eflag;
 Error:

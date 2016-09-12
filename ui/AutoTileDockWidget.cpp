@@ -14,7 +14,7 @@ namespace ui{
 
 	///// Use Current Z Checkbox Control
 	QCheckBox *b = new QCheckBox();
-	//b->setEnabled(false);
+	b->setEnabled(false);
 	QStateMachine *useCurrentZmachine = new QStateMachine(this);
 	QState *doUseCurrentZ = new QState(),
 		*doNotUseCurrentZ = new QState();
@@ -41,6 +41,7 @@ namespace ui{
 //	QObject::connect(b, SIGNAL(stateChanged(int)), &parent->_scope_state_controller, SLOT());
 
 	QObject::connect(b, SIGNAL(clicked(bool)), parent->_stageController, SLOT(toggleUseCurrentZ(bool)));
+	QObject::connect((parent->_stageController->tiling())->listener(), SIGNAL(sig_autoTileImagingStopped(bool)), b, SLOT(setEnabled(bool)), Qt::QueuedConnection);
 	form->addRow("Use Current Z: ", b);
     AgentControllerButtonPanel *btns = new AgentControllerButtonPanel(&parent->_scope_state_controller,&dc->auto_tile_task);
     form->addRow(btns);
