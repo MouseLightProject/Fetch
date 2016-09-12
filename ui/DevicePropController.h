@@ -211,14 +211,12 @@ namespace ui {
   DECL_GETSET_CLASS(GetSetAutoTileChan             ,device::Microscope,unsigned);
   DECL_GETSET_CLASS(GetSetAutoTileIntesityThreshold,device::Microscope,float);
   DECL_GETSET_CLASS(GetSetAutoTileAreaThreshold    ,device::Microscope,float);
-//  DECL_GETSET_CLASS(GetSetAutoTileUseCurrentZ      ,device::Microscope,bool);
   typedef DevicePropController<device::Microscope,float   ,GetSetAutoTileZOff>              AutoTileZOffController;
   typedef DevicePropController<device::Microscope,float   ,GetSetAutoTileZMax>              AutoTileZMaxController;
   typedef DevicePropController<device::Microscope,unsigned,GetSetAutoTileTimeoutMs>         AutoTileTimeoutMsController;
   typedef DevicePropController<device::Microscope,unsigned,GetSetAutoTileChan>              AutoTileChanController;
   typedef DevicePropController<device::Microscope,float   ,GetSetAutoTileIntesityThreshold> AutoTileIntensityThresholdController;
   typedef DevicePropController<device::Microscope,float   ,GetSetAutoTileAreaThreshold>     AutoTileAreaThresholdController;
-//  typedef DevicePropController<device::Microscope,bool    ,GetSetAutoTileUseCurrentZ>		AutoTileUseCurrentZController;
 }} //end fetch::ui
 
   ////////////////////////////////////////////////////////////////////////////
@@ -465,37 +463,6 @@ namespace ui {
     connect(this,SIGNAL(configUpdated()),&configUpdateSignalMapper_,SLOT(map()));   
     return cmb_;
   }
-
-  //template<typename TDevice, typename TConfig, class TGetSetInterface>
-  //QCheckBox* DevicePropController<TDevice, TConfig, TGetSetInterface>::
-	 // createCheckBox()
-  //{
-	 // QCheckBox * cb_ = new QCheckBox();
-	 ///* cb_->setEnabled(false);
-	 // QStateMachine *useCurrentZmachine = new QStateMachine(this);
-	 // QState *doUseCurrentZ = new QState(),
-		//  *doNotUseCurrentZ = new QState();
-	 // doUseCurrentZ->addTransition(cb_, SIGNAL(stateChanged(int)), doNotUseCurrentZ);
-	 // doNotUseCurrentZ->addTransition(cb_, SIGNAL(stateChanged(int)), doUseCurrentZ);
-	 // //doUseCurrentZ->assignProperty(b, "text", "Using Current Z");
-	 // //doNotUseCurrentZ->assignProperty(b, "text", "Not Using Current Z");
-
-	 // useCurrentZmachine->addState(doUseCurrentZ);
-	 // useCurrentZmachine->addState(doNotUseCurrentZ);
-	 // cb_->setCheckState(Qt::Unchecked);
-	 // useCurrentZmachine->setInitialState(doNotUseCurrentZ);
-	 // useCurrentZmachine->start();*/
-
-	 // checkBoxSignalMapper_.setMapping(cb_, cb_);
-	 // connect(cb_, SIGNAL(stateChanged(int)), &checkBoxSignalMapper_, SLOT(map()));
-	 // //connect(cb_, SIGNAL(editingFinished()), this, SLOT(report()));
-
-	 // configUpdateSignalMapper_.setMapping(this, cb_);
-	 // connect(this, SIGNAL(configUpdated()), &configUpdateSignalMapper_, SLOT(map()));
-
-	 // return cb_;
-  //}
-
 
   template<typename TDevice, typename TConfig, class TGetSetInterface>
   QLabel* 

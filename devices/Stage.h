@@ -78,7 +78,7 @@ namespace device {
       virtual bool prepareForCut     ( unsigned axis)=0;                    ///< Ready axis for cutting. \returns true on success, otherwise false.
       virtual bool doneWithCut       ( unsigned axis)=0;                    ///< Return axis to normal. \returns true on success, otherwise false.
 
-	  bool _useCurrentZ = false;
+	  bool _useCurrentZ = false; //make this a function that will return the current checked state
   };
 
   template<class T>
