@@ -936,6 +936,12 @@ DoneOutlining:
       (*i)->tile_next(index,pos);
   }
 
+  void StageTiling::notifyAutoTileImagingStopped(bool setEnabled) //DGA: This is called by enableUseCurrentZCheckBox (ie, when auto tile imaging was stopped before all the images were acquired)
+  { TListeners::iterator i;
+	  for (i = listeners_.begin(); i != listeners_.end(); ++i)
+		  (*i)->autoTileImagingStopped(setEnabled); //DGA: Iterates through all the listeners, and for each one, calls autoTileImagingStopped(enabled), which emits the signal sig_autoTileImagingStopped
+  }
+
   const Vector3f StageTiling::computeCursorPos()
   {
     mylib::Coordinate *c = mylib::Idx2CoordA(attr_,cursor_);

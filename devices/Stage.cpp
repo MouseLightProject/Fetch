@@ -962,14 +962,6 @@ Error:
       (*i)->velocityChanged();
   }
 
-  void Stage::_notifyAutoTileImagingStopped(bool enabled)
-  {
-	  TListeners::iterator i;
-	  for (i = _listeners.begin(); i != _listeners.end(); ++i)
-		  (*i)->autoTileImagingStopped(enabled);
-  }
-
-
   void Stage::_notifyFOVGeometryChanged()
   {
     TListeners::iterator i;

@@ -232,11 +232,12 @@ Error:
         tile=cfg.use_adaptive_tiling()?((MicroscopeTask*)&adaptive_tiling):((MicroscopeTask*)&nonadaptive_tiling);
 
         while(!dc->_agent->is_stopping() && PlaneInBounds(dc,cfg.maxz_mm()))
-        { 
+        { device::StageTiling* tiling = dc->stage()->tiling();
+		  tiling->enableUseCurrentZCheckBox(false);
           if(cfg.use_explore())
             CHKJMP(explore(dc));       // will return an error if no explorable tiles found on the plane
-		  CHKJMP(tile->config(dc));
-		  CHKJMP(0 == tile->run(dc));
+          CHKJMP(   tile->config(dc));
+          CHKJMP(0==tile->run(dc));
 
           /* Assert the trip detector hasn't gone off.  
            * Trip detector will signal acq task and microscope tasks to stop, but 
@@ -245,8 +246,6 @@ Error:
           CHKJMP(dc->trip_detect.ok());
 
           CHKJMP(   cut.config(dc));
-		  
-	//	  bool isit = dc->moving
           CHKJMP(0==cut.run(dc));
         }
 
