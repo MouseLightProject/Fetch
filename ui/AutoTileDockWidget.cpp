@@ -36,8 +36,9 @@ namespace ui{
     parent->_autotile_chan_control->createLineEditAndAddToLayout(form);
     parent->_autotile_intensity_thresh_control->createLineEditAndAddToLayout(form);
     parent->_autotile_area_thresh_control->createLineEditAndAddToLayout(form);
-	QObject::connect(useCurrentZCheckBox, SIGNAL(clicked(bool)), parent->_stageController, SLOT(toggleUseCurrentZ(bool)));
-	QObject::connect(useCurrentZCheckBox, SIGNAL(clicked(bool)), parent->_stageController, SLOT(toggleUseCurrentZ(bool))); //DGA: When the checkbox is clicked, then the toggleUseCurrentZ function of parent->_stageController will be called with true (if checked) or false (if unchecked), which will update stage->useCurrentZ_
+	QObject::connect(parent->_stageController, SIGNAL(setUseCurrentZ(int)), useCurrentZCheckBox, SLOT(clicked(int)));
+	QObject::connect(useCurrentZCheckBox, SIGNAL(stateChanged(int)), parent->_stageController, SLOT(setUseCurrentZ(int))); //DGA: When the checkbox is clicked, then the toggleUseCurrentZ function of parent->_stageController will be called with true (if checked) or false (if unchecked), which will update stage->useCurrentZ_
+	
 	//DGA: The following connects the tiling listener signal sig_autoTileImagingStopped to the checkbox slot setEnabled so that whatevever is passed to the signal will be passed to setEnabled
 	QObject::connect((parent->_stageController->tiling())->listener(), SIGNAL(sig_autoTileImagingStopped(bool)), useCurrentZCheckBox, SLOT(setEnabled(bool)), Qt::QueuedConnection);
 	form->addRow("Use Current Z: ", useCurrentZCheckBox);

@@ -254,7 +254,8 @@ namespace ui {
 
       void updateTiling()                                                  { tiling_controller_.update();}
       //void invalidateTiling()                                              { tiling_controller_.update();}
-	  void toggleUseCurrentZ(bool checkStatus)							   { stage_->useCurrentZ_ = checkStatus; }  /// DGA: sets stage_->useCurrentZ_ to the current state of the useCurrentZ checkbox
+	  void setUseCurrentZ(int newValue)									   { stage_->setUseCurrentZ(newValue); }  /// DGA: sets stage_->useCurrentZ_ to the current state of the useCurrentZ checkbox
+	  int getUseCurrentZ()												   { return stage_->getUseCurrentZ(); }  /// DGA: sets stage_->useCurrentZ_ to the current state of the useCurrentZ checkbox
 
     private:
 

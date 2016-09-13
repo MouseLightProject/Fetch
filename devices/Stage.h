@@ -77,9 +77,13 @@ namespace device {
 
       virtual bool prepareForCut     ( unsigned axis)=0;                    ///< Ready axis for cutting. \returns true on success, otherwise false.
       virtual bool doneWithCut       ( unsigned axis)=0;                    ///< Return axis to normal. \returns true on success, otherwise false.
-
+	
     public:
-	  bool useCurrentZ_ = false;
+		void setUseCurrentZ			 (int checkedState)						{useCurrentZ_ = checkedState; }
+		int getUseCurrentZ			 ()										{return useCurrentZ_;}
+
+    private:
+	  int useCurrentZ_;
   };
 
   template<class T>

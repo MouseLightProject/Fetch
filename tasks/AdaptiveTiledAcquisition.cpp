@@ -115,7 +115,8 @@ Error:
 
 		// 1. iterate over tiles to measure the average tile offset
         tiling->resetCursor();
-		while(eflag==0 && !dc->_agent->is_stopping() && tiling->nextInPlanePosition(tilepos) && !dc->stage_.useCurrentZ_)
+		int temp=dc->stage_.getUseCurrentZ();
+		while(eflag==0 && !dc->_agent->is_stopping() && tiling->nextInPlanePosition(tilepos) && !dc->stage_.getUseCurrentZ())
 		{	if (adapt_mindist <= tiling->minDistTo(0, 0,  // domain query   -- do not restrict to a particular tile type
 				device::StageTiling::Active, 0)) // boundary query -- this is defines what is "outside"
 			{
