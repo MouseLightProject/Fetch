@@ -247,6 +247,7 @@ Error:
 
           CHKJMP(   cut.config(dc));
           CHKJMP(0==cut.run(dc));
+		  tiling->enableUseCurrentZCheckBox(false);
         }
 
 Finalize:

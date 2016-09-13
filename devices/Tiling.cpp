@@ -876,6 +876,18 @@ DoneOutlining:
     }
   };
 
+  int StageTiling::numberOfTilesWithGivenAttributes(uint32_t query_mask){
+	  int numberOfTilesWithGivenAttributes=0;
+	  uint32_t *beg = AUINT32(attr_) + current_plane_offset_, // DGA: First tile in current plane
+			   *end = beg + sz_plane_nelem_; // DGA: Last tile in current plane, sz_plane_nelem_ is number of tiles in plane
+	  for (uint32_t *t = beg; t < end; ++t){
+		  uint32_t temp = *t;
+		  if (((*t)&query_mask) == query_mask)
+			  numberOfTilesWithGivenAttributes++;
+	  }
+	  return numberOfTilesWithGivenAttributes;
+  }
+
   int StageTiling::minDistTo(
     uint32_t search_mask,uint32_t search_flags, // area to search 
     uint32_t query_mask,uint32_t query_flags)  // tile to find

@@ -102,8 +102,7 @@ Error:
         Vector3f tilepos;
         float tiling_offset_acc_mm=0.0f;
         float nsamp=0;
-		int nactive = 0, nimaged = 0;
-		bool startedImaging = false;
+		int numberThatShouldBeImaged, numberImaged;
         int adapt_count=0;
         int adapt_thresh=dc->get_config().adaptive_tiling().every();
         int adapt_mindist=dc->get_config().adaptive_tiling().mindist();
@@ -111,13 +110,13 @@ Error:
         CHKJMP(dc->__scan_agent.is_runnable());
 
         device::StageTiling* tiling = dc->stage()->tiling();
+		uint32_t attributes = device::StageTiling::Addressable | device::StageTiling::Safe | device::StageTiling::Active;
+		numberThatShouldBeImaged = tiling->numberOfTilesWithGivenAttributes(attributes);
 
-        // 1. iterate over tiles to measure the average tile offset
+		// 1. iterate over tiles to measure the average tile offset
         tiling->resetCursor();
-        while(eflag==0 && !dc->_agent->is_stopping() && tiling->nextInPlanePosition(tilepos))
-        { nactive++;          
-		if (!dc->stage_.useCurrentZ_){
-			if (adapt_mindist <= tiling->minDistTo(0, 0,  // domain query   -- do not restrict to a particular tile type
+		while(eflag==0 && !dc->_agent->is_stopping() && tiling->nextInPlanePosition(tilepos) && !dc->stage_.useCurrentZ_)
+		{	if (adapt_mindist <= tiling->minDistTo(0, 0,  // domain query   -- do not restrict to a particular tile type
 				device::StageTiling::Active, 0)) // boundary query -- this is defines what is "outside"
 			{
 				if (++adapt_count > adapt_thresh) // is it time to try?
@@ -148,7 +147,6 @@ Error:
 
 				}
 			}
-		}
         }
         if(nsamp==0)
         { warning("Could not track surface because no candidate sampling points were found.\n");
@@ -164,8 +162,7 @@ Error:
         // 2. iterate over tiles to image
         tiling->resetCursor();
         while(eflag==0 && !dc->_agent->is_stopping() && tiling->nextInPlanePosition(tilepos))
-        { startedImaging = true; nimaged++;
-		  TS_TIC;
+        { TS_TIC;
           debug("%s(%d)"ENDL "\t[Adaptive Tiling Task] tilepos: %5.1f %5.1f %5.1f"ENDL,__FILE__,__LINE__,tilepos[0],tilepos[1],tilepos[2]);
           filename = dc->stack_filename();
           dc->file_series.ensurePathExists();
@@ -221,7 +218,9 @@ Error:
           TS_TOC;          
         } // end loop over tiles
         eflag |= dc->stopPipeline();           // wait till the  pipeline stops
-		if ((nimaged < nactive) && startedImaging)
+		attributes |= device::StageTiling::Done;
+		numberImaged = tiling->numberOfTilesWithGivenAttributes(attributes);
+		if ( (numberImaged < numberThatShouldBeImaged) && numberImaged>0)
 			tiling->enableUseCurrentZCheckBox(true);
 
         TS_CLOSE;
