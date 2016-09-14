@@ -290,7 +290,6 @@ namespace device {
     virtual void tiling_changed() {}                                         ///< a new tiling was created.
     virtual void tile_done(size_t index, const Vector3f& pos,uint32_t sts) {}///< the specified tile was marked as done
     virtual void tile_next(size_t index, const Vector3f& pos) {}             ///< the next tile was requested (stage not necessarily moved yet)
-	virtual void autoTileImagingStopped(bool enabled) {}					 ///< auto tile imaging was stopped in the middle of imaging
 
     virtual void fov_changed(const FieldOfViewGeometry *fov) {}              ///< the field of view size changed
     virtual void moved() {}                                                  ///< the stage position changed

@@ -66,8 +66,6 @@ namespace ui {
       virtual void updateComboBox(QWidget *source) =0;
       virtual void setByDoubleSpinBox   (QWidget *source) =0;
       virtual void updateByDoubleSpinBox(QWidget *source) =0;
-	  virtual void setByCheckBox	    (QWidget *source) = 0;
-	  virtual void updateCheckBox       (QWidget *source) = 0;
 
   };
 
@@ -81,12 +79,10 @@ namespace ui {
       QLineEdit      *createLineEdit();
       QDoubleSpinBox *createDoubleSpinBox();
       QComboBox      *createComboBox();
-	  QCheckBox		 *createCheckBox();
       QLabel         *createLabelAndAddToLayout(QFormLayout *layout);
       QLineEdit      *createLineEditAndAddToLayout(QFormLayout *layout);
       QDoubleSpinBox *createDoubleSpinBoxAndAddToLayout(QFormLayout *layout);
       QComboBox      *createComboBoxAndAddToLayout(QFormLayout *layout);
-	  QCheckBox		 *createCheckBoxAndAddToLayout(QFormLayout *layout);
 
     protected:
       void updateLabel          (QWidget *source);
@@ -96,8 +92,6 @@ namespace ui {
       void updateComboBox       (QWidget *source);
       void setByDoubleSpinBox   (QWidget *source);
       void updateByDoubleSpinBox(QWidget *source);
-	  void setByCheckBox		(QWidget *source);
-	  void updateCheckBox		(QWidget *source);
 
 
     protected:
@@ -111,7 +105,6 @@ namespace ui {
       QSignalMapper lineEditSignalMapper_;
       QSignalMapper comboBoxSignalMapper_;
       QSignalMapper doubleSpinBoxSignalMapper_;
-	  QSignalMapper checkBoxSignalMapper_;
       QSignalMapper configUpdateSignalMapper_;
 
   };
@@ -262,9 +255,6 @@ namespace ui {
     connect(&doubleSpinBoxSignalMapper_,SIGNAL(mapped(QWidget*)),this,SLOT(setByDoubleSpinBox(QWidget*)));
     connect(&configUpdateSignalMapper_,SIGNAL(mapped(QWidget*)),this,SLOT(updateByDoubleSpinBox(QWidget*)));    
 
-	connect(&checkBoxSignalMapper_, SIGNAL(mapped(QWidget*)), this, SLOT(setByCheckBox(QWidget*)));
-//	connect(&configUpdateSignalMapper_, SIGNAL(mapped(QWidget*)), this, SLOT(updateCheckBox(QWidget*)));
-
     connect(parent,SIGNAL(configUpdated()),this,SIGNAL(configUpdated()));
   }
 
@@ -355,29 +345,6 @@ namespace ui {
       w->setValue(v);
       w->blockSignals(false);
     }
-  }
-
-  template<typename TDevice, typename TConfig, class TGetSetInterface>
-  void DevicePropController<TDevice, TConfig, TGetSetInterface>::
-    setByCheckBox(QWidget* source)
-  {
-	  QCheckBox* w = qobject_cast<QCheckBox*>(source);
-	  if (!w) return;
-	//  TConfig v = (TConfig) (w->isChecked());
-	 // interface_.Set_(dc_, v);
-	  w->setText("blahblah");
-  }
-
-  template<typename TDevice, typename TConfig, class TGetSetInterface>
-  void DevicePropController<TDevice, TConfig, TGetSetInterface>::
-	  updateCheckBox(QWidget* source)
-  {
-	  QCheckBox* w = qobject_cast<QCheckBox*>(source);
-	  if (w)
-	  { //bool v = interface_.Get_(dc_);
-		w->setChecked(true);
-		w->setText("blahblah");
-	  }
   }
 
   template<typename TDevice, typename TConfig, class TGetSetInterface>
@@ -498,12 +465,4 @@ namespace ui {
     return w;
   }  
 
-  template<typename TDevice, typename TConfig, class TGetSetInterface>
-  QCheckBox* DevicePropController<TDevice, TConfig, TGetSetInterface>::
-	  createCheckBoxAndAddToLayout(QFormLayout *layout)
-  {
-	  QCheckBox *w = createCheckBox();
-	  layout->addRow(label_, w);
-	  return w;
-  }
 }} //end fetch::ui

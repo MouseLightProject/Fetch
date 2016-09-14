@@ -125,7 +125,6 @@ namespace device {
 
     void notifyDone(size_t i, const Vector3f& pos, uint32_t sts);
     void notifyNext(size_t i, const Vector3f& pos);
-	void notifyAutoTileImagingStopped(bool enabled);
 
     const Vector3f computeCursorPos();
     
