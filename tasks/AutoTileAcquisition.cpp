@@ -232,8 +232,7 @@ Error:
         tile=cfg.use_adaptive_tiling()?((MicroscopeTask*)&adaptive_tiling):((MicroscopeTask*)&nonadaptive_tiling);
 
         while(!dc->_agent->is_stopping() && PlaneInBounds(dc,cfg.maxz_mm()))
-        { device::StageTiling* tiling = dc->stage()->tiling();
-		  tiling->enableUseCurrentZCheckBox(false);
+        { 
           if(cfg.use_explore())
             CHKJMP(explore(dc));       // will return an error if no explorable tiles found on the plane
           CHKJMP(   tile->config(dc));

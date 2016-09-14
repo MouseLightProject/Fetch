@@ -95,8 +95,6 @@ namespace device {
     void     fillHoles(size_t iplane, StageTiling::Flags flag);            //   2d
     void     dilate(size_t iplane, int ntimes, StageTiling::Flags query_flag, StageTiling::Flags write_flag, int explorable_only); // 2d
 
-	void	   enableUseCurrentZCheckBox(bool setEnabled)				   { notifyAutoTileImagingStopped(setEnabled); }
-
     inline mylib::Array*     attributeArray()                              {return attr_;}
     inline const TTransform& latticeToStageTransform()                     {return latticeToStage_; }
     inline const FieldOfViewGeometry& fov()                                {return fov_;}

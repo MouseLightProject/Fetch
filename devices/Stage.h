@@ -79,11 +79,11 @@ namespace device {
       virtual bool doneWithCut       ( unsigned axis)=0;                    ///< Return axis to normal. \returns true on success, otherwise false.
 	
     public:
-		void setUseCurrentZ			 (int checkedState)						{useCurrentZ_ = checkedState; }
-		int getUseCurrentZ			 ()										{return useCurrentZ_;}
+		void setUseCurrentZ			 (bool checkedState)					{useCurrentZ_ = checkedState; }
+		bool getUseCurrentZ			 ()										{return useCurrentZ_;}
 
     private:
-	  int useCurrentZ_;
+	  bool useCurrentZ_;
   };
 
   template<class T>
