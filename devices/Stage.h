@@ -77,13 +77,6 @@ namespace device {
 
       virtual bool prepareForCut     ( unsigned axis)=0;                    ///< Ready axis for cutting. \returns true on success, otherwise false.
       virtual bool doneWithCut       ( unsigned axis)=0;                    ///< Return axis to normal. \returns true on success, otherwise false.
-	
-    public:
-		void setUseCurrentZ			 (bool checkedState)					{useCurrentZ_ = checkedState; }
-		bool getUseCurrentZ			 ()										{return useCurrentZ_;}
-
-    private:
-	  bool useCurrentZ_;
   };
 
   template<class T>
@@ -195,6 +188,8 @@ namespace device {
     FieldOfViewGeometry *_fov;
     FieldOfViewGeometry  _lastfov;
     Mutex               *_tiling_lock;
+    
+	bool useCurrentZ_;																					///<DGA: private boolean useCurrentZ_ determines whether or not to use the current z when resuming imaging after it was stopped prematurely
 
     public:
       Stage(Agent *agent);
@@ -235,7 +230,12 @@ namespace device {
       virtual bool clear             ()                                     {return _istage->clear();}
       virtual bool prepareForCut     ( unsigned axis)                       {return _istage->prepareForCut(axis);}           ///< Ready axis for cutting. \returns true on success, otherwise false.
       virtual bool doneWithCut       ( unsigned axis)                       {return _istage->doneWithCut(axis);}             ///< Return axis to normal. \returns true on success, otherwise false.
+	  
+    public:
+	  void setUseCurrentZ			 (bool setValue)						{useCurrentZ_ = setValue; _notifyUseCurrentZSet(setValue);} ///<DGA: setUseCurrentZ is the setter for private variable useCurrentZ_, and is called by slot setUseCurrentZ of stageController
+	  bool getUseCurrentZ			 ()										{return useCurrentZ_;}			///<DGA: getUseCurrentZ is the getter for private variable useCurrentZ_
 
+    public: 
       Vector3z getPosInLattice();
       float    tiling_z_offset_mm();
       void     set_tiling_z_offset_mm(float dz_mm);
@@ -257,6 +257,8 @@ namespace device {
       void    _notifyReferenced();
       void    _notiveVelocityChanged();
       void    _notifyFOVGeometryChanged();
+
+	  void	  _notifyUseCurrentZSet(bool newValue);
   };
 
   //////////////////////////////////////////////////////////////////////
@@ -295,6 +297,8 @@ namespace device {
     virtual void moved() {}                                                  ///< the stage position changed
     virtual void referenced() {}                                             ///< the stage was referenced
     virtual void velocityChanged() {}                                        ///< the velocity set for an axis changed
+
+	virtual void useCurrentZSet(bool newValue)  {}							 ///< DGA: The useCurrentZ_ variable was set
   };
 
   // end namespace fetch::Device

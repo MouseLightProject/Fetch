@@ -93,7 +93,6 @@ namespace ui {
       void setByDoubleSpinBox   (QWidget *source);
       void updateByDoubleSpinBox(QWidget *source);
 
-
     protected:
       TGetSetInterface interface_;
 
@@ -464,5 +463,4 @@ namespace ui {
     layout->addRow(label_,w);
     return w;
   }  
-
 }} //end fetch::ui

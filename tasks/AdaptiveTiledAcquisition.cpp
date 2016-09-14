@@ -114,11 +114,14 @@ Error:
 		numberImaged = tiling->numberOfTilesWithGivenAttributes(attributes);
 		// 1. iterate over tiles to measure the average tile offset
         tiling->resetCursor();
+		dc->stage_.setUseCurrentZ(true);
 		if ( numberImaged==0 ? true : !dc->stage_.getUseCurrentZ()){
 			while (eflag == 0 && !dc->_agent->is_stopping() && tiling->nextInPlanePosition(tilepos))
-			{	if (adapt_mindist <= tiling->minDistTo(0, 0,  // domain query   -- do not restrict to a particular tile type
+			{	
+				if (adapt_mindist <= tiling->minDistTo(0, 0,  // domain query   -- do not restrict to a particular tile type
 					device::StageTiling::Active, 0)) // boundary query -- this is defines what is "outside"
-				{	if (++adapt_count > adapt_thresh) // is it time to try?
+				{	
+					if (++adapt_count > adapt_thresh) // is it time to try?
 					{	adapt_count = 0;
 						// M O V E
 						Vector3f curpos = dc->stage()->getTarget(); // use current target z for tilepos z
@@ -137,8 +140,7 @@ Error:
 						//surface_find.config();  -- arms stack task as scan agent...redundant
 						eflag |= surface_find.run(dc);
 						if (surface_find.hit())
-						{
-							tiling_offset_acc_mm += dc->stage()->tiling_z_offset_mm();
+						{	tiling_offset_acc_mm += dc->stage()->tiling_z_offset_mm();
 							++nsamp;
 						}
 

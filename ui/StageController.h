@@ -22,13 +22,17 @@ namespace ui {
     void tile_next( size_t index, const Vector3f& pos )                    {emit sig_tile_next((unsigned int)index);}
     void fov_changed(const device::FieldOfViewGeometry *fov)               {emit sig_fov_changed(fov->field_size_um_[0],fov->field_size_um_[1],fov->rotation_radians_);}      
     void moved(void)                                                       {emit sig_moved();}
-    
+	
+	void useCurrentZSet(bool newValue)									   {emit sig_useCurrentZSet(newValue);}
+
   signals:
     void sig_tile_done( unsigned index, unsigned int sts );
     void sig_tiling_changed();
     void sig_tile_next( unsigned index );
     void sig_fov_changed(float w_um, float h_um, float rotation_radians);
     void sig_moved();
+	
+	void sig_useCurrentZSet(bool newValue); 
   };
 
   class TilingController:public QObject
@@ -253,7 +257,7 @@ namespace ui {
 
       void updateTiling()                                                  { tiling_controller_.update();}
       //void invalidateTiling()                                              { tiling_controller_.update();}
-	  void setUseCurrentZ(bool newValue)								   { stage_->setUseCurrentZ(newValue);}
+	  void setUseCurrentZ(bool setValue)								   { stage_->setUseCurrentZ(setValue);}
 
     private:
 
