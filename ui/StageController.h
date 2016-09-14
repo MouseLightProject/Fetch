@@ -234,14 +234,15 @@ namespace ui {
       device::Stage *stage()                                               {return stage_;}
 
       QComboBox *createHistoryComboBox(QWidget *parent=0);
-                                                                     
+      int getUseCurrentZ()												   { return stage_->getUseCurrentZ(); }  /// DGA: sets stage_->useCurrentZ_ to the current state of the useCurrentZ checkbox
    signals:
       void moved();            ///< eventually updates the imitem's position
       void moved(QPointF pos); ///< eventually updates the imitem's position
       void velocityChanged();
       void referenced();       ///< eventually updates the imitem's position
-
-    public slots:
+	  void useCurrentZSet(bool newValue);
+    
+	  public slots:
       
       void setVelocity(QPointF v)                                          { stage_->setVelocity(v.x(),v.y(),0.0); }
       void moveTo3d(float x, float y, float z)                             { stage_->setPosNoWait(x,y,z); history_.push(x,y,z); emit moved(QPointF(x,y));}
@@ -254,8 +255,7 @@ namespace ui {
 
       void updateTiling()                                                  { tiling_controller_.update();}
       //void invalidateTiling()                                              { tiling_controller_.update();}
-	  void setUseCurrentZ(int newValue)									   { stage_->setUseCurrentZ(newValue); }  /// DGA: sets stage_->useCurrentZ_ to the current state of the useCurrentZ checkbox
-	  int getUseCurrentZ()												   { return stage_->getUseCurrentZ(); }  /// DGA: sets stage_->useCurrentZ_ to the current state of the useCurrentZ checkbox
+	  void setUseCurrentZ(int newValue)									   { stage_->setUseCurrentZ(newValue); emit useCurrentZSet((bool)newValue); }
 
     private:
 

@@ -112,11 +112,12 @@ Error:
         device::StageTiling* tiling = dc->stage()->tiling();
 		uint32_t attributes = device::StageTiling::Addressable | device::StageTiling::Safe | device::StageTiling::Active;
 		numberThatShouldBeImaged = tiling->numberOfTilesWithGivenAttributes(attributes);
-
+		attributes |= device::StageTiling::Done;
+		numberImaged = tiling->numberOfTilesWithGivenAttributes(attributes);
 		// 1. iterate over tiles to measure the average tile offset
         tiling->resetCursor();
 		int temp=dc->stage_.getUseCurrentZ();
-		while(eflag==0 && !dc->_agent->is_stopping() && tiling->nextInPlanePosition(tilepos) && !dc->stage_.getUseCurrentZ())
+		while(eflag==0 && !dc->_agent->is_stopping() && tiling->nextInPlanePosition(tilepos) && ( numberImaged==0 ? true : !dc->stage_.getUseCurrentZ()))
 		{	if (adapt_mindist <= tiling->minDistTo(0, 0,  // domain query   -- do not restrict to a particular tile type
 				device::StageTiling::Active, 0)) // boundary query -- this is defines what is "outside"
 			{
@@ -219,7 +220,6 @@ Error:
           TS_TOC;          
         } // end loop over tiles
         eflag |= dc->stopPipeline();           // wait till the  pipeline stops
-		attributes |= device::StageTiling::Done;
 		numberImaged = tiling->numberOfTilesWithGivenAttributes(attributes);
 		if ( (numberImaged < numberThatShouldBeImaged) && numberImaged>0)
 			tiling->enableUseCurrentZCheckBox(true);

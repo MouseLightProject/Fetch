@@ -230,7 +230,7 @@ Error:
         Cut cut;
 
         tile=cfg.use_adaptive_tiling()?((MicroscopeTask*)&adaptive_tiling):((MicroscopeTask*)&nonadaptive_tiling);
-		dc->stage_.setUseCurrentZ(0);
+
         while(!dc->_agent->is_stopping() && PlaneInBounds(dc,cfg.maxz_mm()))
         { device::StageTiling* tiling = dc->stage()->tiling();
 		  tiling->enableUseCurrentZCheckBox(false);

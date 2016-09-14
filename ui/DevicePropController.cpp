@@ -488,4 +488,15 @@ QValidator* GetSetAutoTileAreaThreshold::createValidator_(QObject* parent)
 { return new QDoubleValidator(0.0, 1.0, 3, parent);
 }
 
+//void GetSetAutoTileUseCurrentZOption::Set_(device::Microscope *dc, bool &v)
+//{ dc->setUseCurrentZ();
+//}
+//
+//bool GetSetAutoTileUseCurrentZOption::Get_(device::Microscope *dc)
+//{ return dc->getUseCurrentZ();//dc->get_config().autotile().area_threshold();
+//}
+//QValidator* GetSetAutoTileUseCurrentZOption::createValidator_(QObject* parent)
+//{ return new QIntValidator(0, 1, parent);
+//}
+
 }} //end fetch::ui
