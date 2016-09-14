@@ -47,6 +47,7 @@ template<> double doubleToValue(double v){return v;}
 template<> float  doubleToValue(double v){return v;}
 template<> int doubleToValue(double v){return (int)v;}
 template<> unsigned int doubleToValue(double v){return (unsigned int)v;}
+template<> bool doubleToValue(double v){return (bool)v;}
 template<> cfg::device::Vibratome::VibratomeFeedAxis doubleToValue(double v) { return (v>0.5)?cfg::device::Vibratome_VibratomeFeedAxis_X:cfg::device::Vibratome_VibratomeFeedAxis_Y;}
 
 void DevicePropControllerBase::report() 
@@ -487,5 +488,17 @@ float GetSetAutoTileAreaThreshold::Get_(device::Microscope *dc)
 QValidator* GetSetAutoTileAreaThreshold::createValidator_(QObject* parent)
 { return new QDoubleValidator(0.0, 1.0, 3, parent);
 }
+
+void GetSetAutoTileUseCurrentZ::Set_(device::Microscope *dc, unsigned &setValue)
+{ setValue;
+	bool newValue = (bool) setValue;
+	dc->setUseCurrentZ((bool)setValue);
+}
+unsigned GetSetAutoTileUseCurrentZ::Get_(device::Microscope *dc)
+{ return dc->getUseCurrentZ();
+}
+QValidator* GetSetAutoTileUseCurrentZ::createValidator_(QObject* parent)
+{ return new QIntValidator (0, 1, parent);
+} 
 
 }} //end fetch::ui

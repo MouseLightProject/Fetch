@@ -114,8 +114,8 @@ Error:
 		numberImaged = tiling->numberOfTilesWithGivenAttributes(attributes);
 		// 1. iterate over tiles to measure the average tile offset
         tiling->resetCursor();
-		dc->stage_.setUseCurrentZ(true);
-		if ( numberImaged==0 ? true : !dc->stage_.getUseCurrentZ()){
+	//	dc->setUseCurrentZ(true);
+		if ( numberImaged==0 ? true : !dc->getUseCurrentZ()){
 			while (eflag == 0 && !dc->_agent->is_stopping() && tiling->nextInPlanePosition(tilepos))
 			{	
 				if (adapt_mindist <= tiling->minDistTo(0, 0,  // domain query   -- do not restrict to a particular tile type

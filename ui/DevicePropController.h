@@ -50,6 +50,7 @@ namespace ui {
     protected:
       QLineEdit  *le_;      // do these really need to be here?
       QComboBox  *cmb_;
+	  QCheckBox  *checkBox_;
 
     public:
       DevicePropControllerBase() : le_(NULL), cmb_(NULL) {}
@@ -66,6 +67,8 @@ namespace ui {
       virtual void updateComboBox(QWidget *source) =0;
       virtual void setByDoubleSpinBox   (QWidget *source) =0;
       virtual void updateByDoubleSpinBox(QWidget *source) =0;
+	  virtual void setByCheckBox(QWidget *source) =0;
+      virtual void updateCheckBox(QWidget *source) =0;
 
   };
 
@@ -79,10 +82,12 @@ namespace ui {
       QLineEdit      *createLineEdit();
       QDoubleSpinBox *createDoubleSpinBox();
       QComboBox      *createComboBox();
+	  QCheckBox      *createCheckBox();
       QLabel         *createLabelAndAddToLayout(QFormLayout *layout);
       QLineEdit      *createLineEditAndAddToLayout(QFormLayout *layout);
       QDoubleSpinBox *createDoubleSpinBoxAndAddToLayout(QFormLayout *layout);
       QComboBox      *createComboBoxAndAddToLayout(QFormLayout *layout);
+	  QCheckBox      *createCheckBoxAndAddToLayout(QFormLayout *layout);
 
     protected:
       void updateLabel          (QWidget *source);
@@ -92,6 +97,8 @@ namespace ui {
       void updateComboBox       (QWidget *source);
       void setByDoubleSpinBox   (QWidget *source);
       void updateByDoubleSpinBox(QWidget *source);
+	  void setByCheckBox		(QWidget *source);
+      void updateCheckBox		(QWidget *source);
 
     protected:
       TGetSetInterface interface_;
@@ -104,6 +111,7 @@ namespace ui {
       QSignalMapper lineEditSignalMapper_;
       QSignalMapper comboBoxSignalMapper_;
       QSignalMapper doubleSpinBoxSignalMapper_;
+	  QSignalMapper checkBoxSignalMapper_;
       QSignalMapper configUpdateSignalMapper_;
 
   };
@@ -203,12 +211,14 @@ namespace ui {
   DECL_GETSET_CLASS(GetSetAutoTileChan             ,device::Microscope,unsigned);
   DECL_GETSET_CLASS(GetSetAutoTileIntesityThreshold,device::Microscope,float);
   DECL_GETSET_CLASS(GetSetAutoTileAreaThreshold    ,device::Microscope,float);
+  DECL_GETSET_CLASS(GetSetAutoTileUseCurrentZ      ,device::Microscope,unsigned);
   typedef DevicePropController<device::Microscope,float   ,GetSetAutoTileZOff>              AutoTileZOffController;
   typedef DevicePropController<device::Microscope,float   ,GetSetAutoTileZMax>              AutoTileZMaxController;
   typedef DevicePropController<device::Microscope,unsigned,GetSetAutoTileTimeoutMs>         AutoTileTimeoutMsController;
   typedef DevicePropController<device::Microscope,unsigned,GetSetAutoTileChan>              AutoTileChanController;
   typedef DevicePropController<device::Microscope,float   ,GetSetAutoTileIntesityThreshold> AutoTileIntensityThresholdController;
   typedef DevicePropController<device::Microscope,float   ,GetSetAutoTileAreaThreshold>     AutoTileAreaThresholdController;
+  typedef DevicePropController<device::Microscope,unsigned,GetSetAutoTileUseCurrentZ>		AutoTileUseCurrentZController;
 }} //end fetch::ui
 
   ////////////////////////////////////////////////////////////////////////////
@@ -253,6 +263,9 @@ namespace ui {
 
     connect(&doubleSpinBoxSignalMapper_,SIGNAL(mapped(QWidget*)),this,SLOT(setByDoubleSpinBox(QWidget*)));
     connect(&configUpdateSignalMapper_,SIGNAL(mapped(QWidget*)),this,SLOT(updateByDoubleSpinBox(QWidget*)));    
+
+	connect(&checkBoxSignalMapper_,SIGNAL(mapped(QWidget*)),this,SLOT(setByCheckBox(QWidget*)));
+    connect(&configUpdateSignalMapper_,SIGNAL(mapped(QWidget*)),this,SLOT(updateCheckBox(QWidget*)));    
 
     connect(parent,SIGNAL(configUpdated()),this,SIGNAL(configUpdated()));
   }
@@ -347,6 +360,27 @@ namespace ui {
   }
 
   template<typename TDevice, typename TConfig, class TGetSetInterface>
+  void DevicePropController<TDevice,TConfig,TGetSetInterface>::
+    setByCheckBox(QWidget* source)
+  { QCheckBox* checkBox = qobject_cast<QCheckBox*>(source);
+	if(checkBox)
+	{ TConfig checkedStatus = doubleToValue<TConfig> (checkBox->isChecked());
+      interface_.Set_(dc_, checkedStatus);
+	}
+  }
+
+  template<typename TDevice, typename TConfig, class TGetSetInterface>
+  void DevicePropController<TDevice,TConfig,TGetSetInterface>::
+    updateCheckBox(QWidget* source)
+  {
+    QCheckBox* checkBox = qobject_cast<QCheckBox*>(source);
+    if(checkBox)
+	{ bool checkedStatus = interface_.Get_(dc_);
+      checkBox->clicked(checkedStatus);
+	}
+  }
+
+  template<typename TDevice, typename TConfig, class TGetSetInterface>
   QLabel* 
     DevicePropController<TDevice,TConfig,TGetSetInterface>::
     createLabel()
@@ -431,6 +465,22 @@ namespace ui {
   }
 
   template<typename TDevice, typename TConfig, class TGetSetInterface>
+  QCheckBox* 
+    DevicePropController<TDevice,TConfig,TGetSetInterface>::
+    createCheckBox()
+  { //bool checkedStatus = interface_.Get_(dc_);
+    checkBox_ = new QCheckBox;
+    updateCheckBox(checkBox_);
+    
+    checkBoxSignalMapper_.setMapping(checkBox_,checkBox_);
+    connect(checkBox_,SIGNAL(clicked(bool)),&checkBoxSignalMapper_,SLOT(map()));
+
+    configUpdateSignalMapper_.setMapping(this,checkBox_);
+    connect(this,SIGNAL(configUpdated()),&configUpdateSignalMapper_,SLOT(map()));   
+    return checkBox_;
+  }
+
+  template<typename TDevice, typename TConfig, class TGetSetInterface>
   QLabel* 
     DevicePropController<TDevice,TConfig,TGetSetInterface>::
     createLabelAndAddToLayout( QFormLayout *layout )
@@ -462,5 +512,13 @@ namespace ui {
   { QComboBox *w = createComboBox();
     layout->addRow(label_,w);
     return w;
+  }
+
+  template<typename TDevice, typename TConfig, class TGetSetInterface>
+  QCheckBox* DevicePropController<TDevice,TConfig,TGetSetInterface>::
+    createCheckBoxAndAddToLayout( QFormLayout *layout )
+  { QCheckBox *checkBox = createCheckBox();
+    layout->addRow(label_,checkBox);
+    return checkBox;
   }  
 }} //end fetch::ui
