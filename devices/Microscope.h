@@ -164,10 +164,6 @@ namespace fetch
       int updateFovFromStackDepth(int nowait=0);  // These also account for cut thickness, returns 0 if overlap is not positive.
       int updateStackDepthFromFov(int nowait=0);
 
-	  void setUseCurrentZ(bool setValue) {useCurrentZ_ = setValue;
-	  useCurrentZ_;
-	  }
-	  bool getUseCurrentZ()				 {return useCurrentZ_;}
     public:
       FileSeries file_series;
 
@@ -178,9 +174,6 @@ namespace fetch
       Agent __scan_agent;
       Agent __io_agent;
       Agent __vibratome_agent;
-
-	private:
-		bool useCurrentZ_ = false;
     };
     //end namespace fetch::device
   }

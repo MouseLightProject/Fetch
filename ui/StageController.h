@@ -23,16 +23,12 @@ namespace ui {
     void fov_changed(const device::FieldOfViewGeometry *fov)               {emit sig_fov_changed(fov->field_size_um_[0],fov->field_size_um_[1],fov->rotation_radians_);}      
     void moved(void)                                                       {emit sig_moved();}
 	
-	void useCurrentZSet(bool newValue)									   {emit sig_useCurrentZSet(newValue);}
-
   signals:
     void sig_tile_done( unsigned index, unsigned int sts );
     void sig_tiling_changed();
     void sig_tile_next( unsigned index );
     void sig_fov_changed(float w_um, float h_um, float rotation_radians);
     void sig_moved();
-	
-	void sig_useCurrentZSet(bool newValue); 
   };
 
   class TilingController:public QObject
@@ -236,7 +232,6 @@ namespace ui {
       device::Stage *stage()                                               {return stage_;}
 
       QComboBox *createHistoryComboBox(QWidget *parent=0);
-      bool getUseCurrentZ()												   { return stage_->getUseCurrentZ(); }  /// DGA: sets stage_->useCurrentZ_ to the current state of the useCurrentZ checkbox
 
    signals:
       void moved();            ///< eventually updates the imitem's position
@@ -257,7 +252,6 @@ namespace ui {
 
       void updateTiling()                                                  { tiling_controller_.update();}
       //void invalidateTiling()                                              { tiling_controller_.update();}
-	  void setUseCurrentZ(bool setValue)								   { stage_->setUseCurrentZ(setValue);}
 
     private:
 

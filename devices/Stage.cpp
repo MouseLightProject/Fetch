@@ -969,13 +969,6 @@ Error:
       (*i)->fov_changed(_fov);
   }
 
-  void Stage::_notifyUseCurrentZSet(bool newValue)
-  {
-    TListeners::iterator i;
-    for(i=_listeners.begin();i!=_listeners.end();++i)
-      (*i)->useCurrentZSet(newValue);
-  }
-
   unsigned int Stage::on_attach()
   {
     unsigned int eflag = _idevice->on_attach();
