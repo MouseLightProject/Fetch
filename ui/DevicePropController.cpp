@@ -490,15 +490,15 @@ QValidator* GetSetAutoTileAreaThreshold::createValidator_(QObject* parent)
 }
 
 void GetSetAutoTileUseCurrentZ::Set_(device::Microscope *dc, unsigned &setValue)
-{ setValue;
-	bool newValue = (bool) setValue;
-	dc->setUseCurrentZ((bool)setValue);
+{ device::Microscope::Config c = dc->get_config();
+  c.mutable_autotile()->set_use_current_z(setValue);
+  dc->set_config(c);
 }
 unsigned GetSetAutoTileUseCurrentZ::Get_(device::Microscope *dc)
-{ return dc->getUseCurrentZ();
+{ return dc->get_config().autotile().use_current_z();
 }
 QValidator* GetSetAutoTileUseCurrentZ::createValidator_(QObject* parent)
-{ return new QIntValidator (0, 1, parent);
-} 
+{ return NULL;
+}
 
 }} //end fetch::ui

@@ -108,14 +108,15 @@ Error:
         int adapt_mindist=dc->get_config().adaptive_tiling().mindist();
         TS_OPEN("timer-tiles.f32");
         CHKJMP(dc->__scan_agent.is_runnable());
-
+		
         device::StageTiling* tiling = dc->stage()->tiling();
 		uint32_t attributes = device::StageTiling::Addressable | device::StageTiling::Safe | device::StageTiling::Active | device::StageTiling::Done;
 		numberImaged = tiling->numberOfTilesWithGivenAttributes(attributes);
 		// 1. iterate over tiles to measure the average tile offset
         tiling->resetCursor();
 	//	dc->setUseCurrentZ(true);
-		if ( numberImaged==0 ? true : !dc->getUseCurrentZ()){
+		bool temp = dc->get_config().autotile().use_current_z();
+		if ( numberImaged==0 ? true : !temp){
 			while (eflag == 0 && !dc->_agent->is_stopping() && tiling->nextInPlanePosition(tilepos))
 			{	
 				if (adapt_mindist <= tiling->minDistTo(0, 0,  // domain query   -- do not restrict to a particular tile type
