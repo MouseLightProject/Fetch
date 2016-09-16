@@ -193,14 +193,13 @@ namespace ui {
     pstep_=s;
 
     ///// Lock Controls
-    QCheckBox *b = new QCheckBox();        
+    QCheckBox *b = new QCheckBox();
+	b->setText("Lock Controls");
     QStateMachine *lockmachine = new QStateMachine(this);
     QState *locked = new QState(),
          *unlocked = new QState();
     locked->addTransition(b,SIGNAL(stateChanged(int)),unlocked);
     unlocked->addTransition(b,SIGNAL(stateChanged(int)),locked);
-    locked->assignProperty(b  ,"text","Locked");
-    unlocked->assignProperty(b,"text","Unlocked");
     for(int i=0;i<3;++i)
     { locked->assignProperty(w[i]  ,"readOnly",true);
       unlocked->assignProperty(w[i],"readOnly",false);
@@ -232,7 +231,10 @@ namespace ui {
     s->setValue(0.1);
     vstep_=s;
     form->addRow(row);
-    form->addRow("Lock controls",b);
+
+	row = new QGridLayout(); //DGA: Dynamically allocates row as QGridLayout pointer
+	row->addWidget(b,0,0,Qt::AlignHCenter); //DGA:  Adds the checkBox to the row and aligns it in the center horizontally
+	form->addRow(row); //DGA: Adds the row to the form
 
     ///// Indicators
     { QGridLayout *layout = new QGridLayout();
