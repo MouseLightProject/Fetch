@@ -50,10 +50,10 @@ namespace ui {
     protected:
       QLineEdit  *le_;      // do these really need to be here?
       QComboBox  *cmb_;
-	  QCheckBox  *checkBox_;
+	  QCheckBox  *checkBox_; //DGA: checkBox_ is a pointer to a QCheckBox
 
     public:
-      DevicePropControllerBase() : le_(NULL), cmb_(NULL) {}
+      DevicePropControllerBase() : le_(NULL), cmb_(NULL), checkBox_(NULL) {} //DGA: Initiate the pointers le_, cmb_ and checkBox_ to NULL
       
     signals:
       void configUpdated();
@@ -67,8 +67,8 @@ namespace ui {
       virtual void updateComboBox(QWidget *source) =0;
       virtual void setByDoubleSpinBox   (QWidget *source) =0;
       virtual void updateByDoubleSpinBox(QWidget *source) =0;
-	  virtual void setByCheckBox(QWidget *source) =0;
-      virtual void updateCheckBox(QWidget *source) =0;
+	  virtual void setByCheckBox(QWidget *source) =0; //DGA: Virtual function setByCheckBox that takes in as argument source, a pointer to type QWidget; used to set the configuration by clicking the checkbox. "=0" means it is a pure virtual function: derived classes will have to override it, else they will be abstract (be a base class). These are slots
+      virtual void updateCheckBox(QWidget *source) =0; //DGA: Virtual function updateCheckBox that takes in as argument source, a pointer to type QWidget; used to update the check box if changes occur in configuration ''
 
   };
 
@@ -82,12 +82,12 @@ namespace ui {
       QLineEdit      *createLineEdit();
       QDoubleSpinBox *createDoubleSpinBox();
       QComboBox      *createComboBox();
-	  QCheckBox      *createCheckBox();
+	  QCheckBox      *createCheckBox(); //DGA: Declaration of *createCheckBox function (*createCheckBox is a function, createCheckBox is a pointer to the function)
       QLabel         *createLabelAndAddToLayout(QFormLayout *layout);
       QLineEdit      *createLineEditAndAddToLayout(QFormLayout *layout);
       QDoubleSpinBox *createDoubleSpinBoxAndAddToLayout(QFormLayout *layout);
       QComboBox      *createComboBoxAndAddToLayout(QFormLayout *layout);
-	  QCheckBox      *createCheckBoxAndAddToLayout(QFormLayout *layout);
+	  QCheckBox      *createCheckBoxAndAddToLayout(QFormLayout *layout); //DGA: Declaration of *createCheckBoxAndAddToLayout function, which takes in *layout which is of type QFormLayout
 
     protected:
       void updateLabel          (QWidget *source);
@@ -97,8 +97,8 @@ namespace ui {
       void updateComboBox       (QWidget *source);
       void setByDoubleSpinBox   (QWidget *source);
       void updateByDoubleSpinBox(QWidget *source);
-	  void setByCheckBox		(QWidget *source);
-      void updateCheckBox		(QWidget *source);
+	  void setByCheckBox		(QWidget *source); //DGA: Overriding virtual function
+      void updateCheckBox		(QWidget *source); //DGA: Overriding virtual function
 
     protected:
       TGetSetInterface interface_;
@@ -111,7 +111,7 @@ namespace ui {
       QSignalMapper lineEditSignalMapper_;
       QSignalMapper comboBoxSignalMapper_;
       QSignalMapper doubleSpinBoxSignalMapper_;
-	  QSignalMapper checkBoxSignalMapper_;
+	  QSignalMapper checkBoxSignalMapper_; //DGA: checkBoxSignalMapper is of type QSignalMapper; collects parameterless signals and re-emits them with integer, string or widget parameters corresponding to the objec that sent the signal (doc.qt.io/qt-5/qsignalmapper.html)
       QSignalMapper configUpdateSignalMapper_;
 
   };
@@ -211,14 +211,14 @@ namespace ui {
   DECL_GETSET_CLASS(GetSetAutoTileChan             ,device::Microscope,unsigned);
   DECL_GETSET_CLASS(GetSetAutoTileIntesityThreshold,device::Microscope,float);
   DECL_GETSET_CLASS(GetSetAutoTileAreaThreshold    ,device::Microscope,float);
-  DECL_GETSET_CLASS(GetSetAutoTileUseCurrentZ      ,device::Microscope,unsigned);
+  DECL_GETSET_CLASS(GetSetAutoTileUseCurrentZ      ,device::Microscope,bool); //DGA: Declares getset class GetSetAutoTileUseCurrentZ which uses the Microscope device, and works with a bool since it is a checkbox
   typedef DevicePropController<device::Microscope,float   ,GetSetAutoTileZOff>              AutoTileZOffController;
   typedef DevicePropController<device::Microscope,float   ,GetSetAutoTileZMax>              AutoTileZMaxController;
   typedef DevicePropController<device::Microscope,unsigned,GetSetAutoTileTimeoutMs>         AutoTileTimeoutMsController;
   typedef DevicePropController<device::Microscope,unsigned,GetSetAutoTileChan>              AutoTileChanController;
   typedef DevicePropController<device::Microscope,float   ,GetSetAutoTileIntesityThreshold> AutoTileIntensityThresholdController;
   typedef DevicePropController<device::Microscope,float   ,GetSetAutoTileAreaThreshold>     AutoTileAreaThresholdController;
-  typedef DevicePropController<device::Microscope,unsigned,GetSetAutoTileUseCurrentZ>		AutoTileUseCurrentZController;
+  typedef DevicePropController<device::Microscope,bool    ,GetSetAutoTileUseCurrentZ>		AutoTileUseCurrentZController; //DGA: AutoTileUseCurrentZController now acts as type for template class DevicePropController taking in Microscope device, bool and GetSetAutoTileUseCurrentZ as parameters
 }} //end fetch::ui
 
   ////////////////////////////////////////////////////////////////////////////
@@ -264,10 +264,10 @@ namespace ui {
     connect(&doubleSpinBoxSignalMapper_,SIGNAL(mapped(QWidget*)),this,SLOT(setByDoubleSpinBox(QWidget*)));
     connect(&configUpdateSignalMapper_,SIGNAL(mapped(QWidget*)),this,SLOT(updateByDoubleSpinBox(QWidget*)));    
 
-	connect(&checkBoxSignalMapper_,SIGNAL(mapped(QWidget*)),this,SLOT(setByCheckBox(QWidget*)));
-    connect(&configUpdateSignalMapper_,SIGNAL(mapped(QWidget*)),this,SLOT(updateCheckBox(QWidget*)));    
+	connect(&checkBoxSignalMapper_,SIGNAL(mapped(QWidget*)),this,SLOT(setByCheckBox(QWidget*))); //DGA: The pointer (address) to each QCheckBox has been mapped to each checkbox, so when map() is called on checkBoxSignalMapper_, mapped(checkBox address) will be emitted, which will in turn call the setByCheckBox slot of the appropriate checkBox. "this" being the pointer to the DevicePropController object.
+    connect(&configUpdateSignalMapper_,SIGNAL(mapped(QWidget*)),this,SLOT(updateCheckBox(QWidget*))); //DGA: The pointer (address) to each QCheckBox has been mapped to the object of the class DevicePropController for which it was created, so when map() is called on configUpdateSignalMapper_, mapped(checkBox address) will be emitted, which will in turn call the updateCheckBox slot of the appropriate checkBox
 
-    connect(parent,SIGNAL(configUpdated()),this,SIGNAL(configUpdated()));
+    connect(parent,SIGNAL(configUpdated()),this,SIGNAL(configUpdated())); //DGA: When the parent signals configUpdated(), "this" object also signals configUpdated()
   }
 
   template<typename TDevice, typename TConfig, class TGetSetInterface>
@@ -362,10 +362,10 @@ namespace ui {
   template<typename TDevice, typename TConfig, class TGetSetInterface>
   void DevicePropController<TDevice,TConfig,TGetSetInterface>::
     setByCheckBox(QWidget* source)
-  { QCheckBox* checkBox = qobject_cast<QCheckBox*>(source);
-	if(checkBox)
-	{ TConfig checkedStatus = doubleToValue<TConfig> (checkBox->isChecked());
-      interface_.Set_(dc_, checkedStatus);
+  { QCheckBox* checkBox = qobject_cast<QCheckBox*>(source); //DGA: Get the pointer to the QCheckBox, returns 0 if source is not of type QCheckBox*
+	if(checkBox) //DGA: If source was a checkBox pointer
+	{ TConfig isChecked = doubleToValue<TConfig> (checkBox->isChecked()); //DGA: isChecked is true/flase if checkBox is checked/unchecked
+      interface_.Set_(dc_, isChecked); //DGA: Calls the setter of the interface_ (GetSet class object) for the device pointed to by dc_ and using isChecked as the set value
 	}
   }
 
@@ -373,10 +373,10 @@ namespace ui {
   void DevicePropController<TDevice,TConfig,TGetSetInterface>::
     updateCheckBox(QWidget* source)
   {
-    QCheckBox* checkBox = qobject_cast<QCheckBox*>(source);
-    if(checkBox)
-	{ bool checkedStatus = interface_.Get_(dc_);
-      checkBox->clicked(checkedStatus);
+    QCheckBox* checkBox = qobject_cast<QCheckBox*>(source); //DGA: Get the pointer to the QCheckBox, returns 0 if source is not of type QCheckBox*
+    if(checkBox) //DGA: If source was a checkBox pointer
+	{ bool isChecked = interface_.Get_(dc_); //DGA: Calls the getter of the interface (GetSetClass object), which in this case will return whether or not the checkbox should be checked
+      checkBox->clicked(isChecked); //DGA: Checks/unchecks the checkbox as determined by isChecked
 	}
   }
 
@@ -467,17 +467,16 @@ namespace ui {
   template<typename TDevice, typename TConfig, class TGetSetInterface>
   QCheckBox* 
     DevicePropController<TDevice,TConfig,TGetSetInterface>::
-    createCheckBox()
-  { //bool checkedStatus = interface_.Get_(dc_);
-    checkBox_ = new QCheckBox;
-    updateCheckBox(checkBox_);
+    createCheckBox() //DGA: Function to create the checkBox
+  { checkBox_ = new QCheckBox; //DGA: checkBox_ now points to a dynamically allocated region of memory for a QCheckBox
+    updateCheckBox(checkBox_); //DGA: updateCheckBox is called, which will initialize the checkBox's checked status to equal the value set in the config
     
-    checkBoxSignalMapper_.setMapping(checkBox_,checkBox_);
-    connect(checkBox_,SIGNAL(clicked(bool)),&checkBoxSignalMapper_,SLOT(map()));
+    checkBoxSignalMapper_.setMapping(checkBox_,checkBox_); //DGA: setMapping of checkBoxSignalMapper is called, mapping the checkBox_'s address to the checkBox_
+    connect(checkBox_,SIGNAL(clicked()),&checkBoxSignalMapper_,SLOT(map())); //DGA: clicking the checkbox causes the slot map() of checkBoxSignalMapper to execute, which emits the mapped(checkBox_ address) signal. This will in turn call slot setByCheckBox of the appropriate checkbox.
 
-    configUpdateSignalMapper_.setMapping(this,checkBox_);
-    connect(this,SIGNAL(configUpdated()),&configUpdateSignalMapper_,SLOT(map()));   
-    return checkBox_;
+    configUpdateSignalMapper_.setMapping(this,checkBox_); //DGA: setMapping of configUpdateSignalMapper is called, mapping the checkBox_'s address to this DevicePropController
+    connect(this,SIGNAL(configUpdated()),&configUpdateSignalMapper_,SLOT(map())); //DGA: When configUpdated() of this DevicePropController is called, the slot map() of configUpdatedSignalMapper_ is called, which emits the mapped(checkBox_ address) signal. This will in turn call the slot updateCheckBox of the appropriate checkbox. 
+    return checkBox_; //DGA: The checkBox_ pointer is returned
   }
 
   template<typename TDevice, typename TConfig, class TGetSetInterface>
@@ -516,9 +515,12 @@ namespace ui {
 
   template<typename TDevice, typename TConfig, class TGetSetInterface>
   QCheckBox* DevicePropController<TDevice,TConfig,TGetSetInterface>::
-    createCheckBoxAndAddToLayout( QFormLayout *layout )
-  { QCheckBox *checkBox = createCheckBox();
-    layout->addRow(label_,checkBox);
-    return checkBox;
+    createCheckBoxAndAddToLayout( QFormLayout *layout ) //DGA: Create checkbox and add to layout
+  { QCheckBox *checkBox = createCheckBox(); //DGA: Creates the checkBox with all the necessary mappings
+    QGridLayout *row = new QGridLayout(); //DGA: Creates a new grid layout so that we can center checkboxes
+	checkBox->setText(label_); //DGA: Sets the text of checkbox to label_, making the text on the right side. label_ is just the provided label since createLabel() was never called.
+	row->addWidget(checkBox,0,0,Qt::AlignHCenter); //DGA:  Adds the checkBox and aligns it in the center horizontally
+    layout->addRow(row);//DGA: Adds the row -- checkBox label_ -- to the layout.
+    return checkBox; //DGA: Returns the checkBox pointer
   }  
 }} //end fetch::ui

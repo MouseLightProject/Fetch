@@ -876,13 +876,12 @@ DoneOutlining:
     }
   };
 
-  int StageTiling::numberOfTilesWithGivenAttributes(uint32_t query_mask){
+  int StageTiling::numberOfTilesWithGivenAttributes(uint32_t query_mask){ // DGA: This is the definition of the function to count the number of tiles with attributes defined by query mask
 	  int numberOfTilesWithGivenAttributes=0;
 	  uint32_t *beg = AUINT32(attr_) + current_plane_offset_, // DGA: First tile in current plane
 			   *end = beg + sz_plane_nelem_; // DGA: Last tile in current plane, sz_plane_nelem_ is number of tiles in plane
 	  for (uint32_t *t = beg; t < end; ++t){
-		  uint32_t temp = *t;
-		  if (((*t)&query_mask) == query_mask)
+		  if (((*t)&query_mask) == query_mask) // DGA: Can have more attributes than query_mask, but must at least have all of the ones in query_mask
 			  numberOfTilesWithGivenAttributes++;
 	  }
 	  return numberOfTilesWithGivenAttributes;

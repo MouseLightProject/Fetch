@@ -110,12 +110,12 @@ Error:
         CHKJMP(dc->__scan_agent.is_runnable());
 		
         device::StageTiling* tiling = dc->stage()->tiling();
-		uint32_t attributes = device::StageTiling::Addressable | device::StageTiling::Safe | device::StageTiling::Active | device::StageTiling::Done;
+		uint32_t attributes = device::StageTiling::Addressable | device::StageTiling::Safe | device::StageTiling::Active | device::StageTiling::Done; //DGA: Will be used to count the number of tiles already imaged
 		numberImaged = tiling->numberOfTilesWithGivenAttributes(attributes);
 		// 1. iterate over tiles to measure the average tile offset
         tiling->resetCursor();
-		bool temp = dc->get_config().autotile().use_current_z();
-		if ( numberImaged==0 ? true : !temp){
+		bool shouldUseCurrentZ = dc->get_config().autotile().use_current_z(); //DGA: Is use_current_z set to true in cfg
+		if ( numberImaged==0 ? true : !shouldUseCurrentZ){ //DGA: If no tiles have been imaged, then will iterate over tiles as usual. If at least one has been imaged, then will skip this iteration if shouldUseCurrentZ is true; else will do the iteration (which will update z)
 			while (eflag == 0 && !dc->_agent->is_stopping() && tiling->nextInPlanePosition(tilepos))
 			{	
 				if (adapt_mindist <= tiling->minDistTo(0, 0,  // domain query   -- do not restrict to a particular tile type
@@ -219,7 +219,6 @@ Error:
           TS_TOC;          
         } // end loop over tiles
         eflag |= dc->stopPipeline();           // wait till the  pipeline stops
-
         TS_CLOSE;
         return eflag;
 Error:

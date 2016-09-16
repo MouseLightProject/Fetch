@@ -16,6 +16,7 @@ namespace ui {
     return v
 
 
+template<> bool QStringToValue<bool >(QString &s,bool *ok) {return NULL;} //DGA: template<> means that it is a template specialization. For boolean value, will return NULL since there is no string to convert; need to include this though for creating checkboxes since is in DevicePropController template
 template<> u8   QStringToValue<u8   >(QString &s,bool *ok) { CVT(u8 ,toUShort);}
 template<> u16  QStringToValue<u16  >(QString &s,bool *ok) { CVT(u16,toUShort);}
 template<> u32  QStringToValue<u32  >(QString &s,bool *ok) { CVT(u32,toUInt);}
@@ -27,6 +28,7 @@ template<> i64  QStringToValue<i64  >(QString &s,bool *ok) { CVT(i64,toLongLong)
 template<> f32  QStringToValue<f32  >(QString &s,bool *ok) { CVT(f32,toFloat );}
 template<> f64  QStringToValue<f64  >(QString &s,bool *ok) { CVT(f64,toDouble);}
 
+template<> QString ValueToQString(bool  v) {return NULL;} //DGA: template<> means that it is a template specialization. For boolean value, will return NULL since there is no need to convert value to qstring; need to include this though for creating checkboxes since is in DevicePropController template
 template<> QString ValueToQString(u8    v) {return QString().setNum(v);}
 template<> QString ValueToQString(u16   v) {return QString().setNum(v);}
 template<> QString ValueToQString(u32   v) {return QString().setNum(v);}
@@ -47,7 +49,7 @@ template<> double doubleToValue(double v){return v;}
 template<> float  doubleToValue(double v){return v;}
 template<> int doubleToValue(double v){return (int)v;}
 template<> unsigned int doubleToValue(double v){return (unsigned int)v;}
-template<> bool doubleToValue(double v){return (bool)v;}
+template<> bool doubleToValue(double v){return (bool)v;} //DGA: This is a template specialization required in creating checkboxes
 template<> cfg::device::Vibratome::VibratomeFeedAxis doubleToValue(double v) { return (v>0.5)?cfg::device::Vibratome_VibratomeFeedAxis_X:cfg::device::Vibratome_VibratomeFeedAxis_Y;}
 
 void DevicePropControllerBase::report() 
@@ -489,16 +491,16 @@ QValidator* GetSetAutoTileAreaThreshold::createValidator_(QObject* parent)
 { return new QDoubleValidator(0.0, 1.0, 3, parent);
 }
 
-void GetSetAutoTileUseCurrentZ::Set_(device::Microscope *dc, unsigned &setValue)
-{ device::Microscope::Config c = dc->get_config();
-  c.mutable_autotile()->set_use_current_z(setValue);
-  dc->set_config(c);
+void GetSetAutoTileUseCurrentZ::Set_(device::Microscope *dc, bool &setValue)
+{ device::Microscope::Config c = dc->get_config(); //DGA: Gets configuration
+  c.mutable_autotile()->set_use_current_z(setValue); //DGA: Sets the value of use_current_Z to setValue
+  dc->set_config(c); //DGA: Updates the config, now with use_current_z = setValue;
 }
-unsigned GetSetAutoTileUseCurrentZ::Get_(device::Microscope *dc)
-{ return dc->get_config().autotile().use_current_z();
+bool GetSetAutoTileUseCurrentZ::Get_(device::Microscope *dc)
+{ return dc->get_config().autotile().use_current_z(); //DGA: Returns the value of use_current_z from conifguration
 }
 QValidator* GetSetAutoTileUseCurrentZ::createValidator_(QObject* parent)
-{ return NULL;
+{ return NULL; //DGA: Do not really need a QValidator for a checkbox, so set it to NULL; is recquired if using the DECL_GETSETCLASS
 }
 
 }} //end fetch::ui

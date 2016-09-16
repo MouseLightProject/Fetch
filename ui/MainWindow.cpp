@@ -161,7 +161,7 @@ fetch::ui::MainWindow::MainWindow(device::Microscope *dc)
   _autotile_chan_control             = new AutoTileChanController(dc,"Channel to threshold",this);
   _autotile_intensity_thresh_control = new AutoTileIntensityThresholdController(dc,"Intensity threshold",this);
   _autotile_area_thresh_control      = new AutoTileAreaThresholdController(dc,"Area threshold (0-1)",this);
-  _autotile_use_current_z_control    = new AutoTileUseCurrentZController(dc,"Test",this);
+  _autotile_use_current_z_control    = new AutoTileUseCurrentZController(dc,"Use Current Z on Image Resume",this); //DGA: dynamically allocates _autotile_use_current_z_control as type AutoTileUseCurrentZController (a DevicePropController), with device dc, label "Test", and mainwindow parent pointer this
   
   connect(_stageController,SIGNAL(moved()),          _stage_pos_x_control,SIGNAL(configUpdated()));
   connect(_stageController,SIGNAL(moved()),          _stage_pos_y_control,SIGNAL(configUpdated()));

@@ -131,7 +131,7 @@ public: // semi-private
   AutoTileChanController               *_autotile_chan_control;
   AutoTileIntensityThresholdController *_autotile_intensity_thresh_control;
   AutoTileAreaThresholdController      *_autotile_area_thresh_control;
-  AutoTileUseCurrentZController		   *_autotile_use_current_z_control;
+  AutoTileUseCurrentZController		   *_autotile_use_current_z_control; //DGA: creates _autotile_use_current_z_control, a pointer of type AutoTileUseCurrentZController
 
   QFileSystemWatcher           *_config_watcher;
 

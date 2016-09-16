@@ -18,8 +18,7 @@ namespace ui{
     parent->_autotile_chan_control->createLineEditAndAddToLayout(form);
     parent->_autotile_intensity_thresh_control->createLineEditAndAddToLayout(form);
     parent->_autotile_area_thresh_control->createLineEditAndAddToLayout(form);
-	parent->_autotile_use_current_z_control->createCheckBoxAndAddToLayout(form);
-    ///// Use Current Z Checkbox Control
+	parent->_autotile_use_current_z_control->createCheckBoxAndAddToLayout(form); //DGA: Added a checkbox to select whether to use current z
     AgentControllerButtonPanel *btns = new AgentControllerButtonPanel(&parent->_scope_state_controller,&dc->auto_tile_task);
     form->addRow(btns);
   }
