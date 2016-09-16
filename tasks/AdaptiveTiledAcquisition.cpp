@@ -114,8 +114,8 @@ Error:
 		numberImaged = tiling->numberOfTilesWithGivenAttributes(attributes);
 		// 1. iterate over tiles to measure the average tile offset
         tiling->resetCursor();
-		bool shouldUseCurrentZ = dc->get_config().autotile().use_current_z(); //DGA: Is use_current_z set to true in cfg
-		if ( numberImaged==0 ? true : !shouldUseCurrentZ){ //DGA: If no tiles have been imaged, then will iterate over tiles as usual. If at least one has been imaged, then will skip this iteration if shouldUseCurrentZ is true; else will do the iteration (which will update z)
+		bool skipSurfaceFindOnImageResume = dc->get_config().autotile().skip_surface_find_on_image_resume(); //DGA: Is skip_surface_find_on_image_resume set to true in cfg
+		if ( numberImaged==0 ? true : !skipSurfaceFindOnImageResume){ //DGA: If no tiles have been imaged, then will iterate over tiles as usual. If at least one has been imaged, then will skip this iteration if skipSurfaceFindOnImageResume is true; else will do the iteration (which will update z)
 			while (eflag == 0 && !dc->_agent->is_stopping() && tiling->nextInPlanePosition(tilepos))
 			{	
 				if (adapt_mindist <= tiling->minDistTo(0, 0,  // domain query   -- do not restrict to a particular tile type

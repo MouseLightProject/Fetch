@@ -12,7 +12,7 @@ message AutoTile
   optional int32  search_radius       = 7 [default = 3];    // search radius in tiles
   optional bool   use_adaptive_tiling = 8 [default = false];
   optional bool   use_explore         = 9 [default = true];
-  optional bool	  use_current_z		  = 10 [default = false];
+  optional bool	  skip_surface_find_on_image_resume = 10 [default = false];
 }
 
 message TimeSeries

@@ -491,15 +491,15 @@ QValidator* GetSetAutoTileAreaThreshold::createValidator_(QObject* parent)
 { return new QDoubleValidator(0.0, 1.0, 3, parent);
 }
 
-void GetSetAutoTileUseCurrentZ::Set_(device::Microscope *dc, bool &setValue)
+void GetSetAutoTileSkipSurfaceFindOnImageResume::Set_(device::Microscope *dc, bool &setValue)
 { device::Microscope::Config c = dc->get_config(); //DGA: Gets configuration
-  c.mutable_autotile()->set_use_current_z(setValue); //DGA: Sets the value of use_current_Z to setValue
-  dc->set_config(c); //DGA: Updates the config, now with use_current_z = setValue;
+  c.mutable_autotile()->set_skip_surface_find_on_image_resume(setValue); //DGA: Sets the value of skip_surface_find_on_image_resume to setValue
+  dc->set_config(c); //DGA: Updates the config, now with skip_surface_find_on_image_resume = setValue;
 }
-bool GetSetAutoTileUseCurrentZ::Get_(device::Microscope *dc)
-{ return dc->get_config().autotile().use_current_z(); //DGA: Returns the value of use_current_z from conifguration
+bool GetSetAutoTileSkipSurfaceFindOnImageResume::Get_(device::Microscope *dc)
+{ return dc->get_config().autotile().skip_surface_find_on_image_resume(); //DGA: Returns the value of skip_surface_find_on_image_resume from configuration
 }
-QValidator* GetSetAutoTileUseCurrentZ::createValidator_(QObject* parent)
+QValidator* GetSetAutoTileSkipSurfaceFindOnImageResume::createValidator_(QObject* parent)
 { return NULL; //DGA: Do not really need a QValidator for a checkbox, so set it to NULL; is recquired if using the DECL_GETSETCLASS
 }
 
