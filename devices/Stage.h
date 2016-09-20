@@ -188,7 +188,7 @@ namespace device {
     FieldOfViewGeometry *_fov;
     FieldOfViewGeometry  _lastfov;
     Mutex               *_tiling_lock;
-
+    
     public:
       Stage(Agent *agent);
       Stage(Agent *agent, Config *cfg);

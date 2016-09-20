@@ -114,6 +114,8 @@ namespace device {
     uint32_t search_mask,uint32_t search_flags,   // area to search 
     uint32_t query_mask ,uint32_t query_flags);  // tile to find
     void getCursorLatticePosition(int* x,int* y,int* z);
+
+	int numberOfTilesWithGivenAttributes(uint32_t query_mask); //DGA: Function to return the number of tiles with attributes defined by query_mask
   protected:
     void computeLatticeToStageTransform_
                         (const FieldOfViewGeometry& fov,

@@ -42,4 +42,13 @@ _______________
 		      Clack's repository.
 
 1.011  Sep 7, 2016    Fixed README formatting.
-                      
+
+1.02   Sep 20, 2016   Created a property and check box called
+		      "Skip Surface Find on Image Resume" in 
+		      Auto Tile mode. This gives the user the 
+		      option to stop imaging and restart without 
+		      having to do another surface find. This 
+		      property is outputted in .acquisition file. 
+	              Also reformatted Stage's "Lock Controls" 
+		      checkbox and added version number to main 
+		      window.

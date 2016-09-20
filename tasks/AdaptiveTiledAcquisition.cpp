@@ -102,49 +102,53 @@ Error:
         Vector3f tilepos;
         float tiling_offset_acc_mm=0.0f;
         float nsamp=0;
+		int numberImaged;
         int adapt_count=0;
         int adapt_thresh=dc->get_config().adaptive_tiling().every();
         int adapt_mindist=dc->get_config().adaptive_tiling().mindist();
         TS_OPEN("timer-tiles.f32");
         CHKJMP(dc->__scan_agent.is_runnable());
-
+		
         device::StageTiling* tiling = dc->stage()->tiling();
-
-
-        // 1. iterate over tiles to measure the average tile offset
+		uint32_t attributes = device::StageTiling::Addressable | device::StageTiling::Safe | device::StageTiling::Active | device::StageTiling::Done; //DGA: Will be used to count the number of tiles already imaged
+		numberImaged = tiling->numberOfTilesWithGivenAttributes(attributes);
+		// 1. iterate over tiles to measure the average tile offset
         tiling->resetCursor();
-        while(eflag==0 && !dc->_agent->is_stopping() && tiling->nextInPlanePosition(tilepos))
-        {           
-          if(adapt_mindist<=tiling->minDistTo( 0,0,  // domain query   -- do not restrict to a particular tile type
-                     device::StageTiling::Active,0)) // boundary query -- this is defines what is "outside"
-		  {
-            if(++adapt_count>adapt_thresh) // is it time to try?
-            { adapt_count=0;
-              // M O V E
-              Vector3f curpos = dc->stage()->getTarget(); // use current target z for tilepos z
-              debug("%s(%d)"ENDL "\t[Adaptive Tiling Task] curpos: %5.1f %5.1f %5.1f"ENDL,__FILE__,__LINE__,curpos[0]*1000.0f,curpos[1]*1000.0f,curpos[2]*1000.0f);          
-              dc->stage()->setPos(0.001f*tilepos);        // convert um to mm
-              curpos = dc->stage()->getTarget(); // use current target z for tilepos z
-              debug("%s(%d)"ENDL "\t[Adaptive Tiling Task] curpos: %5.1f %5.1f %5.1f"ENDL,__FILE__,__LINE__,curpos[0]*1000.0f,curpos[1]*1000.0f,curpos[2]*1000.0f);
+		bool skipSurfaceFindOnImageResume = dc->get_config().autotile().skip_surface_find_on_image_resume(); //DGA: Is skip_surface_find_on_image_resume set to true in cfg
+		if ( numberImaged==0 ? true : !skipSurfaceFindOnImageResume){ //DGA: If no tiles have been imaged, then will iterate over tiles as usual. If at least one has been imaged, then will skip this iteration if skipSurfaceFindOnImageResume is true; else will do the iteration (which will update z)
+			while (eflag == 0 && !dc->_agent->is_stopping() && tiling->nextInPlanePosition(tilepos))
+			{	
+				if (adapt_mindist <= tiling->minDistTo(0, 0,  // domain query   -- do not restrict to a particular tile type
+					device::StageTiling::Active, 0)) // boundary query -- this is defines what is "outside"
+				{	
+					if (++adapt_count > adapt_thresh) // is it time to try?
+					{	adapt_count = 0;
+						// M O V E
+						Vector3f curpos = dc->stage()->getTarget(); // use current target z for tilepos z
+						debug("%s(%d)"ENDL "\t[Adaptive Tiling Task] curpos: %5.1f %5.1f %5.1f"ENDL, __FILE__, __LINE__, curpos[0] * 1000.0f, curpos[1] * 1000.0f, curpos[2] * 1000.0f);
+						dc->stage()->setPos(0.001f*tilepos);        // convert um to mm
+						curpos = dc->stage()->getTarget(); // use current target z for tilepos z
+						debug("%s(%d)"ENDL "\t[Adaptive Tiling Task] curpos: %5.1f %5.1f %5.1f"ENDL, __FILE__, __LINE__, curpos[0] * 1000.0f, curpos[1] * 1000.0f, curpos[2] * 1000.0f);
 
-              // A D A P T I V E 
+						// A D A P T I V E 
 #if 0
-              if (adapt_count>2*adapt_thresh) // have too many detections been missed
-              { warning("Could not track surface.  Giving up.\n");
-                goto Error;
-              }
+						if (adapt_count>2*adapt_thresh) // have too many detections been missed
+						{ warning("Could not track surface.  Giving up.\n");
+						goto Error;
+						}
 #endif
-              //surface_find.config();  -- arms stack task as scan agent...redundant
-              eflag |= surface_find.run(dc);
-              if(surface_find.hit())
-              { tiling_offset_acc_mm+=dc->stage()->tiling_z_offset_mm();
-                ++nsamp;
-              }
+						//surface_find.config();  -- arms stack task as scan agent...redundant
+						eflag |= surface_find.run(dc);
+						if (surface_find.hit())
+						{	tiling_offset_acc_mm += dc->stage()->tiling_z_offset_mm();
+							++nsamp;
+						}
 
-             
-            }
-          }
-        }
+
+					}
+				}
+			}
+		}
         if(nsamp==0)
         { warning("Could not track surface because no candidate sampling points were found.\n");
           //goto Error;
@@ -153,7 +157,7 @@ Error:
           dc->stage()->set_tiling_z_offset_mm(tiling_offset_acc_mm/nsamp);
         }
 
-        // retore connection between end of pipeline and disk 
+		// retore connection between end of pipeline and disk 
         IDevice::connect(&dc->disk,0,dc->_end_of_pipeline,0);
 
         // 2. iterate over tiles to image
