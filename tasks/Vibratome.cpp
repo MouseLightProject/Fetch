@@ -115,7 +115,7 @@ namespace microscope {
     CHK( (v = dc->vibratome()->feed_vel_mm_p_s())>0.0); // must be non-zero
 
     // Move to the start of the cut
-    bz = cz-dz+thick;								// cut z position = Current Z - delta Z offset + requested slice thickness
+    bz = cz-dz+thick;								// cut z position = Current Z - delta Z offset + requested slice thickness ( + offset)
     CHK( dc->stage()->setPos(cx,cy,14));           // Drop to safe z first
     CHK( dc->stage()->setPos(ax,ay,14));           // Move on safe z plane to cut position
     CHK( dc->stage()->setPos(ax,ay,bz));            // Move to final plane (bz)

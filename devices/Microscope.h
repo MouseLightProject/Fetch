@@ -82,7 +82,6 @@ namespace fetch
       std::string _lastpath;
       cfg::FileSeries __default_desc;
       bool _is_valid;
-	  bool _haveBeenInIncMethod;
 
       void notify();
 

@@ -21,8 +21,8 @@ namespace ui {
     void tiling_changed()                                                  {emit sig_tiling_changed();}
     void tile_next( size_t index, const Vector3f& pos )                    {emit sig_tile_next((unsigned int)index);}
     void fov_changed(const device::FieldOfViewGeometry *fov)               {emit sig_fov_changed(fov->field_size_um_[0],fov->field_size_um_[1],fov->rotation_radians_);}      
-    void moved(void)                                                       {emit sig_moved();}  
-    
+    void moved(void)                                                       {emit sig_moved();}
+	
   signals:
     void sig_tile_done( unsigned index, unsigned int sts );
     void sig_tiling_changed();
@@ -232,14 +232,14 @@ namespace ui {
       device::Stage *stage()                                               {return stage_;}
 
       QComboBox *createHistoryComboBox(QWidget *parent=0);
-                                                                     
+
    signals:
       void moved();            ///< eventually updates the imitem's position
       void moved(QPointF pos); ///< eventually updates the imitem's position
       void velocityChanged();
       void referenced();       ///< eventually updates the imitem's position
-
-    public slots:
+    
+	  public slots:
       
       void setVelocity(QPointF v)                                          { stage_->setVelocity(v.x(),v.y(),0.0); }
       void moveTo3d(float x, float y, float z)                             { stage_->setPosNoWait(x,y,z); history_.push(x,y,z); emit moved(QPointF(x,y));}

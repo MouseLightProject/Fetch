@@ -16,27 +16,29 @@ namespace ui {
     return v
 
 
-template<> u8  QStringToValue<u8 >(QString &s,bool *ok) { CVT(u8 ,toUShort);}
-template<> u16 QStringToValue<u16>(QString &s,bool *ok) { CVT(u16,toUShort);}
-template<> u32 QStringToValue<u32>(QString &s,bool *ok) { CVT(u32,toUInt);}
-template<> u64 QStringToValue<u64>(QString &s,bool *ok) { CVT(u64,toULongLong);}
-template<> i8  QStringToValue<i8 >(QString &s,bool *ok) { CVT(i8 ,toShort);}
-template<> i16 QStringToValue<i16>(QString &s,bool *ok) { CVT(i16,toShort);}
-template<> i32 QStringToValue<i32>(QString &s,bool *ok) { CVT(i32,toInt);}
-template<> i64 QStringToValue<i64>(QString &s,bool *ok) { CVT(i64,toLongLong);}
-template<> f32 QStringToValue<f32>(QString &s,bool *ok) { CVT(f32,toFloat );}
-template<> f64 QStringToValue<f64>(QString &s,bool *ok) { CVT(f64,toDouble);}
+template<> bool QStringToValue<bool >(QString &s,bool *ok) {return NULL;} //DGA: template<> means that it is a template specialization. For boolean value, will return NULL since there is no string to convert; need to include this though for creating checkboxes since is in DevicePropController template
+template<> u8   QStringToValue<u8   >(QString &s,bool *ok) { CVT(u8 ,toUShort);}
+template<> u16  QStringToValue<u16  >(QString &s,bool *ok) { CVT(u16,toUShort);}
+template<> u32  QStringToValue<u32  >(QString &s,bool *ok) { CVT(u32,toUInt);}
+template<> u64  QStringToValue<u64  >(QString &s,bool *ok) { CVT(u64,toULongLong);}
+template<> i8   QStringToValue<i8   >(QString &s,bool *ok) { CVT(i8 ,toShort);}
+template<> i16  QStringToValue<i16  >(QString &s,bool *ok) { CVT(i16,toShort);}
+template<> i32  QStringToValue<i32  >(QString &s,bool *ok) { CVT(i32,toInt);}
+template<> i64  QStringToValue<i64  >(QString &s,bool *ok) { CVT(i64,toLongLong);}
+template<> f32  QStringToValue<f32  >(QString &s,bool *ok) { CVT(f32,toFloat );}
+template<> f64  QStringToValue<f64  >(QString &s,bool *ok) { CVT(f64,toDouble);}
 
-template<> QString ValueToQString(u8  v) {return QString().setNum(v);}
-template<> QString ValueToQString(u16 v) {return QString().setNum(v);}
-template<> QString ValueToQString(u32 v) {return QString().setNum(v);}
-template<> QString ValueToQString(u64 v) {return QString().setNum(v);}
-template<> QString ValueToQString(i8  v) {return QString().setNum(v);}
-template<> QString ValueToQString(i16 v) {return QString().setNum(v);}
-template<> QString ValueToQString(i32 v) {return QString().setNum(v);}
-template<> QString ValueToQString(i64 v) {return QString().setNum(v);}
-template<> QString ValueToQString(f32 v) {return QString().setNum(v);}
-template<> QString ValueToQString(f64 v) {return QString().setNum(v);}
+template<> QString ValueToQString(bool  v) {return NULL;} //DGA: template<> means that it is a template specialization. For boolean value, will return NULL since there is no need to convert value to qstring; need to include this though for creating checkboxes since is in DevicePropController template
+template<> QString ValueToQString(u8    v) {return QString().setNum(v);}
+template<> QString ValueToQString(u16   v) {return QString().setNum(v);}
+template<> QString ValueToQString(u32   v) {return QString().setNum(v);}
+template<> QString ValueToQString(u64   v) {return QString().setNum(v);}
+template<> QString ValueToQString(i8    v) {return QString().setNum(v);}
+template<> QString ValueToQString(i16   v) {return QString().setNum(v);}
+template<> QString ValueToQString(i32   v) {return QString().setNum(v);}
+template<> QString ValueToQString(i64   v) {return QString().setNum(v);}
+template<> QString ValueToQString(f32   v) {return QString().setNum(v);}
+template<> QString ValueToQString(f64   v) {return QString().setNum(v);}
 
 /* Note:
    This is an ugly little set of convrsion functions.  Ideally, the non-trivial one's would never be used.
@@ -47,6 +49,7 @@ template<> double doubleToValue(double v){return v;}
 template<> float  doubleToValue(double v){return v;}
 template<> int doubleToValue(double v){return (int)v;}
 template<> unsigned int doubleToValue(double v){return (unsigned int)v;}
+template<> bool doubleToValue(double v){return (bool)v;} //DGA: This is a template specialization required in creating checkboxes
 template<> cfg::device::Vibratome::VibratomeFeedAxis doubleToValue(double v) { return (v>0.5)?cfg::device::Vibratome_VibratomeFeedAxis_X:cfg::device::Vibratome_VibratomeFeedAxis_Y;}
 
 void DevicePropControllerBase::report() 
@@ -486,6 +489,18 @@ float GetSetAutoTileAreaThreshold::Get_(device::Microscope *dc)
 }
 QValidator* GetSetAutoTileAreaThreshold::createValidator_(QObject* parent)
 { return new QDoubleValidator(0.0, 1.0, 3, parent);
+}
+
+void GetSetAutoTileSkipSurfaceFindOnImageResume::Set_(device::Microscope *dc, bool &setValue)
+{ device::Microscope::Config c = dc->get_config(); //DGA: Gets configuration
+  c.mutable_autotile()->set_skip_surface_find_on_image_resume(setValue); //DGA: Sets the value of skip_surface_find_on_image_resume to setValue
+  dc->set_config(c); //DGA: Updates the config, now with skip_surface_find_on_image_resume = setValue;
+}
+bool GetSetAutoTileSkipSurfaceFindOnImageResume::Get_(device::Microscope *dc)
+{ return dc->get_config().autotile().skip_surface_find_on_image_resume(); //DGA: Returns the value of skip_surface_find_on_image_resume from configuration
+}
+QValidator* GetSetAutoTileSkipSurfaceFindOnImageResume::createValidator_(QObject* parent)
+{ return NULL; //DGA: Do not really need a QValidator for a checkbox, so set it to NULL; is recquired if using the DECL_GETSETCLASS
 }
 
 }} //end fetch::ui
