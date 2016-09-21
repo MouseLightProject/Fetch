@@ -60,3 +60,5 @@ _______________
                       microscope file. Also changed z_tile_offset 
                       to 0 to prevent errors when resaving 
                       .microscope file.
+
+1.022  Sep 21, 2016   Updated version number in main window.
