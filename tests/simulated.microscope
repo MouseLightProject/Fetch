@@ -199,7 +199,7 @@ stage {
     z: 1
   }
   tilemode: PixelAligned
-  tile_z_offset_mm: 1.5716921091079712
+  tile_z_offset_mm: 0
 }
 vibratome {
   kind: Simulated
@@ -233,7 +233,7 @@ file_prefix: "derp"
 stack_extension: ".tif"
 config_extension: ".microscope"
 autotile {
-  z_um: 4
+  z_um: 6
   maxz_mm: 0.55
   timeout_ms: 15000
   ichan: 0
