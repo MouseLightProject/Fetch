@@ -376,7 +376,7 @@ namespace ui {
     QCheckBox* checkBox = qobject_cast<QCheckBox*>(source); //DGA: Get the pointer to the QCheckBox, returns 0 if source is not of type QCheckBox*
     if(checkBox) //DGA: If source was a checkBox pointer
 	{ bool isChecked = interface_.Get_(dc_); //DGA: Calls the getter of the interface (GetSetClass object), which in this case will return whether or not the checkbox should be checked
-      checkBox->clicked(isChecked); //DGA: Checks/unchecks the checkbox as determined by isChecked
+      checkBox->setChecked(isChecked); //DGA: Checks/unchecks the checkbox as determined by isChecked
 	}
   }
 
