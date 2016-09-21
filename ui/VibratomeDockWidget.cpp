@@ -303,6 +303,18 @@ namespace ui {
         connect(this,SIGNAL(delta(float)),b,SLOT(setValue(float)));
         connect(parent->_vibratome_z_offset_controller, SIGNAL(configUpdated()),
                 this,SLOT(updateFromConfig()));
+
+		g = new QGroupBox("Manual Offset");
+        b = new MarkButton("Commit");
+        v = new QVBoxLayout();
+        v->addWidget(b);
+        g->setLayout(v);
+        row->addWidget(g,1,4);
+        /*connect(b,SIGNAL(clicked()),this,SLOT(commitOffset()));
+        connect(this,SIGNAL(delta(float)),b,SLOT(setValue(float)));
+        connect(parent->_vibratome_z_offset_controller, SIGNAL(configUpdated()),
+                this,SLOT(updateFromConfig()));*/
+
         emit updateFromConfig();
       
         form->addRow(row);
