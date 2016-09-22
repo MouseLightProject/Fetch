@@ -469,10 +469,10 @@ Error:
 
   int
     Vibratome::
-    setManualVerticalOffsetNoWait(float manualZOffset_mm)
+    setVerticalOffsetCorrectionNoWait(float manualZOffset_mm)
   {
     Config cfg = get_config();
-    cfg.mutable_geometry()->set_manual_z_offset_mm(manualZOffset_mm);
+    cfg.mutable_geometry()->set_z_offset_correction_mm(manualZOffset_mm);
     return set_config_nowait(cfg);
   }
 

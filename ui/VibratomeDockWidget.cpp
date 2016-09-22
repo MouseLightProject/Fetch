@@ -307,7 +307,25 @@ namespace ui {
         emit updateFromConfig();
       
         form->addRow(row);
-		parent->_vibratome_manual_z_offset_controller->createLineEditAndAddToLayout(form);
+		QLineEdit* zOffsetCorrectionLineEdit = parent->_vibratome_z_offset_correction_controller->createLineEditAndAddToLayout(form);
+		///// Lock Controls
+		QCheckBox *checkBox = new QCheckBox();
+		checkBox->setText("Lock Z Offset Correction");
+		QStateMachine *lockmachine = new QStateMachine(this);
+		QState *locked = new QState(),
+			*unlocked = new QState();
+		locked->addTransition(checkBox, SIGNAL(stateChanged(int)), unlocked);
+		unlocked->addTransition(checkBox, SIGNAL(stateChanged(int)), locked);
+		locked->assignProperty(zOffsetCorrectionLineEdit, "readOnly", true);
+		unlocked->assignProperty(zOffsetCorrectionLineEdit, "readOnly", false);
+		lockmachine->addState(locked);
+		lockmachine->addState(unlocked);
+		checkBox->setCheckState(Qt::Checked);
+		lockmachine->setInitialState(locked);
+		lockmachine->start();
+		row = new QGridLayout(); //DGA: Dynamically allocates row as QGridLayout pointer
+		row->addWidget(checkBox, 0, 0, Qt::AlignHCenter); //DGA:  Adds the checkBox to the row and aligns it in the center horizontally
+		form->addRow(row); //DGA: Adds the row to the form
       }
 
 #if 0 // turns out this tableview is completely useless.

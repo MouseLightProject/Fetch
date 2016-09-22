@@ -102,7 +102,7 @@ namespace microscope {
 
   unsigned int Cut::run(device::Microscope* dc)
   {
-    float cx,cy,cz,vx,vy,vz,ax,ay,bx,by,bz,v,dz,thick, manual_z_offset;
+    float cx,cy,cz,vx,vy,vz,ax,ay,bx,by,bz,v,dz,thick, z_offset_correction;
     // get current pos,vel
     CHK( dc->stage()->getTarget(&cx,&cy,&cz));
     CHK( dc->stage()->getVelocity(&vx,&vy,&vz));
@@ -112,11 +112,11 @@ namespace microscope {
     dc->vibratome()->feed_end_pos_mm(&bx,&by);
     thick = dc->vibratome()->thickness_um()*0.001;      // um->mm
     dz = dc->vibratome()->verticalOffset();             // when image plan is lower than cutting plane, dz should be negative
-	manual_z_offset = dc->vibratome()->manualVerticalOffset();
+	z_offset_correction = dc->vibratome()->verticalOffsetCorrection();
     CHK( (v = dc->vibratome()->feed_vel_mm_p_s())>0.0); // must be non-zero
 
     // Move to the start of the cut
-    bz = cz-dz+thick + (manual_z_offset);								// cut z position = Current Z - delta Z offset + requested slice thickness ( + offset)
+    bz = cz-dz+thick - (z_offset_correction);		// cut z position = Current Z - delta Z offset + requested slice thickness ( - offset correction); another way to look at it: bz = cz - (dz + z_offset_correction) + thick, where the first subtraction gets the blade to the top of the sample
     CHK( dc->stage()->setPos(cx,cy,14));           // Drop to safe z first
     CHK( dc->stage()->setPos(ax,ay,14));           // Move on safe z plane to cut position
     CHK( dc->stage()->setPos(ax,ay,bz));            // Move to final plane (bz)

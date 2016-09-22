@@ -269,13 +269,13 @@ QValidator* GetSetVibratomeZOffset::createValidator_(QObject* parent)
 { return new QDoubleValidator(-10.0,10.0/*mm*/,4/*decimals*/,parent);
 }
 
-void GetSetVibratomeManualZOffset::Set_(device::Vibratome *dc, float &v)
-{ dc->setManualVerticalOffsetNoWait(v); 
+void GetSetVibratomeZOffsetCorrection::Set_(device::Vibratome *dc, float &v)
+{ dc->setVerticalOffsetCorrectionNoWait(v); 
 }
-float GetSetVibratomeManualZOffset::Get_(device::Vibratome *dc)
-{ return dc->manualVerticalOffset();
+float GetSetVibratomeZOffsetCorrection::Get_(device::Vibratome *dc)
+{ return dc->verticalOffsetCorrection();
 }
-QValidator* GetSetVibratomeManualZOffset::createValidator_(QObject* parent)
+QValidator* GetSetVibratomeZOffsetCorrection::createValidator_(QObject* parent)
 { return new QDoubleValidator(-10.0,10.0/*mm*/,4/*decimals*/,parent);
 }
     
