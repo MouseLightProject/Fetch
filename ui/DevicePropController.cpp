@@ -268,6 +268,16 @@ float GetSetVibratomeZOffset::Get_(device::Vibratome *dc)
 QValidator* GetSetVibratomeZOffset::createValidator_(QObject* parent)
 { return new QDoubleValidator(-10.0,10.0/*mm*/,4/*decimals*/,parent);
 }
+
+void GetSetVibratomeManualZOffset::Set_(device::Vibratome *dc, float &v)
+{ dc->setManualVerticalOffsetNoWait(v); 
+}
+float GetSetVibratomeManualZOffset::Get_(device::Vibratome *dc)
+{ return dc->manualVerticalOffset();
+}
+QValidator* GetSetVibratomeManualZOffset::createValidator_(QObject* parent)
+{ return new QDoubleValidator(-10.0,10.0/*mm*/,4/*decimals*/,parent);
+}
     
 void GetSetVibratomeThick::Set_(device::Vibratome *dc, float &v)
 { dc->setThicknessUmNoWait(v); 

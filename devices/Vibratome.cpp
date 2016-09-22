@@ -469,6 +469,15 @@ Error:
 
   int
     Vibratome::
+    setManualVerticalOffsetNoWait(float manualZOffset_mm)
+  {
+    Config cfg = get_config();
+    cfg.mutable_geometry()->set_manual_z_offset_mm(manualZOffset_mm);
+    return set_config_nowait(cfg);
+  }
+
+  int
+    Vibratome::
     setThicknessUmNoWait(float um)
   {
     Config cfg = get_config();
