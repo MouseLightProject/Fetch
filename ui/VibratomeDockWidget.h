@@ -63,6 +63,8 @@ namespace fetch{
       device::Microscope *dc_;
     public:
       VibratomeGeometryDockWidget(device::Microscope *dc, MainWindow* parent);
+	  virtual ~VibratomeGeometryDockWidget();
+
     protected slots:
       void geometryCtxMenu(const QPoint &);
       void insert();
@@ -72,6 +74,8 @@ namespace fetch{
       void markImagePlane();
       void markCutPlane();
       void commitOffset();
+
+	  void zOffsetCorrectionChanged();
 
       void updateFromConfig();
 

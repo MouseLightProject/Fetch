@@ -307,7 +307,18 @@ namespace ui {
         emit updateFromConfig();
       
         form->addRow(row);
-		QLineEdit* zOffsetCorrectionLineEdit = parent->_vibratome_z_offset_correction_controller->createLineEditAndAddToLayout(form);
+
+		//DGA: Restore sliceThicknessCorrection if stored
+		QSettings settings;
+		QLineEdit * zOffsetCorrectionLineEdit = parent->_vibratome_z_offset_correction_controller->createLineEditAndAddToLayout(form);
+		bool ok; float sliceThicknessCorrection;
+		sliceThicknessCorrection = settings.value("VibratomeGeometryDockWidget/sliceThicknessCorrection").toFloat(&ok);
+		if (ok){
+			zOffsetCorrectionLineEdit->setText(QString::number(sliceThicknessCorrection));
+			zOffsetCorrectionLineEdit->editingFinished();
+		}
+		connect(zOffsetCorrectionLineEdit,SIGNAL(editingFinished()),this,SLOT(zOffsetCorrectionChanged()));
+
 		///// Lock Controls
 		QCheckBox *checkBox = new QCheckBox();
 		checkBox->setText("Lock Z Offset Correction");
@@ -422,4 +433,36 @@ namespace ui {
       updateFromConfig()
     { emit delta(dc_->vibratome()->verticalOffset());
     }
+
+	//DGA: Settings related information
+	VibratomeGeometryDockWidget::~VibratomeGeometryDockWidget()
+	{// saveSettings();
+	}
+
+	/*void 
+	  VibratomeGeometryDockWidget::
+	  saveSettings()
+	{QSettings settings;
+	dc_->vibratome();
+	float temp = dc_->vibratome()->verticalOffsetCorrection();
+	 settings.setValue("VibratomeGeometryDockWidget/sliceThicknessCorrection",dc_->vibratome()->verticalOffsetCorrection());
+	}*/
+	void
+	  VibratomeGeometryDockWidget::
+	  zOffsetCorrectionChanged()
+	{QSettings settings;
+	 float newZOffsetCorrection = dc_->vibratome()->verticalOffsetCorrection();
+	 settings.setValue("VibratomeGeometryDockWidget/sliceThicknessCorrection",newZOffsetCorrection);
+	}
+
+	/*void 
+	  VibratomeGeometryDockWidget::
+	  restoreSettings()
+	{QSettings settings;
+	 bool ok; float sliceThicknessCorrection;
+	 sliceThicknessCorrection = settings.value("VibratomeGeometryDockWidget/sliceThicknessCorrection").toFloat(&ok);
+	 if (ok)
+		 dc_->vibratome()->setVerticalOffsetCorrectionNoWait(sliceThicknessCorrection);
+	}*/
+
 }} //end namespace fetch::ui
