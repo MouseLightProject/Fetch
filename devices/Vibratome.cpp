@@ -469,14 +469,21 @@ Error:
 
   int
     Vibratome::
-    setThicknessUmNoWait(float um)
+    setThicknessUmNoWait(float um) 
   {
-    Config cfg = get_config();
-    cfg.set_cut_thickness_um(um);
+    Config cfg = get_config(); 
+    cfg.set_cut_thickness_um(um); 
     return set_config_nowait(cfg);
   }
-
   
+  int
+    Vibratome::
+    setThicknessCorrectionUmNoWait(float um) //DGA: Sets the thickness correction in microns equal to the input um.
+  {
+    Config cfg = get_config(); //DGA: Sets cfg equal to the current config.
+    cfg.mutable_geometry()->set_cut_thickness_correction_um(um); //DGA: Sets the cfg's cut_thickness_correction_um property to um
+    return set_config_nowait(cfg); //DGA: Sets teh config to cfg
+  }
 
 
 } //end device namespace

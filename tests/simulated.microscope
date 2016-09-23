@@ -158,7 +158,7 @@ scanner3d {
     }
     um_max: 10
     um_min: 0
-    um_step: 2
+    um_step: 1
   }
   zref_um: 0
 }
@@ -209,6 +209,9 @@ vibratome {
   }
   feed_axis: X
   cut_thickness_um: 6
+    geometry {
+    dz_mm: 6.4350018501281738
+  }
 }
 fov {
   x_size_um: 500
@@ -234,7 +237,7 @@ stack_extension: ".tif"
 config_extension: ".microscope"
 autotile {
   z_um: 6
-  maxz_mm: 0.55
+  maxz_mm: 14.55
   timeout_ms: 15000
   ichan: 0
   intensity_threshold: 15700
