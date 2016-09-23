@@ -167,7 +167,8 @@ namespace ui {
   DECL_GETSET_CLASS(GetSetVibratomeCutPosX ,device::Vibratome,double);
   DECL_GETSET_CLASS(GetSetVibratomeCutPosY ,device::Vibratome,double);
   DECL_GETSET_CLASS(GetSetVibratomeZOffset ,device::Vibratome,float);
-  DECL_GETSET_CLASS(GetSetVibratomeThick   ,device::Vibratome,float);
+  DECL_GETSET_CLASS(GetSetVibratomeThickness   ,device::Vibratome,float); //DGA: Renamed thick to thickness
+  DECL_GETSET_CLASS(GetSetVibratomeThicknessCorrection ,device::Vibratome,float); //DGA: Declares getset class GetSetVibratomeThicknessCorrection which uses the Vibratome device, and works with a float
   DECL_GETSET_DESC_CLASS(GetSetVibratomeFeedAxis,device::Vibratome,cfg::device::Vibratome::VibratomeFeedAxis);
   typedef DevicePropController<device::Vibratome,u32,GetSetVibratomeAmplitude>                                      VibratomeAmplitudeController;
   typedef DevicePropController<device::Vibratome,double,GetSetVibratomeFeedDist>                                    VibratomeFeedDisController;
@@ -175,7 +176,8 @@ namespace ui {
   typedef DevicePropController<device::Vibratome,double,GetSetVibratomeCutPosX >                                    VibratomeFeedPosXController;
   typedef DevicePropController<device::Vibratome,double,GetSetVibratomeCutPosY >                                    VibratomeFeedPosYController;
   typedef DevicePropController<device::Vibratome,float ,GetSetVibratomeZOffset >                                    VibratomeZOffsetController;
-  typedef DevicePropController<device::Vibratome,float ,GetSetVibratomeThick >                                      VibratomeThickController;
+  typedef DevicePropController<device::Vibratome,float ,GetSetVibratomeThickness >                                  VibratomeThicknessController; //DGA: Renamed thick to thickness
+  typedef DevicePropController<device::Vibratome,float ,GetSetVibratomeThicknessCorrection >					    VibratomeThicknessCorrectionController; //DGA: VibratomeThicknessCorrectionController now acts as type for template class DevicePropController taking in Vibratome device, float and GetSetVibratomeThicknessCorrection as parameters 
   typedef DevicePropController<device::Vibratome,cfg::device::Vibratome::VibratomeFeedAxis,GetSetVibratomeFeedAxis> VibratomeFeedAxisController;
 
   // Stack
@@ -376,7 +378,7 @@ namespace ui {
     QCheckBox* checkBox = qobject_cast<QCheckBox*>(source); //DGA: Get the pointer to the QCheckBox, returns 0 if source is not of type QCheckBox*
     if(checkBox) //DGA: If source was a checkBox pointer
 	{ bool isChecked = interface_.Get_(dc_); //DGA: Calls the getter of the interface (GetSetClass object), which in this case will return whether or not the checkbox should be checked
-      checkBox->clicked(isChecked); //DGA: Checks/unchecks the checkbox as determined by isChecked
+      checkBox->setChecked(isChecked); //DGA: Checks/unchecks the checkbox as determined by isChecked
 	}
   }
 
@@ -517,10 +519,8 @@ namespace ui {
   QCheckBox* DevicePropController<TDevice,TConfig,TGetSetInterface>::
     createCheckBoxAndAddToLayout( QFormLayout *layout ) //DGA: Create checkbox and add to layout
   { QCheckBox *checkBox = createCheckBox(); //DGA: Creates the checkBox with all the necessary mappings
-    QGridLayout *row = new QGridLayout(); //DGA: Creates a new grid layout so that we can center checkboxes
 	checkBox->setText(label_); //DGA: Sets the text of checkbox to label_, making the text on the right side. label_ is just the provided label since createLabel() was never called.
-	row->addWidget(checkBox,0,0,Qt::AlignHCenter); //DGA:  Adds the checkBox to the row and aligns it in the center horizontally
-    layout->addRow(row);//DGA: Adds the row -- checkBox label_ -- to the layout.
+    layout->addRow("",checkBox);//DGA: Adds the row -- "" checkBox label_ -- to the layout. Since label is set to "", the checkbox is aligned properly with the other fields in the widget
     return checkBox; //DGA: Returns the checkBox pointer
   }  
 }} //end fetch::ui

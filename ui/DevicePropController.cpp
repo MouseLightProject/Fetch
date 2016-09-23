@@ -269,14 +269,24 @@ QValidator* GetSetVibratomeZOffset::createValidator_(QObject* parent)
 { return new QDoubleValidator(-10.0,10.0/*mm*/,4/*decimals*/,parent);
 }
     
-void GetSetVibratomeThick::Set_(device::Vibratome *dc, float &v)
+void GetSetVibratomeThickness::Set_(device::Vibratome *dc, float &v) //DGA: renamed thick to thickness
 { dc->setThicknessUmNoWait(v); 
 }
-float GetSetVibratomeThick::Get_(device::Vibratome *dc)
+float GetSetVibratomeThickness::Get_(device::Vibratome *dc)
 { return dc->thickness_um();
 }
-QValidator* GetSetVibratomeThick::createValidator_(QObject* parent)
+QValidator* GetSetVibratomeThickness::createValidator_(QObject* parent)
 { return new QDoubleValidator(0.0,1000.0/*um*/,4/*decimals*/,parent);
+}
+
+void GetSetVibratomeThicknessCorrection::Set_(device::Vibratome *dc, float &v)
+{ dc->setThicknessCorrectionUmNoWait(v); //DGA: Sets the thickness correction in um equal to the value of v
+}
+float GetSetVibratomeThicknessCorrection::Get_(device::Vibratome *dc)
+{ return dc->thicknessCorrection_um(); //DGA: Returns the thickness correction in um equal
+}
+QValidator* GetSetVibratomeThicknessCorrection::createValidator_(QObject* parent)
+{ return new QDoubleValidator(-1000.0,1000.0/*um*/,4/*decimals*/,parent); //DGA: The validator ensuring that the value entered into the text box is between +/- 1 mm.
 }
 
 // Stage

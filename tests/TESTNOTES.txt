@@ -1,12 +1,15 @@
 Fetch Test Notes
 ================
 To test code, use simulated.microscope file and tile small surface and mark as safe, and mark some internal area as explorable.
+  
+1. File Numbering:             To enusre file numbering increases from one session to another, start an auto tile run and collect images.
+	                       Stop it part way and close the session. Open another session and make sure FileSeries has incremented.
+	                       Start run, and set Time/Date on computer so that it is a different day to make sure FileSeries resets to zero.
 
-1. File Numbering:         To enusre file numbering increases from one session to another, start an auto tile run and collect images.
-	                   Stop it part way and close the session. Open another session and make sure FileSeries has incremented.
-	                   Start run, and set Time/Date on computer so that it is a different day to make sure FileSeries resets to zero.
+2. Auto Tiling At Fixed z:     To test auto tiling at fixed z, start an auto tile run until images begin to be collected.
+			       Stop run and check box "Skip Surface Find On Image Resume." Click run, and imaging should resume immediately.
+			       Repeat, but now uncheck the box "Skip Surface Find on Image Resume." Click run, and surface find should begin/complete, followed by imaging.
+			       .acquisition files should have the checked status of the checkbox once the state has been changed (by default, it is set to unchecked).
 
-2. Auto Tiling At Fixed z: To test auto tiling at fixed z, start an auto tile run until images begin to be collected.
-			   Stop run and check box "Skip Surface Find On Image Resume." Click run, and imaging should resume immediately.
-			   Repeat, but now uncheck the box "Skip Surface Find on Image Resume." Click run, and surface find should begin/complete, followed by imaging.
-			   .acquisition files should have the checked status of the checkbox once the state has been changed (by default, it is set to unchecked).
+3. Slice Thickness Correction: To test slice thickness correction, try changing the correction and make sure it is actually changing via, eg. tasks/Vibratome.cpp.
+			       Make sure when stop and restart software, the previous value was saved/used.

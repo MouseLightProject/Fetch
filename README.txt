@@ -52,3 +52,13 @@ _______________
 	              Also reformatted Stage's "Lock Controls" 
 		      checkbox and added version number to main 
 		      window.
+
+1.021  Sep 21, 2016   Updated "Skip Surface Find on Image Resume"
+		      check box so that its checked status 
+                      updates from .microscope file, and removed 
+                      the corresponding property from simulated.
+                      microscope file. Also changed z_tile_offset 
+                      to 0 to prevent errors when resaving 
+                      .microscope file.
+
+1.022  Sep 21, 2016   Updated version number in main window.

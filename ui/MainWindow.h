@@ -113,7 +113,8 @@ public: // semi-private
   VibratomeFeedPosXController  *_vibratome_feed_pos_x_controller;
   VibratomeFeedPosYController  *_vibratome_feed_pos_y_controller;
   VibratomeZOffsetController   *_vibratome_z_offset_controller;
-  VibratomeThickController     *_vibratome_thick_controller;
+  VibratomeThicknessController     *_vibratome_thickness_controller; //DGA: Renamed thick to thickness
+  VibratomeThicknessCorrectionController   *_vibratome_thickness_correction_controller; //DGA: creates _vibratome_thickness_correction_controller, a pointer of type VibratomeThicknessCorrectionController
   ZPiezoMaxController          *_zpiezo_max_control;
   ZPiezoMinController          *_zpiezo_min_control;
   ZPiezoStepController         *_zpiezo_step_control;

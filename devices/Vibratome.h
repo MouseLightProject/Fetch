@@ -202,7 +202,9 @@ class SimulatedVibratome:public VibratomeBase<cfg::device::SimulatedVibratome>
 
               float    thickness_um()             { return (float)_config->cut_thickness_um();}
               int      setThicknessUmNoWait(float um);
-      
+
+			  float    thicknessCorrection_um()   {return (float)_config->geometry().cut_thickness_correction_um();} //DGA: Function to return the value of the vibratome geometry's cut_thickness_correction_um property
+			  int      setThicknessCorrectionUmNoWait(float um); //DGA: Function to set the vibratome geometry's cut_thickness_correction_um property to um
     };
 
   } // end namespace device
