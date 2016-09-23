@@ -310,7 +310,7 @@ namespace ui {
 
 		//DGA: Restore thicknessCorrectionUm setting if stored
 		QSettings settings;
-		QLineEdit * thicknessCorrectionUmLineEdit = parent->_vibratome_thickness_correction_controller->createLineEditAndAddToLayout(form); //creates the thicknessCorrectionUmLineEdit box
+		QLineEdit * thicknessCorrectionUmLineEdit = parent->_vibratome_thickness_correction_controller->createLineEditAndAddToLayout(form); //DGA: creates the thicknessCorrectionUmLineEdit box, setting the value to the default value of cut_thickness_correction_um from the configuration
 		bool ok; float thicknessCorrectionUm;
 		thicknessCorrectionUm = settings.value("VibratomeGeometryDockWidget/thicknessCorrectionUm").toFloat(&ok); //DGA: Converts the settings value "VibratomeGeometryDockWidget/thicknessCorrectionUm" to a float, where ok=true/false based on if the conversion was a success
 		if (ok){ //DGA: If the conversion was a success ("VibratomeGeometryDockWidget/thicknessCorrectionUm" exists and was convertable to a float)
@@ -321,7 +321,7 @@ namespace ui {
 
 		//DGA: Lock thickness correction editing
 		QCheckBox *checkBox = new QCheckBox(); //DGA: Create checkbox
-		checkBox->setText("Lock Z Offset Correction"); //DGA: Set the checkbox text
+		checkBox->setText("Lock Slice Thickness Correction"); //DGA: Set the checkbox text
 		QStateMachine *lockmachine = new QStateMachine(this); //DGA: create state machine
 		QState *locked = new QState(), //DGA: Two states, locked and unlocked
 			*unlocked = new QState();
