@@ -62,3 +62,8 @@ _______________
                       .microscope file.
 
 1.022  Sep 21, 2016   Updated version number in main window.
+
+1.03-beta-1 Sep 23, 2016    Enable user to enter slice
+			    thickness correction with accompanying
+			    locked checkbox. Updated checkbox
+			    alignment for other widgets.
