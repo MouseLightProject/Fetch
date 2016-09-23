@@ -63,7 +63,6 @@ namespace fetch{
       device::Microscope *dc_;
     public:
       VibratomeGeometryDockWidget(device::Microscope *dc, MainWindow* parent);
-	  virtual ~VibratomeGeometryDockWidget();
 
     protected slots:
       void geometryCtxMenu(const QPoint &);
@@ -75,7 +74,7 @@ namespace fetch{
       void markCutPlane();
       void commitOffset();
 
-	  void thicknessCorrectionUmChanged();
+	  void thicknessCorrectionUmChanged(); //DGA: Slot used to update the settings when the thickness has been changed
 
       void updateFromConfig();
 

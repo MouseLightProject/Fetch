@@ -237,7 +237,7 @@ stack_extension: ".tif"
 config_extension: ".microscope"
 autotile {
   z_um: 6
-  maxz_mm: 0.55
+  maxz_mm: 14.55
   timeout_ms: 15000
   ichan: 0
   intensity_threshold: 15700

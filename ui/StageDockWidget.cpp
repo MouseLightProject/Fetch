@@ -231,7 +231,7 @@ namespace ui {
     s->setValue(0.1);
     vstep_=s;
     form->addRow(row);
-	form->addRow("",b); //DGA: Adds the row to the form
+	form->addRow("",b); //DGA: Adds the row to the form, where "" allows the checkbox b to be aligned properly with other fields in the widget
 
     ///// Indicators
     { QGridLayout *layout = new QGridLayout();

@@ -145,7 +145,7 @@ fetch::ui::MainWindow::MainWindow(device::Microscope *dc)
   _vibratome_feed_pos_y_controller    = new VibratomeFeedPosYController(dc->vibratome(),"Cut Pos Y (mm)", this);
   _vibratome_z_offset_controller      = new VibratomeZOffsetController(dc->vibratome(),"Z Offset (mm)", this);
   _vibratome_thickness_controller         = new VibratomeThicknessController(dc->vibratome(),"Slice Thickness (um)", this);
-  _vibratome_thickness_correction_controller = new VibratomeThicknessCorrectionController(dc->vibratome(),"Slice Thickness Correction (um)", this);
+  _vibratome_thickness_correction_controller = new VibratomeThicknessCorrectionController(dc->vibratome(),"Slice Thickness Correction (um)", this); //DGA: dynamically allocates _vibratome_thickness_correction_controller as type VibratomeThicknessCorrectionController (a DevicePropController), with device dc->vibratome, a label, and mainwindow parent pointer this
 
   _stage_pos_x_control = new StagePosXController(dc->stage(),"Pos X (mm)",this);
   _stage_pos_y_control = new StagePosYController(dc->stage(),"Pos Y (mm)",this);
