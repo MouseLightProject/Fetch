@@ -335,8 +335,8 @@ namespace ui {
 		lockmachine->setInitialState(locked);
 		lockmachine->start();
 		row = new QGridLayout(); //DGA: Dynamically allocates row as QGridLayout pointer
-		row->addWidget(checkBox, 0, 0, Qt::AlignHCenter); //DGA:  Adds the checkBox to the row and aligns it in the center horizontally
-		form->addRow(row); //DGA: Adds the row to the form
+		//QLabel* spacerText = "Slice Thickness Correction (um)";
+		form->addRow("",checkBox); //DGA: Adds the row to the form
       }
 
 #if 0 // turns out this tableview is completely useless.

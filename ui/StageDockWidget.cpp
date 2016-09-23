@@ -231,10 +231,7 @@ namespace ui {
     s->setValue(0.1);
     vstep_=s;
     form->addRow(row);
-
-	row = new QGridLayout(); //DGA: Dynamically allocates row as QGridLayout pointer
-	row->addWidget(b,0,0,Qt::AlignHCenter); //DGA:  Adds the checkBox to the row and aligns it in the center horizontally
-	form->addRow(row); //DGA: Adds the row to the form
+	form->addRow("",b); //DGA: Adds the row to the form
 
     ///// Indicators
     { QGridLayout *layout = new QGridLayout();

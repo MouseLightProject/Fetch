@@ -520,10 +520,8 @@ namespace ui {
   QCheckBox* DevicePropController<TDevice,TConfig,TGetSetInterface>::
     createCheckBoxAndAddToLayout( QFormLayout *layout ) //DGA: Create checkbox and add to layout
   { QCheckBox *checkBox = createCheckBox(); //DGA: Creates the checkBox with all the necessary mappings
-    QGridLayout *row = new QGridLayout(); //DGA: Creates a new grid layout so that we can center checkboxes
 	checkBox->setText(label_); //DGA: Sets the text of checkbox to label_, making the text on the right side. label_ is just the provided label since createLabel() was never called.
-	row->addWidget(checkBox,0,0,Qt::AlignHCenter); //DGA:  Adds the checkBox to the row and aligns it in the center horizontally
-    layout->addRow(row);//DGA: Adds the row -- checkBox label_ -- to the layout.
+    layout->addRow("",checkBox);//DGA: Adds the row -- "" checkBox label_ -- to the layout. Since label is set to "", the checkbox is aligned properly with the other fields 
     return checkBox; //DGA: Returns the checkBox pointer
   }  
 }} //end fetch::ui
