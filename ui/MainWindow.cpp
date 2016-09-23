@@ -144,8 +144,8 @@ fetch::ui::MainWindow::MainWindow(device::Microscope *dc)
   _vibratome_feed_pos_x_controller    = new VibratomeFeedPosXController(dc->vibratome(),"Cut Pos X (mm)", this);
   _vibratome_feed_pos_y_controller    = new VibratomeFeedPosYController(dc->vibratome(),"Cut Pos Y (mm)", this);
   _vibratome_z_offset_controller      = new VibratomeZOffsetController(dc->vibratome(),"Z Offset (mm)", this);
-  _vibratome_z_offset_correction_controller = new VibratomeZOffsetCorrectionController(dc->vibratome(),"Z Offset Correction (mm)", this);
-  _vibratome_thick_controller         = new VibratomeThickController(dc->vibratome(),"Slice Thickness (um)", this);
+  _vibratome_thickness_controller         = new VibratomeThicknessController(dc->vibratome(),"Slice Thickness (um)", this);
+  _vibratome_thickness_correction_controller = new VibratomeThicknessCorrectionController(dc->vibratome(),"Slice Thickness Correction (um)", this);
 
   _stage_pos_x_control = new StagePosXController(dc->stage(),"Pos X (mm)",this);
   _stage_pos_y_control = new StagePosYController(dc->stage(),"Pos Y (mm)",this);

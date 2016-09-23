@@ -30,7 +30,7 @@ namespace ui {
     parent->_vibratome_feed_axis_controller->createComboBoxAndAddToLayout(form);
     parent->_vibratome_feed_pos_x_controller->createLineEditAndAddToLayout(form);
     parent->_vibratome_feed_pos_y_controller->createLineEditAndAddToLayout(form);
-    parent->_vibratome_thick_controller->createLineEditAndAddToLayout(form);
+    parent->_vibratome_thickness_controller->createLineEditAndAddToLayout(form);
     parent->_fov_overlap_z_controller->createLabelAndAddToLayout(form);
 
     { QHBoxLayout *row = new QHBoxLayout();
@@ -310,14 +310,14 @@ namespace ui {
 
 		//DGA: Restore sliceThicknessCorrection if stored
 		QSettings settings;
-		QLineEdit * zOffsetCorrectionLineEdit = parent->_vibratome_z_offset_correction_controller->createLineEditAndAddToLayout(form);
-		bool ok; float sliceThicknessCorrection;
-		sliceThicknessCorrection = settings.value("VibratomeGeometryDockWidget/sliceThicknessCorrection").toFloat(&ok);
+		QLineEdit * thicknessCorrectionUmLineEdit = parent->_vibratome_thickness_correction_controller->createLineEditAndAddToLayout(form);
+		bool ok; float thicknessCorrectionUm;
+		thicknessCorrectionUm = settings.value("VibratomeGeometryDockWidget/thicknessCorrectionUm").toFloat(&ok);
 		if (ok){
-			zOffsetCorrectionLineEdit->setText(QString::number(sliceThicknessCorrection));
-			zOffsetCorrectionLineEdit->editingFinished();
+			thicknessCorrectionUmLineEdit->setText(QString::number(thicknessCorrectionUm));
+			thicknessCorrectionUmLineEdit->editingFinished();
 		}
-		connect(zOffsetCorrectionLineEdit,SIGNAL(editingFinished()),this,SLOT(zOffsetCorrectionChanged()));
+		connect(thicknessCorrectionUmLineEdit,SIGNAL(editingFinished()),this,SLOT(thicknessCorrectionUmChanged()));
 
 		///// Lock Controls
 		QCheckBox *checkBox = new QCheckBox();
@@ -327,8 +327,8 @@ namespace ui {
 			*unlocked = new QState();
 		locked->addTransition(checkBox, SIGNAL(stateChanged(int)), unlocked);
 		unlocked->addTransition(checkBox, SIGNAL(stateChanged(int)), locked);
-		locked->assignProperty(zOffsetCorrectionLineEdit, "readOnly", true);
-		unlocked->assignProperty(zOffsetCorrectionLineEdit, "readOnly", false);
+		locked->assignProperty(thicknessCorrectionUmLineEdit, "readOnly", true);
+		unlocked->assignProperty(thicknessCorrectionUmLineEdit, "readOnly", false);
 		lockmachine->addState(locked);
 		lockmachine->addState(unlocked);
 		checkBox->setCheckState(Qt::Checked);
@@ -439,30 +439,12 @@ namespace ui {
 	{// saveSettings();
 	}
 
-	/*void 
-	  VibratomeGeometryDockWidget::
-	  saveSettings()
-	{QSettings settings;
-	dc_->vibratome();
-	float temp = dc_->vibratome()->verticalOffsetCorrection();
-	 settings.setValue("VibratomeGeometryDockWidget/sliceThicknessCorrection",dc_->vibratome()->verticalOffsetCorrection());
-	}*/
 	void
 	  VibratomeGeometryDockWidget::
-	  zOffsetCorrectionChanged()
+	  thicknessCorrectionUmChanged()
 	{QSettings settings;
-	 float newZOffsetCorrection = dc_->vibratome()->verticalOffsetCorrection();
-	 settings.setValue("VibratomeGeometryDockWidget/sliceThicknessCorrection",newZOffsetCorrection);
+	 float newThicknessCorrectionUm = dc_->vibratome()->thicknessCorrection_um();
+	 settings.setValue("VibratomeGeometryDockWidget/thicknessCorrectionUm",newThicknessCorrectionUm);
 	}
-
-	/*void 
-	  VibratomeGeometryDockWidget::
-	  restoreSettings()
-	{QSettings settings;
-	 bool ok; float sliceThicknessCorrection;
-	 sliceThicknessCorrection = settings.value("VibratomeGeometryDockWidget/sliceThicknessCorrection").toFloat(&ok);
-	 if (ok)
-		 dc_->vibratome()->setVerticalOffsetCorrectionNoWait(sliceThicknessCorrection);
-	}*/
 
 }} //end namespace fetch::ui

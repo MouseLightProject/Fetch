@@ -469,23 +469,21 @@ Error:
 
   int
     Vibratome::
-    setVerticalOffsetCorrectionNoWait(float manualZOffset_mm)
-  {
-    Config cfg = get_config();
-    cfg.mutable_geometry()->set_z_offset_correction_mm(manualZOffset_mm);
-    return set_config_nowait(cfg);
-  }
-
-  int
-    Vibratome::
     setThicknessUmNoWait(float um)
   {
     Config cfg = get_config();
     cfg.set_cut_thickness_um(um);
     return set_config_nowait(cfg);
   }
-
   
+  int
+    Vibratome::
+    setThicknessCorrectionUmNoWait(float um)
+  {
+    Config cfg = get_config();
+    cfg.mutable_geometry()->set_cut_thickness_correction_um(um);
+    return set_config_nowait(cfg);
+  }
 
 
 } //end device namespace

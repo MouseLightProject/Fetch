@@ -75,7 +75,7 @@ namespace fetch{
       void markCutPlane();
       void commitOffset();
 
-	  void zOffsetCorrectionChanged();
+	  void thicknessCorrectionUmChanged();
 
       void updateFromConfig();
 

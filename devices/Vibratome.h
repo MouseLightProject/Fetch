@@ -200,8 +200,8 @@ class SimulatedVibratome:public VibratomeBase<cfg::device::SimulatedVibratome>
               int      setVerticalOffsetNoWait(float dz_mm);
               int      setVerticalOffsetNoWait(float cutting_plane_mm, float image_plane_mm);
 
-			  float    verticalOffsetCorrection()           {return (float)_config->geometry().z_offset_correction_mm();}
-			  int      setVerticalOffsetCorrectionNoWait(float z_offset_correction_mm);
+			  float    thicknessCorrection_um()   {return (float)_config->geometry().cut_thickness_correction_um();}
+			  int      setThicknessCorrectionUmNoWait(float um);
 
               float    thickness_um()             { return (float)_config->cut_thickness_um();}
               int      setThicknessUmNoWait(float um);
