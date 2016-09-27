@@ -13,6 +13,7 @@ namespace ui {
 
 	QLineEdit * createThicknessCorrectionUmLineEdit(QWidget * parent=0);
 	QLineEdit * thicknessCorrectionUmLineEdit;
+	QLabel * currentThicknessCorrectionUm;
 	void setSliceThicknessCorrection(float um);
 	float getSliceThicknessCorrection();
 

@@ -305,21 +305,11 @@ namespace ui {
                 this,SLOT(updateFromConfig()));
 
         emit updateFromConfig();
-      
+		
         form->addRow(row);
 		QLineEdit * thicknessCorrectionUmLineEdit = parent->_vibratomeController->createThicknessCorrectionUmLineEdit();
-		form->addWidget(thicknessCorrectionUmLineEdit);
-		//DGA: Restore thicknessCorrectionUm setting if stored
-	/*	QSettings settings;
-		QLineEdit * thicknessCorrectionUmLineEdit = parent->_vibratome_thickness_correction_controller->createLineEditAndAddToLayout(form); //DGA: creates the thicknessCorrectionUmLineEdit box, setting the value to the default value of cut_thickness_correction_um from the configuration
-		bool ok; float thicknessCorrectionUm;
-		thicknessCorrectionUm = settings.value("VibratomeGeometryDockWidget/thicknessCorrectionUm").toFloat(&ok); //DGA: Converts the settings value "VibratomeGeometryDockWidget/thicknessCorrectionUm" to a float, where ok=true/false based on if the conversion was a success
-		if (ok){ //DGA: If the conversion was a success ("VibratomeGeometryDockWidget/thicknessCorrectionUm" exists and was convertable to a float)
-			thicknessCorrectionUmLineEdit->setText(QString::number(thicknessCorrectionUm)); //DGA: sets the line edit value to the value of thicknessCorrectionUm
-			thicknessCorrectionUmLineEdit->editingFinished(); //DGA: sends signal editingFinished, which will in turn update the configuration property value so that it equals thicknessCorrectionUm
-		}
-		connect(thicknessCorrectionUmLineEdit,SIGNAL(editingFinished()),this,SLOT(thicknessCorrectionUmChanged())); //DGA: Connects the signal editingFinished of thicknessCorrectionUmLineEdit to the slot here thicknessCorectionUmChanged.
-		*/
+		form->addRow("Slice Thickness Correction (um)",thicknessCorrectionUmLineEdit);
+		form->addRow("Current Thickness Correction (um)",parent->_vibratomeController->currentThicknessCorrectionUm);
 		//DGA: Lock thickness correction editing
 		QCheckBox *checkBox = new QCheckBox(); //DGA: Create checkbox
 		checkBox->setText("Lock Slice Thickness Correction"); //DGA: Set the checkbox text
@@ -433,13 +423,5 @@ namespace ui {
       updateFromConfig()
     { emit delta(dc_->vibratome()->verticalOffset());
     }
-
-	void
-	  VibratomeGeometryDockWidget::
-	  thicknessCorrectionUmChanged() //DGA: This gets called when thicknessCorrectionUmLineEdit's signal editingFinished gets sent.
-	{QSettings settings;
-	 float newThicknessCorrectionUm = dc_->vibratome()->thicknessCorrection_um(); //DGA: newThicknessCorrectionUm is set equal to the value from the configuration, which is also set when editingFinished is called. But the slot thicknessCorrectionUmChanged is connected after the other so should be executed after the other
-	 settings.setValue("VibratomeGeometryDockWidget/thicknessCorrectionUm",newThicknessCorrectionUm); //DGA: the settings value is set equal to newThicknessCorrecitonUm
-	}
 
 }} //end namespace fetch::ui
