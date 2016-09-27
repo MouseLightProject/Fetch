@@ -2,6 +2,7 @@
 #include <QtWidgets>
 #include "ui/AgentController.h"
 #include "ui/StageController.h"
+#include "ui/VibratomeController.h"
 #include "DevicePropController.h"
 
 namespace fetch {
@@ -100,6 +101,7 @@ public: // semi-private
   QTimer _poller;
   AgentController               _scope_state_controller;
   PlanarStageController        *_stageController;
+  VibratomeController		   *_vibratomeController;
 
   // Property controllers
   ResonantTurnController       *_resonant_turn_controller;

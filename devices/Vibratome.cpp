@@ -292,6 +292,7 @@ Error:
     ,_simulated(NULL)
     ,_idevice(NULL)
     ,_ivibratome(NULL)
+	,sliceThicknessCorrection_um_(0)
   {
     setKind(_config->kind());
   }
@@ -302,6 +303,7 @@ Error:
     ,_simulated(NULL)
     ,_idevice(NULL)
     ,_ivibratome(NULL)
+	,sliceThicknessCorrection_um_(0)
   {
     setKind(cfg->kind());
   }
@@ -476,13 +478,12 @@ Error:
     return set_config_nowait(cfg);
   }
   
-  int
+  void
     Vibratome::
-    setThicknessCorrectionUmNoWait(float um) //DGA: Sets the thickness correction in microns equal to the input um.
+    setThicknessCorrection_um(float um) //DGA: Sets the thickness correction in microns equal to the input um.
   {
-    Config cfg = get_config(); //DGA: Sets cfg equal to the current config.
-    cfg.mutable_geometry()->set_cut_thickness_correction_um(um); //DGA: Sets the cfg's cut_thickness_correction_um property to um
-    return set_config_nowait(cfg); //DGA: Sets teh config to cfg
+	if (um > -1000 && um < 1000)
+		sliceThicknessCorrection_um_ = um;
   }
 
 

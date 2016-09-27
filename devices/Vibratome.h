@@ -156,8 +156,9 @@ class SimulatedVibratome:public VibratomeBase<cfg::device::SimulatedVibratome>
                                                               
       IDevice          *_idevice;
       IVibratome       *_ivibratome;
+	  float    sliceThicknessCorrection_um_;
     public:
-      Vibratome(Agent *agent);
+	  Vibratome(Agent *agent);
       Vibratome(Agent *agent, Config *cfg);
       ~Vibratome();
 
@@ -204,7 +205,8 @@ class SimulatedVibratome:public VibratomeBase<cfg::device::SimulatedVibratome>
               int      setThicknessUmNoWait(float um);
 
 			  float    thicknessCorrection_um()   {return (float)_config->geometry().cut_thickness_correction_um();} //DGA: Function to return the value of the vibratome geometry's cut_thickness_correction_um property
-			  int      setThicknessCorrectionUmNoWait(float um); //DGA: Function to set the vibratome geometry's cut_thickness_correction_um property to um
+			  void     setThicknessCorrection_um(float um) ;
+			  float	   getThicknessCorrection_um(){return sliceThicknessCorrection_um_;}
     };
 
   } // end namespace device

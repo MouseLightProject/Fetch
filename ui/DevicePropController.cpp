@@ -280,13 +280,13 @@ QValidator* GetSetVibratomeThickness::createValidator_(QObject* parent)
 }
 
 void GetSetVibratomeThicknessCorrection::Set_(device::Vibratome *dc, float &v)
-{ dc->setThicknessCorrectionUmNoWait(v); //DGA: Sets the thickness correction in um equal to the value of v
+{ //dc->setThicknessCorrectionUmNoWait(v); //DGA: Sets the thickness correction in um equal to the value of v
 }
 float GetSetVibratomeThicknessCorrection::Get_(device::Vibratome *dc)
-{ return dc->thicknessCorrection_um(); //DGA: Returns the thickness correction in um equal
+{ return 0;//dc->thicknessCorrection_um(); //DGA: Returns the thickness correction in um equal
 }
 QValidator* GetSetVibratomeThicknessCorrection::createValidator_(QObject* parent)
-{ return new QDoubleValidator(-1000.0,1000.0/*um*/,4/*decimals*/,parent); //DGA: The validator ensuring that the value entered into the text box is between +/- 1 mm.
+{ return 0;//new QDoubleValidator(-1000.0,1000.0/*um*/,4/*decimals*/,parent); //DGA: The validator ensuring that the value entered into the text box is between +/- 1 mm.
 }
 
 // Stage

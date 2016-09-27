@@ -18,6 +18,7 @@
 #include "TimeSeriesDockWidget.h"
 #include "AdaptiveTilingdockWidget.h"
 #include "StageController.h"
+#include "VibratomeController.h"
 #include "SurfaceFindDockWidget.h"
 #include <google/protobuf/text_format.h>
 #include <google/protobuf/io/tokenizer.h>
@@ -120,6 +121,7 @@ fetch::ui::MainWindow::MainWindow(device::Microscope *dc)
   ,_player(0)
   ,_scope_state_controller(&dc->__self_agent)
   ,_stageController(NULL)
+  ,_vibratomeController(NULL)
   ,_resonant_turn_controller(NULL)
   ,_vlines_controller(NULL)
   ,_lsm_vert_range_controller(NULL)
@@ -137,6 +139,7 @@ fetch::ui::MainWindow::MainWindow(device::Microscope *dc)
   _zpiezo_step_control      = new ZPiezoStepController(dc->zpiezo(),"Z &Step (um)",this);
 
   _stageController          = new PlanarStageController(dc->stage());
+  _vibratomeController		= new VibratomeController(dc->vibratome());
   _vibratome_amp_controller = new VibratomeAmplitudeController(dc->vibratome(),"Amplitude (0-255)",this);
   _vibratome_feed_distance_controller = new VibratomeFeedDisController(dc->vibratome(),"Feed distance (mm)",this);
   _vibratome_feed_velocity_controller = new VibratomeFeedVelController(dc->vibratome(),"Feed velocity (mm/s)",this);
