@@ -463,6 +463,7 @@ Error:
 	}
 
 	void Microscope::setSkipSurfaceFindOnImageResume(bool setValue){
+		skipSurfaceFindOnImageResume = setValue;
 		skipSurfaceFindOnImageResumeUpdater.signal_somethingChanged(setValue);
 	}
 

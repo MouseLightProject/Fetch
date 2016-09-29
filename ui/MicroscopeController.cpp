@@ -8,6 +8,7 @@ QCheckBox *
 	skipSurfaceFindOnImageResumeCheckBox = new QCheckBox(parent);
 	connect(skipSurfaceFindOnImageResumeCheckBox, SIGNAL(clicked(bool)), this, SLOT(setSkipSurfaceFindOnImageResume(bool)));
 	connect(&(microscope_->skipSurfaceFindOnImageResumeUpdater), SIGNAL(signal_somethingChanged(bool)),skipSurfaceFindOnImageResumeCheckBox, SLOT(setChecked(bool)));
+	skipSurfaceFindOnImageResumeCheckBox->clicked(false);//DGA: Initialize the checkbox to off
 	return skipSurfaceFindOnImageResumeCheckBox;
 }
 
