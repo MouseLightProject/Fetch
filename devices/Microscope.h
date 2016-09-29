@@ -164,16 +164,22 @@ namespace fetch
       int updateFovFromStackDepth(int nowait=0);  // These also account for cut thickness, returns 0 if overlap is not positive.
       int updateStackDepthFromFov(int nowait=0);
 
+	  bool getSkipSurfaceFindOnImageResume();
+	  void setSkipSurfaceFindOnImageResume(bool setValue);
     public:
       FileSeries file_series;
 
     public:
       IDevice* _end_of_pipeline;
+	  ui::simpleUiUpdater skipSurfaceFindOnImageResumeUpdater;
 
       Agent __self_agent;
       Agent __scan_agent;
       Agent __io_agent;
       Agent __vibratome_agent;
+
+	private:
+		bool skipSurfaceFindOnImageResume;
     };
     //end namespace fetch::device
   }

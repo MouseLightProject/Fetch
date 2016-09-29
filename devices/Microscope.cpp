@@ -458,6 +458,14 @@ Error:
       return 0;
     }
 
+	bool Microscope::getSkipSurfaceFindOnImageResume(){
+		return skipSurfaceFindOnImageResume;
+	}
+
+	void Microscope::setSkipSurfaceFindOnImageResume(bool setValue){
+		skipSurfaceFindOnImageResumeUpdater.signal_somethingChanged(setValue);
+	}
+
     ///////////////////////////////////////////////////////////////////////
     // FileSeries
     ///////////////////////////////////////////////////////////////////////

@@ -11,7 +11,8 @@ namespace ui{
 		template<typename T> void updateSettings(QString settingString, T newSetting){settings.setValue(settingString,newSetting);}
 	signals:
 		void signal_somethingChanged();
-		void signal_somethingChanged(QString val);
+		void signal_somethingChanged(bool setValue);
+		void signal_somethingChanged(QString setValue);
 	};
 }
 }

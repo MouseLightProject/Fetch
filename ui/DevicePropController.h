@@ -168,7 +168,6 @@ namespace ui {
   DECL_GETSET_CLASS(GetSetVibratomeCutPosY ,device::Vibratome,double);
   DECL_GETSET_CLASS(GetSetVibratomeZOffset ,device::Vibratome,float);
   DECL_GETSET_CLASS(GetSetVibratomeThickness   ,device::Vibratome,float); //DGA: Renamed thick to thickness
-  DECL_GETSET_CLASS(GetSetVibratomeThicknessCorrection ,device::Vibratome,float); //DGA: Declares getset class GetSetVibratomeThicknessCorrection which uses the Vibratome device, and works with a float
   DECL_GETSET_DESC_CLASS(GetSetVibratomeFeedAxis,device::Vibratome,cfg::device::Vibratome::VibratomeFeedAxis);
   typedef DevicePropController<device::Vibratome,u32,GetSetVibratomeAmplitude>                                      VibratomeAmplitudeController;
   typedef DevicePropController<device::Vibratome,double,GetSetVibratomeFeedDist>                                    VibratomeFeedDisController;
@@ -177,7 +176,6 @@ namespace ui {
   typedef DevicePropController<device::Vibratome,double,GetSetVibratomeCutPosY >                                    VibratomeFeedPosYController;
   typedef DevicePropController<device::Vibratome,float ,GetSetVibratomeZOffset >                                    VibratomeZOffsetController;
   typedef DevicePropController<device::Vibratome,float ,GetSetVibratomeThickness >                                  VibratomeThicknessController; //DGA: Renamed thick to thickness
-  typedef DevicePropController<device::Vibratome,float ,GetSetVibratomeThicknessCorrection >					    VibratomeThicknessCorrectionController; //DGA: VibratomeThicknessCorrectionController now acts as type for template class DevicePropController taking in Vibratome device, float and GetSetVibratomeThicknessCorrection as parameters 
   typedef DevicePropController<device::Vibratome,cfg::device::Vibratome::VibratomeFeedAxis,GetSetVibratomeFeedAxis> VibratomeFeedAxisController;
 
   // Stack
@@ -213,14 +211,12 @@ namespace ui {
   DECL_GETSET_CLASS(GetSetAutoTileChan             ,device::Microscope,unsigned);
   DECL_GETSET_CLASS(GetSetAutoTileIntesityThreshold,device::Microscope,float);
   DECL_GETSET_CLASS(GetSetAutoTileAreaThreshold    ,device::Microscope,float);
-  DECL_GETSET_CLASS(GetSetAutoTileSkipSurfaceFindOnImageResume,device::Microscope,bool); //DGA: Declares getset class GetSetAutoTileSkipSurfaceFindOnImageResume which uses the Microscope device, and works with a bool since it is a checkbox
   typedef DevicePropController<device::Microscope,float   ,GetSetAutoTileZOff>              AutoTileZOffController;
   typedef DevicePropController<device::Microscope,float   ,GetSetAutoTileZMax>              AutoTileZMaxController;
   typedef DevicePropController<device::Microscope,unsigned,GetSetAutoTileTimeoutMs>         AutoTileTimeoutMsController;
   typedef DevicePropController<device::Microscope,unsigned,GetSetAutoTileChan>              AutoTileChanController;
   typedef DevicePropController<device::Microscope,float   ,GetSetAutoTileIntesityThreshold> AutoTileIntensityThresholdController;
   typedef DevicePropController<device::Microscope,float   ,GetSetAutoTileAreaThreshold>     AutoTileAreaThresholdController;
-  typedef DevicePropController<device::Microscope,bool    ,GetSetAutoTileSkipSurfaceFindOnImageResume>		AutoTileSkipSurfaceFindOnImageResumeController; //DGA: AutoTileSkipSurfaceFindOnImageResumeController now acts as type for template class DevicePropController taking in Microscope device, bool and GetSetAutoTileSkipSurfaceFindOnImageResume as parameters
 }} //end fetch::ui
 
   ////////////////////////////////////////////////////////////////////////////

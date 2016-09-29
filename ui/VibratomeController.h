@@ -14,10 +14,7 @@ namespace ui {
 	QLineEdit * createThicknessCorrectionUmLineEdit(QWidget * parent=0);
 	QLineEdit * thicknessCorrectionUmLineEdit;
 	QLabel * currentThicknessCorrectionUm;
-	void setSliceThicknessCorrection(float um);
-	float getSliceThicknessCorrection();
-
-  public slots:
+ public slots:
     void setSliceThicknessCorrection();
   private:
     device::Vibratome       *vibratome_;

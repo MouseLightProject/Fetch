@@ -112,7 +112,7 @@ namespace microscope {
     dc->vibratome()->feed_end_pos_mm(&bx,&by);
     thick = dc->vibratome()->thickness_um()*0.001;      // um->mm
     dz = dc->vibratome()->verticalOffset();             // when image plan is lower than cutting plane, dz should be negative
-	thicknessCorrection = dc->vibratome()->getThicknessCorrection_um()*0.001; //DGA: Get the configuration property cut_thickness_correction_um in mm
+	thicknessCorrection = dc->vibratome()->getThicknessCorrection_um()*0.001; //DGA: Get thickness correction in um
     CHK( (v = dc->vibratome()->feed_vel_mm_p_s())>0.0); // must be non-zero
 
     // Move to the start of the cut

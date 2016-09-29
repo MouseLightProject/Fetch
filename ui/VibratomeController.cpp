@@ -18,27 +18,12 @@ QLineEdit*
 void 
   fetch::ui::VibratomeController::
   setSliceThicknessCorrection()
-{	QSettings settings;
-	bool ok;
+{	bool ok;
 	float newThicknessCorrection = thicknessCorrectionUmLineEdit->text().toFloat(&ok);
 	if (ok && abs(newThicknessCorrection)<1000){ //DGA: Conversion was successful and is a valid number
 		vibratome_->setThicknessCorrection_um(newThicknessCorrection);
 	}
 	else{
-		thicknessCorrectionUmLineEdit->setText(QString::number(getSliceThicknessCorrection()));
+		thicknessCorrectionUmLineEdit->setText(QString::number(vibratome_->getThicknessCorrection_um()));
 	}
-}
-
-void 
-  fetch::ui::VibratomeController::
-  setSliceThicknessCorrection(float um)
-{
-	vibratome_->setThicknessCorrection_um(um);
-}
-
-float 
-  fetch::ui::VibratomeController::
-  getSliceThicknessCorrection()
-{
-	return vibratome_->getThicknessCorrection_um();
 }
