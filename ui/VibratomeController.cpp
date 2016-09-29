@@ -8,6 +8,8 @@ QLineEdit*
 	thicknessCorrectionUmLineEdit = new QLineEdit(parent);
 	currentThicknessCorrectionUm = new QLabel(parent);
 	connect(thicknessCorrectionUmLineEdit, SIGNAL(editingFinished()), this, SLOT(setSliceThicknessCorrection()));
+	simpleUiUpdater * temp = &(vibratome_->thicknessUpdater);
+	connect(temp, SIGNAL(signal_somethingChanged()),thicknessCorrectionUmLineEdit, SLOT(undo()));
 	thicknessCorrectionUmLineEdit->setText(QString::number(settings.value("thicknessCorrectionUm").toFloat()));
 	thicknessCorrectionUmLineEdit->editingFinished();
 	return thicknessCorrectionUmLineEdit;

@@ -5,7 +5,7 @@
 namespace fetch {
 namespace ui {
 
-  class VibratomeController:public QObject
+  class VibratomeController: public QObject
   {
     Q_OBJECT
   public:
@@ -18,8 +18,7 @@ namespace ui {
 	float getSliceThicknessCorrection();
 
   public slots:
-    void setSliceThicknessCorrection();//                                     {vibratome_->setThicknessCorrection_um(4.0);}
-
+    void setSliceThicknessCorrection();
   private:
     device::Vibratome       *vibratome_;
   };

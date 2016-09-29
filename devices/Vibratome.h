@@ -48,6 +48,7 @@
 #include "vibratome.pb.h"
 #include "object.h"
 #include "agent.h"
+#include "ui/simpleUiUpdater.h"
 
 namespace fetch
 {
@@ -127,7 +128,7 @@ namespace fetch
       int STOP();
     };   
 
-class SimulatedVibratome:public VibratomeBase<cfg::device::SimulatedVibratome>
+	class SimulatedVibratome:public VibratomeBase<cfg::device::SimulatedVibratome>
     {
       int    _is_running;
       int    _amp;
@@ -148,9 +149,9 @@ class SimulatedVibratome:public VibratomeBase<cfg::device::SimulatedVibratome>
       virtual int start()                        {int r=_is_running==0; _is_running=1; return r;}
       virtual int stop()                         {int r=_is_running==1; _is_running=0; return r;}
     };
-    
+
     class Vibratome:public VibratomeBase<cfg::device::Vibratome>
-    {
+    { 
       SerialControlVibratome *_serial;
       SimulatedVibratome     *_simulated;
                                                               
@@ -203,10 +204,11 @@ class SimulatedVibratome:public VibratomeBase<cfg::device::SimulatedVibratome>
 
               float    thickness_um()             { return (float)_config->cut_thickness_um();}
               int      setThicknessUmNoWait(float um);
+			  float	   getThicknessCorrection_um(){return sliceThicknessCorrection_um_;}
 
 			  void     setThicknessCorrection_um(float um) ;
-			  float	   getThicknessCorrection_um(){return sliceThicknessCorrection_um_;}
+			  ui::simpleUiUpdater thicknessUpdater;
     };
-
+  
   } // end namespace device
 }   // end namespace fetch

@@ -481,9 +481,11 @@ Error:
   void
     Vibratome::
     setThicknessCorrection_um(float um) //DGA: Sets the thickness correction in microns equal to the input um.
-  {
-	if (um > -1000 && um < 1000)
+  { 
+	if (um > -1000 && um < 1000){
 		sliceThicknessCorrection_um_ = um;
+		thicknessUpdater.signal_somethingChanged();
+	}
   }
 
 
