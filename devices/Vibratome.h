@@ -207,7 +207,7 @@ namespace fetch
 			  float	   getThicknessCorrection_um(){return sliceThicknessCorrection_um_;}
 
 			  void     setThicknessCorrection_um(float um) ;
-			  ui::simpleUiUpdater thicknessUpdater;
+			  ui::simpleUiUpdater thicknessUpdater, thicknessLabelUpdater;
     };
   
   } // end namespace device

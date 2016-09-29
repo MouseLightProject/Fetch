@@ -484,7 +484,10 @@ Error:
   { 
 	if (um > -1000 && um < 1000){
 		sliceThicknessCorrection_um_ = um;
-		thicknessUpdater.signal_somethingChanged();
+		QString currentSliceThicknessCorrection = QString::number(um);
+		thicknessUpdater.signal_somethingChanged(currentSliceThicknessCorrection);
+		thicknessLabelUpdater.signal_somethingChanged(currentSliceThicknessCorrection);
+		thicknessUpdater.updateSettings("thicknessCorrectionUm",um);
 	}
   }
 
