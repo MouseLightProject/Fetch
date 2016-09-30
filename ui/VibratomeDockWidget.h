@@ -74,8 +74,6 @@ namespace fetch{
       void markCutPlane();
       void commitOffset();
 
-	  void thicknessCorrectionUmChanged(); //DGA: Slot used to update the settings when the thickness has been changed
-
       void updateFromConfig();
 
     signals:

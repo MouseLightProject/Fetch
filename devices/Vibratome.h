@@ -48,6 +48,7 @@
 #include "vibratome.pb.h"
 #include "object.h"
 #include "agent.h"
+#include "ui/simpleUiUpdater.h"
 
 namespace fetch
 {
@@ -127,7 +128,7 @@ namespace fetch
       int STOP();
     };   
 
-class SimulatedVibratome:public VibratomeBase<cfg::device::SimulatedVibratome>
+	class SimulatedVibratome:public VibratomeBase<cfg::device::SimulatedVibratome>
     {
       int    _is_running;
       int    _amp;
@@ -148,16 +149,17 @@ class SimulatedVibratome:public VibratomeBase<cfg::device::SimulatedVibratome>
       virtual int start()                        {int r=_is_running==0; _is_running=1; return r;}
       virtual int stop()                         {int r=_is_running==1; _is_running=0; return r;}
     };
-    
+
     class Vibratome:public VibratomeBase<cfg::device::Vibratome>
-    {
+    { 
       SerialControlVibratome *_serial;
       SimulatedVibratome     *_simulated;
                                                               
       IDevice          *_idevice;
       IVibratome       *_ivibratome;
+	  float    sliceThicknessCorrectionUm_; //DGA: private member that is the slice thickness correction in microns to be used to adjust to get the desired thickness
     public:
-      Vibratome(Agent *agent);
+	  Vibratome(Agent *agent);
       Vibratome(Agent *agent, Config *cfg);
       ~Vibratome();
 
@@ -203,9 +205,10 @@ class SimulatedVibratome:public VibratomeBase<cfg::device::SimulatedVibratome>
               float    thickness_um()             { return (float)_config->cut_thickness_um();}
               int      setThicknessUmNoWait(float um);
 
-			  float    thicknessCorrection_um()   {return (float)_config->geometry().cut_thickness_correction_um();} //DGA: Function to return the value of the vibratome geometry's cut_thickness_correction_um property
-			  int      setThicknessCorrectionUmNoWait(float um); //DGA: Function to set the vibratome geometry's cut_thickness_correction_um property to um
+			  void     setSliceThicknessCorrectionUm(float um) ; //DGA: Function declaration of slice thickness correction setter
+			  float	   getSliceThicknessCorrectionUm(){return sliceThicknessCorrectionUm_;} //DGA: Getter of slice thickness correction
+			  ui::simpleUiUpdater sliceThicknessCorrectionUmLineEditUpdater, sliceThicknessCorrectionUmLabelUpdater; //DGA: Instances of simpleUiUpdater so that changed to sliceThicknessCorrectionUm_ can be transmitted to the UI
     };
-
+  
   } // end namespace device
 }   // end namespace fetch

@@ -15,6 +15,7 @@
 #include "Vibratome.h"
 #include "task.h"
 #include "vibratome.pb.h"
+#include <QSettings>
 
 #define CHKLBL(expr,lbl) \
   if(!(expr))                                                                                             \
@@ -292,6 +293,7 @@ Error:
     ,_simulated(NULL)
     ,_idevice(NULL)
     ,_ivibratome(NULL)
+	,sliceThicknessCorrectionUm_(0) //DGA: Initializes sliceThicknessCorrectionUm_ to 0
   {
     setKind(_config->kind());
   }
@@ -302,6 +304,7 @@ Error:
     ,_simulated(NULL)
     ,_idevice(NULL)
     ,_ivibratome(NULL)
+	,sliceThicknessCorrectionUm_(0) //DGA: Initializes sliceThicknessCorrectionUm_ to 0
   {
     setKind(cfg->kind());
   }
@@ -476,13 +479,18 @@ Error:
     return set_config_nowait(cfg);
   }
   
-  int
+  void
     Vibratome::
-    setThicknessCorrectionUmNoWait(float um) //DGA: Sets the thickness correction in microns equal to the input um.
-  {
-    Config cfg = get_config(); //DGA: Sets cfg equal to the current config.
-    cfg.mutable_geometry()->set_cut_thickness_correction_um(um); //DGA: Sets the cfg's cut_thickness_correction_um property to um
-    return set_config_nowait(cfg); //DGA: Sets teh config to cfg
+    setSliceThicknessCorrectionUm(float um) //DGA: Sets the thickness correction in microns equal to the input um.
+  { 
+	if (um > -1000 && um < 1000){ //DGA: If um is in valid range
+		sliceThicknessCorrectionUm_ = um; //DGA: set sliceThicknessCorrectionUm_ to um
+		QString currentSliceThicknessCorrectionUm = QString::number(um); //DGA: Convert um to QString currentSliceThicknessCorrectionUm
+		sliceThicknessCorrectionUmLineEditUpdater.signal_valueSet(currentSliceThicknessCorrectionUm); //DGA: Signal to the slice thickness correction line edit that the slice thickness correction has been set
+		sliceThicknessCorrectionUmLabelUpdater.signal_valueSet(currentSliceThicknessCorrectionUm); //DGA: Signal to the slice thickness correction label that the slice thickness correction has been set
+		QSettings settings; //DGA: settings is a QSettings
+		settings.setValue("sliceThicknessCorrectionUm",um); //DGA: Set the sliceThicknessCorrectionUm settings
+	}
   }
 
 

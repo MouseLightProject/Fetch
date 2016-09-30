@@ -17,7 +17,9 @@
 #include "HistogramDockWidget.h"
 #include "TimeSeriesDockWidget.h"
 #include "AdaptiveTilingdockWidget.h"
+#include "MicroscopeController.h"
 #include "StageController.h"
+#include "VibratomeController.h"
 #include "SurfaceFindDockWidget.h"
 #include <google/protobuf/text_format.h>
 #include <google/protobuf/io/tokenizer.h>
@@ -119,7 +121,9 @@ fetch::ui::MainWindow::MainWindow(device::Microscope *dc)
   ,_display(0)
   ,_player(0)
   ,_scope_state_controller(&dc->__self_agent)
+  ,_microscopeController(NULL) //DGA: Initialize _micrsocopeController pointer to NULL pointer
   ,_stageController(NULL)
+  ,_vibratomeController(NULL) //DGA: Initialize _micrsocopeController pointer to NULL pointer
   ,_resonant_turn_controller(NULL)
   ,_vlines_controller(NULL)
   ,_lsm_vert_range_controller(NULL)
@@ -136,7 +140,9 @@ fetch::ui::MainWindow::MainWindow(device::Microscope *dc)
   _zpiezo_min_control       = new ZPiezoMinController(dc->zpiezo(), "Z Mi&n (um)",this);
   _zpiezo_step_control      = new ZPiezoStepController(dc->zpiezo(),"Z &Step (um)",this);
 
+  _microscopeController		= new MicroscopeController(dc); //DGA: Dynamically allocate _microsocpeController to point to instance of MicroscopeController class that takes in microscope device dc
   _stageController          = new PlanarStageController(dc->stage());
+  _vibratomeController		= new VibratomeController(dc->vibratome()); //DGA: Dynamically allocate _vibratomeController to point to instance of VibratomeController class that takes in vibratome device dc->vibratome
   _vibratome_amp_controller = new VibratomeAmplitudeController(dc->vibratome(),"Amplitude (0-255)",this);
   _vibratome_feed_distance_controller = new VibratomeFeedDisController(dc->vibratome(),"Feed distance (mm)",this);
   _vibratome_feed_velocity_controller = new VibratomeFeedVelController(dc->vibratome(),"Feed velocity (mm/s)",this);
@@ -144,8 +150,7 @@ fetch::ui::MainWindow::MainWindow(device::Microscope *dc)
   _vibratome_feed_pos_x_controller    = new VibratomeFeedPosXController(dc->vibratome(),"Cut Pos X (mm)", this);
   _vibratome_feed_pos_y_controller    = new VibratomeFeedPosYController(dc->vibratome(),"Cut Pos Y (mm)", this);
   _vibratome_z_offset_controller      = new VibratomeZOffsetController(dc->vibratome(),"Z Offset (mm)", this);
-  _vibratome_thickness_controller         = new VibratomeThicknessController(dc->vibratome(),"Slice Thickness (um)", this);
-  _vibratome_thickness_correction_controller = new VibratomeThicknessCorrectionController(dc->vibratome(),"Slice Thickness Correction (um)", this); //DGA: dynamically allocates _vibratome_thickness_correction_controller as type VibratomeThicknessCorrectionController (a DevicePropController), with device dc->vibratome, a label, and mainwindow parent pointer this
+  _vibratome_thickness_controller	  = new VibratomeThicknessController(dc->vibratome(),"Slice Thickness (um)",this);
 
   _stage_pos_x_control = new StagePosXController(dc->stage(),"Pos X (mm)",this);
   _stage_pos_y_control = new StagePosYController(dc->stage(),"Pos Y (mm)",this);
@@ -162,7 +167,6 @@ fetch::ui::MainWindow::MainWindow(device::Microscope *dc)
   _autotile_chan_control             = new AutoTileChanController(dc,"Channel to threshold",this);
   _autotile_intensity_thresh_control = new AutoTileIntensityThresholdController(dc,"Intensity threshold",this);
   _autotile_area_thresh_control      = new AutoTileAreaThresholdController(dc,"Area threshold (0-1)",this);
-  _autotile_skip_surface_find_on_image_resume_control = new AutoTileSkipSurfaceFindOnImageResumeController(dc,"Skip Surface Find on Image Resume",this); //DGA: dynamically allocates _autotile_skip_surface_find_on_image_resume as type AutoTileSkipSurfaceFindOnImageResumeController (a DevicePropController), with device dc, a label, and mainwindow parent pointer this
   
   connect(_stageController,SIGNAL(moved()),          _stage_pos_x_control,SIGNAL(configUpdated()));
   connect(_stageController,SIGNAL(moved()),          _stage_pos_y_control,SIGNAL(configUpdated()));
