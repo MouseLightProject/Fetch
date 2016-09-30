@@ -210,7 +210,7 @@ vibratome {
   feed_axis: X
   cut_thickness_um: 6
     geometry {
-    dz_mm: 6.4350018501281738
+    dz_mm: 0.123
   }
 }
 fov {

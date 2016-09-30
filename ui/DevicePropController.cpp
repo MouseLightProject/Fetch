@@ -279,16 +279,6 @@ QValidator* GetSetVibratomeThickness::createValidator_(QObject* parent)
 { return new QDoubleValidator(0.0,1000.0/*um*/,4/*decimals*/,parent);
 }
 
-void GetSetVibratomeThicknessCorrection::Set_(device::Vibratome *dc, float &v)
-{ dc->setThicknessCorrectionUmNoWait(v); //DGA: Sets the thickness correction in um equal to the value of v
-}
-float GetSetVibratomeThicknessCorrection::Get_(device::Vibratome *dc)
-{ return dc->thicknessCorrection_um(); //DGA: Returns the thickness correction in um equal
-}
-QValidator* GetSetVibratomeThicknessCorrection::createValidator_(QObject* parent)
-{ return new QDoubleValidator(-1000.0,1000.0/*um*/,4/*decimals*/,parent); //DGA: The validator ensuring that the value entered into the text box is between +/- 1 mm.
-}
-
 // Stage
 
 void GetSetStagePosX::Set_(device::Stage *dc, float &v)
@@ -499,18 +489,6 @@ float GetSetAutoTileAreaThreshold::Get_(device::Microscope *dc)
 }
 QValidator* GetSetAutoTileAreaThreshold::createValidator_(QObject* parent)
 { return new QDoubleValidator(0.0, 1.0, 3, parent);
-}
-
-void GetSetAutoTileSkipSurfaceFindOnImageResume::Set_(device::Microscope *dc, bool &setValue)
-{ device::Microscope::Config c = dc->get_config(); //DGA: Gets configuration
-  c.mutable_autotile()->set_skip_surface_find_on_image_resume(setValue); //DGA: Sets the value of skip_surface_find_on_image_resume to setValue
-  dc->set_config(c); //DGA: Updates the config, now with skip_surface_find_on_image_resume = setValue;
-}
-bool GetSetAutoTileSkipSurfaceFindOnImageResume::Get_(device::Microscope *dc)
-{ return dc->get_config().autotile().skip_surface_find_on_image_resume(); //DGA: Returns the value of skip_surface_find_on_image_resume from configuration
-}
-QValidator* GetSetAutoTileSkipSurfaceFindOnImageResume::createValidator_(QObject* parent)
-{ return NULL; //DGA: Do not really need a QValidator for a checkbox, so set it to NULL; is recquired if using the DECL_GETSETCLASS
 }
 
 }} //end fetch::ui
