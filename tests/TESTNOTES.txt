@@ -9,7 +9,9 @@ To test code, use simulated.microscope file and tile small surface and mark as s
 2. Auto Tiling At Fixed z:     To test auto tiling at fixed z, start an auto tile run until images begin to be collected.
 			       Stop run and check box "Skip Surface Find On Image Resume." Click run, and imaging should resume immediately.
 			       Repeat, but now uncheck the box "Skip Surface Find on Image Resume." Click run, and surface find should begin/complete, followed by imaging.
-			       .acquisition files should have the checked status of the checkbox once the state has been changed (by default, it is set to unchecked).
+			       Change setting elsewhere in code (not in UI) to see if it updates fields appropriately.
 
 3. Slice Thickness Correction: To test slice thickness correction, try changing the correction and make sure it is actually changing via, eg. tasks/Vibratome.cpp.
 			       Make sure when stop and restart software, the previous value was saved/used.
+			       Ensure only valid values can be set and that the current slice thickness correction label is updated properly.
+			       Change setting elsewhere in code (not in UI) to see if it updates checkbox appropriately.
