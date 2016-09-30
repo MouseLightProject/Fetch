@@ -2,6 +2,8 @@
 #include <QtWidgets>
 #include "ui/AgentController.h"
 #include "ui/StageController.h"
+#include "ui/VibratomeController.h"
+#include "ui/MicroscopeController.h"
 #include "DevicePropController.h"
 
 namespace fetch {
@@ -99,7 +101,9 @@ public: // semi-private
 
   QTimer _poller;
   AgentController               _scope_state_controller;
+  MicroscopeController		   *_microscopeController; //DGA: _microscopeController is a pointer to a an instance of MicroscopeController
   PlanarStageController        *_stageController;
+  VibratomeController		   *_vibratomeController; //DGA: _vibratomeController is a pointer to a an instance of VibratomeController
 
   // Property controllers
   ResonantTurnController       *_resonant_turn_controller;
@@ -114,7 +118,6 @@ public: // semi-private
   VibratomeFeedPosYController  *_vibratome_feed_pos_y_controller;
   VibratomeZOffsetController   *_vibratome_z_offset_controller;
   VibratomeThicknessController     *_vibratome_thickness_controller; //DGA: Renamed thick to thickness
-  VibratomeThicknessCorrectionController   *_vibratome_thickness_correction_controller; //DGA: creates _vibratome_thickness_correction_controller, a pointer of type VibratomeThicknessCorrectionController
   ZPiezoMaxController          *_zpiezo_max_control;
   ZPiezoMinController          *_zpiezo_min_control;
   ZPiezoStepController         *_zpiezo_step_control;
@@ -132,7 +135,6 @@ public: // semi-private
   AutoTileChanController               *_autotile_chan_control;
   AutoTileIntensityThresholdController *_autotile_intensity_thresh_control;
   AutoTileAreaThresholdController      *_autotile_area_thresh_control;
-  AutoTileSkipSurfaceFindOnImageResumeController *_autotile_skip_surface_find_on_image_resume_control; //DGA: creates _autotile_skip_surface_find_on_image_resume, a pointer of type AutoTileSkipSurfaceFindOnImageResumeController
 
   QFileSystemWatcher           *_config_watcher;
 
