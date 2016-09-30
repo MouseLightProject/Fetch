@@ -18,9 +18,9 @@ namespace ui{
     parent->_autotile_chan_control->createLineEditAndAddToLayout(form);
     parent->_autotile_intensity_thresh_control->createLineEditAndAddToLayout(form);
     parent->_autotile_area_thresh_control->createLineEditAndAddToLayout(form);
-	QCheckBox * skipSurfaceFindOnImageResume = parent->_microscopeController->createSkipSurfaceFindOnImageResumeCheckBox();
-	skipSurfaceFindOnImageResume->setText("Skip Surface Find On Image Resume");
-	form->addRow("",skipSurfaceFindOnImageResume);
+	QCheckBox * skipSurfaceFindOnImageResumeCheckBox = parent->_microscopeController->createSkipSurfaceFindOnImageResumeCheckBox(); //DGA: create skipSurfaceFindOnImageResumeCheckBox
+	skipSurfaceFindOnImageResumeCheckBox->setText("Skip Surface Find On Image Resume"); //DGA: Set the text then add the checkbox so that is aligned properly with other widgets
+	form->addRow("",skipSurfaceFindOnImageResumeCheckBox);
     AgentControllerButtonPanel *btns = new AgentControllerButtonPanel(&parent->_scope_state_controller,&dc->auto_tile_task);
     form->addRow(btns);
   }

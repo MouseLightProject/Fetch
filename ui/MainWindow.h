@@ -101,9 +101,9 @@ public: // semi-private
 
   QTimer _poller;
   AgentController               _scope_state_controller;
-  MicroscopeController		   *_microscopeController;
+  MicroscopeController		   *_microscopeController; //DGA: _microscopeController is a pointer to a an instance of MicroscopeController
   PlanarStageController        *_stageController;
-  VibratomeController		   *_vibratomeController;
+  VibratomeController		   *_vibratomeController; //DGA: _vibratomeController is a pointer to a an instance of VibratomeController
 
   // Property controllers
   ResonantTurnController       *_resonant_turn_controller;

@@ -307,9 +307,15 @@ namespace ui {
         emit updateFromConfig();
 		
         form->addRow(row);
-		QLineEdit * thicknessCorrectionUmLineEdit = parent->_vibratomeController->createThicknessCorrectionUmLineEdit();
-		form->addRow("Slice Thickness Correction (um)",thicknessCorrectionUmLineEdit);
-		form->addRow("Current Thickness Correction (um)",parent->_vibratomeController->currentThicknessCorrectionUm);
+		parent->_vibratomeController->createSliceThicknessCorrectionUmWidgets(); //DGA: Create the slice thickness correction line edits and labels
+		QLineEdit * sliceThicknessCorrectionUmLineEdit = parent->_vibratomeController->sliceThicknessCorrectionUmLineEdit;
+		QLabel * currentSliceThicknessCorrectionUmLabel = parent->_vibratomeController->currentSliceThicknessCorrectionUmLabel;
+		//DGA: Add the widgets, and a lock checkbox to prevent changes being made to slice thickness correction
+		form->addRow("Slice Thickness Correction (um)", sliceThicknessCorrectionUmLineEdit);
+		form->addRow("Current Thickness Correction (um)", currentSliceThicknessCorrectionUmLabel);
+		QSettings settings; //DGA: settings is of type QSettings
+		sliceThicknessCorrectionUmLineEdit->setText(QString::number(settings.value("sliceThicknessCorrectionUm").toFloat())); //DGA: Initialize the line edit text to equal the sliceThicknessCorrectionUm variable in the QSettings, which will be 0 if it doesn't exist yet
+		parent->_vibratomeController->setSliceThicknessCorrectionUm(); //DGA: Call function to update the slice thickness correction variable of vibratome_
 		//DGA: Lock thickness correction editing
 		QCheckBox *checkBox = new QCheckBox(); //DGA: Create checkbox
 		checkBox->setText("Lock Slice Thickness Correction"); //DGA: Set the checkbox text
@@ -318,15 +324,14 @@ namespace ui {
 			*unlocked = new QState();
 		locked->addTransition(checkBox, SIGNAL(stateChanged(int)), unlocked); //DGA: The following define the transition between locked and unlocked states (namely, when the checkbox state changes, the state transitions
 		unlocked->addTransition(checkBox, SIGNAL(stateChanged(int)), locked);
-		locked->assignProperty(thicknessCorrectionUmLineEdit, "readOnly", true);//DGA: When locked, the editor is read only
-		unlocked->assignProperty(thicknessCorrectionUmLineEdit, "readOnly", false); //DGA: When unlocked, the edit box can be edited
+		locked->assignProperty(sliceThicknessCorrectionUmLineEdit, "readOnly", true);//DGA: When locked, the editor is read only
+		unlocked->assignProperty(sliceThicknessCorrectionUmLineEdit, "readOnly", false); //DGA: When unlocked, the edit box can be edited
 		lockmachine->addState(locked); //DGA: Add the states to the state machine
 		lockmachine->addState(unlocked);
 		checkBox->setCheckState(Qt::Checked); //DGA: Set the initial value of the checkbox to checked.
 		lockmachine->setInitialState(locked); //DGA: Set the inital state of the state machine to locked
 		lockmachine->start(); //DGA: The state machine is started
-		row = new QGridLayout(); //DGA: Dynamically allocates row as QGridLayout pointer
-		form->addRow("",checkBox); //DGA: Adds the row to the form, where the "" mean that the check box will be properly aligned with other fields in the widget
+		form->addRow("", checkBox); //DGA: Adds the row to the form, where the "" mean that the check box will be properly aligned with other fields in the widget
       }
 
 #if 0 // turns out this tableview is completely useless.

@@ -157,7 +157,7 @@ namespace fetch
                                                               
       IDevice          *_idevice;
       IVibratome       *_ivibratome;
-	  float    sliceThicknessCorrection_um_;
+	  float    sliceThicknessCorrectionUm_; //DGA: private member that is the slice thickness correction in microns to be used to adjust to get the desired thickness
     public:
 	  Vibratome(Agent *agent);
       Vibratome(Agent *agent, Config *cfg);
@@ -205,9 +205,9 @@ namespace fetch
               float    thickness_um()             { return (float)_config->cut_thickness_um();}
               int      setThicknessUmNoWait(float um);
 
-			  void     setThicknessCorrection_um(float um) ;
-			  float	   getThicknessCorrection_um(){return sliceThicknessCorrection_um_;}
-			  ui::simpleUiUpdater thicknessUpdater, thicknessLabelUpdater;
+			  void     setSliceThicknessCorrectionUm(float um) ; //DGA: Function declaration of slice thickness correction setter
+			  float	   getSliceThicknessCorrectionUm(){return sliceThicknessCorrectionUm_;} //DGA: Getter of slice thickness correction
+			  ui::simpleUiUpdater sliceThicknessCorrectionUmLineEditUpdater, sliceThicknessCorrectionUmLabelUpdater; //DGA: Instances of simpleUiUpdater so that changed to sliceThicknessCorrectionUm_ can be transmitted to the UI
     };
   
   } // end namespace device

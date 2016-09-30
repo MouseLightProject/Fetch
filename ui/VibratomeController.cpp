@@ -1,29 +1,26 @@
 #include "VibratomeController.h"
 #include <QtWidgets>
 
-QLineEdit*
+void
   fetch::ui::VibratomeController::
-  createThicknessCorrectionUmLineEdit(QWidget *parent)
-{	QSettings settings;
-	thicknessCorrectionUmLineEdit = new QLineEdit(parent);
-	currentThicknessCorrectionUm = new QLabel(parent);
-	connect(thicknessCorrectionUmLineEdit, SIGNAL(editingFinished()), this, SLOT(setSliceThicknessCorrection()));
-	connect(&(vibratome_->thicknessUpdater), SIGNAL(signal_somethingChanged(QString)),thicknessCorrectionUmLineEdit, SLOT(setText(QString)));
-	connect(&(vibratome_->thicknessUpdater), SIGNAL(signal_somethingChanged(QString)),currentThicknessCorrectionUm, SLOT(setText(QString)));
-	thicknessCorrectionUmLineEdit->setText(QString::number(settings.value("thicknessCorrectionUm").toFloat()));
-	thicknessCorrectionUmLineEdit->editingFinished();
-	return thicknessCorrectionUmLineEdit;
+  createSliceThicknessCorrectionUmWidgets() //DGA: Definition of function from header
+{	QSettings settings; //DGA: Create a QSettings variable
+	sliceThicknessCorrectionUmLineEdit = new QLineEdit(); //DGA: Dynamically allocate slice thickness correction line edit
+	currentSliceThicknessCorrectionUmLabel = new QLabel(); //DGA: Dynamically allocate current slice thickness correction label
+	connect(sliceThicknessCorrectionUmLineEdit, SIGNAL(editingFinished()), this, SLOT(setSliceThicknessCorrectionUm())); //DGA: Connect the editingFinished signal from the line edit to the setSliceThicknessCorrection slot of this class instance. This will set the slice thickness variable of vibratome_ to that entered in the line edit
+	connect(&(vibratome_->sliceThicknessCorrectionUmLineEditUpdater), SIGNAL(signal_valueSet(QString)),sliceThicknessCorrectionUmLineEdit, SLOT(setText(QString))); //DGA: Connect the signal signal_valueSet(Qstring) of the thickness correction line edit updater object of vibratome_ to the setText slot of the line edit so the displayed text matches the value of the slice thickness variable of vibratome_
+	connect(&(vibratome_->sliceThicknessCorrectionUmLabelUpdater), SIGNAL(signal_valueSet(QString)),currentSliceThicknessCorrectionUmLabel, SLOT(setText(QString))); //DGA: Connect the signal signal_valueSet(QString) of the thickness correction label updater object of vibratome_ to the setText slot of the label so the displayed text matches the value of the slice thickness variable of vibratome_
 }
 
 void 
   fetch::ui::VibratomeController::
-  setSliceThicknessCorrection()
+  setSliceThicknessCorrectionUm() //DGA: setSliceThicknessCorrectionUm slot
 {	bool ok;
-	float newThicknessCorrection = thicknessCorrectionUmLineEdit->text().toFloat(&ok);
-	if (ok && abs(newThicknessCorrection)<1000){ //DGA: Conversion was successful and is a valid number
-		vibratome_->setThicknessCorrection_um(newThicknessCorrection);
+	float newSliceThicknessCorrection = sliceThicknessCorrectionUmLineEdit->text().toFloat(&ok); //Try to convert text to a float, if successful ok = true
+	if (ok && abs(newSliceThicknessCorrection)<1000){ //DGA: Conversion was successful and is a valid number (between -1000 and 1000
+		vibratome_->setSliceThicknessCorrectionUm(newSliceThicknessCorrection); //DGA: set slice thickness correction member of vibratome_
 	}
 	else{
-		thicknessCorrectionUmLineEdit->setText(QString::number(vibratome_->getThicknessCorrection_um()));
+		sliceThicknessCorrectionUmLineEdit->setText(QString::number(vibratome_->getSliceThicknessCorrectionUm())); //DGA: If conversion wasn't successful, then set the text of the line edit to the current sliceThicknessCorrection_um_
 	}
 }
