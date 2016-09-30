@@ -26,44 +26,40 @@ Fetch is currently developed by David Ackerman.
 Version History
 _______________
 
-1.0    Aug 5, 2016    Initial commit, based on fully functional 
-		      code from local microscope machine, written
-		      by Nathan Clack.
+1.0    Aug 5, 2016    Initial commit, based on fully functional code from local
+		      microscope machine, written by Nathan Clack.
 
-1.01   Sep 7, 2016    Changed folder numbering so that numbering
-		      always increases, resetting to 0 when a
-		      new day begins; seriesno in .microscope
-		      file is now unused. Updated simulation mode
-		      so that a complete autotile simulation
-		      (exploration, surface find and image stack
-		      acquisition) is possible. Fixed issue with
-		      distance-to-edge calculation in Tiling.cpp.
-		      Added this README, and LICENSE from Nathan 
-		      Clack's repository.
+1.01   Sep 7, 2016    Changed folder numbering so that numbering always 
+		      increases, resetting to 0 when a new day begins; seriesno 
+		      in .microscope file is now unused. Updated simulation 
+		      mode so that a complete autotile simulation (exploration, 
+		      surface find and image stack acquisition) is possible. 
+		      Fixed issue with distance-to-edge calculation in Tiling.cpp. 
+	              Added this README, and LICENSE from Nathan Clack's 
+		      repository.
 
 1.011  Sep 7, 2016    Fixed README formatting.
 
-1.02   Sep 20, 2016   Created a property and check box called
-		      "Skip Surface Find on Image Resume" in 
-		      Auto Tile mode. This gives the user the 
-		      option to stop imaging and restart without 
-		      having to do another surface find. This 
-		      property is outputted in .acquisition file. 
-	              Also reformatted Stage's "Lock Controls" 
-		      checkbox and added version number to main 
-		      window.
+1.02   Sep 20, 2016   Created a property and check box called "Skip Surface Find 
+		      on Image Resume" in Auto Tile mode. This gives the user the 
+		      option to stop imaging and restart without having to do 
+		      another surface find. This property is outputted in 
+		      .acquisition file. Also reformatted Stage's "Lock Controls" 
+		      checkbox and added version number to main window.
 
-1.021  Sep 21, 2016   Updated "Skip Surface Find on Image Resume"
-		      check box so that its checked status 
-                      updates from .microscope file, and removed 
-                      the corresponding property from simulated.
-                      microscope file. Also changed z_tile_offset 
-                      to 0 to prevent errors when resaving 
-                      .microscope file.
+1.021  Sep 21, 2016   Updated "Skip Surface Find on Image Resume" check box so 
+		      that its checked status updates from .microscope file, and 
+		      removed the corresponding property from simulated.microscope 
+		      file. Also changed z_tile_offset to 0 to prevent errors when 
+		      resaving .microscope file.
 
 1.022  Sep 21, 2016   Updated version number in main window.
 
-1.03-beta-1 Sep 23, 2016    Enable user to enter slice
-			    thickness correction with accompanying
-			    locked checkbox. Updated checkbox
+1.03-beta-1 Sep 23, 2016    Enable user to enter slice thickness correction 
+		            with accompanying locked checkbox. Updated checkbox
 			    alignment for other widgets.
+
+1.03   Sep 30, 2016   Slice thickness correction and skip surface find are no 
+		      longer configuration properties, but are instead QSettings. 
+		      Added field that displays the current slice thickness 
+		      correction setting.
