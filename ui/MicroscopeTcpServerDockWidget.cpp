@@ -122,7 +122,7 @@ class server_t {
     buffers_t buffers; //We need a buffer to store data until command has completely received
 public:
     explicit server_t(device_t *device,unsigned port=1024)
-        : state_(ServerStopped)
+        : state_(ServerRunning) //DGA: Made it so that it is running by default. Alternatively ould just "click" it after it is created so it will be outputted
         , device(device)
     {
         make_protocol();
