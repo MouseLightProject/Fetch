@@ -22,5 +22,6 @@ void
 	}
 	else{
 		sliceThicknessCorrectionUmLineEdit->setText(QString::number(vibratome_->getSliceThicknessCorrectionUm())); //DGA: If conversion wasn't successful, then set the text of the line edit to the current sliceThicknessCorrection_um_
+	    currentSliceThicknessCorrectionUmLabel->setText(QString::number(vibratome_->getSliceThicknessCorrectionUm())); //DGA: If conversion wasn't successful, then set the text of the line edit to the current sliceThicknessCorrection_um_
 	}
 }
