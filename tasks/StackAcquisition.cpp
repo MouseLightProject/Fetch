@@ -428,6 +428,9 @@ Error:
 			  //Then it is taking a stack
 			  isTakingStack = true;
 		  }
+		  else{
+			  Sleep(100);
+		  }
 	
 		  for (z_um = ummin; ((ummax - z_um) / umstep) >= -0.5f && !d->_agent->is_stopping(); z_um += umstep) //DGA: Now this is inclusive of ummin and ummax
           { size_t pitch[4];

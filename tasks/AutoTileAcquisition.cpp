@@ -185,7 +185,9 @@ Error:
       { Vector3f tilepos;
         unsigned any_explorable=0,
                  any_active=0;
+		float distanceFromCenterUm, sphereRadiusUm = 2000, crossSectionRadiusUm, maxzUm;
         cfg::tasks::AutoTile cfg=dc->get_config().autotile();
+		maxzUm = cfg.maxz_mm()*1000;
         size_t iplane=dc->stage()->getPosInLattice().z();
 
         device::StageTiling* tiling = dc->stage()->tiling();
@@ -202,9 +204,17 @@ Error:
           DBG("Exploring tile: %6.1f %6.1f %6.1f",tilepos.x(),tilepos.y(),tilepos.z());
           CHKJMP(dc->stage()->setPos(tilepos*0.001)); // convert um to mm
           CHKJMP(im=dc->snapshot(cfg.z_um(),cfg.timeout_ms()));
+		  
           tiling->markExplored();
-
           tiling->markDetected(classify(im,cfg.ichan(),cfg.intensity_threshold(),cfg.area_threshold()));
+		  device::Digitizer::Config digcfg = dc->scanner._scanner2d._digitizer.get_config();
+		  if(digcfg.kind() == cfg::device::Digitizer_DigitizerType_Simulated){
+			  crossSectionRadiusUm = sqrt( sphereRadiusUm*sphereRadiusUm - ((maxzUm-500)/2 - (tilepos[2]-500))*((maxzUm-500)/2 - (tilepos[2]-500)));
+			  crossSectionRadiusUm = (crossSectionRadiusUm > 250) ? crossSectionRadiusUm:250;
+			  distanceFromCenterUm = sqrt((tilepos[0]-50000)*(tilepos[0]-50000) + (tilepos[1]-50000)*(tilepos[1]-50000) );
+			  if( distanceFromCenterUm > crossSectionRadiusUm)
+				tiling->markDetected(0);
+		  }
           mylib::Free_Array(im);
         }
         if(!tiling->updateActive(iplane))
