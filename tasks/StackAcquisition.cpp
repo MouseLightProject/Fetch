@@ -454,6 +454,7 @@ Error:
 					  // DGA: In surface find mode, this ensures the surface is not found in the first frame and will likely be found in the middle of stack and the stage should move up
 					  // such that the surface would be expected in the next first frame
 					  *c = (TPixel)(((ptp*rand() / (float)RAND_MAX)*((z_um - ummin) / (ummax - ummin))) + low);
+					  //*c = low;
 				 }
 			  }
 			}

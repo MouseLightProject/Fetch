@@ -426,11 +426,25 @@ namespace device {
     }
     cursor_=beg-AUINT32(attr_); // reset to start of plane
     // Copy explorable to next plane
-    if( (current_plane_offset_/sz_plane_nelem_)<(attr_->dims[2]-1)) // if not last plane
+   /* if( (current_plane_offset_/sz_plane_nelem_)<(attr_->dims[2]-1)) // if not last plane
     { uint32_t *c,*n;
-      for(c=(uint32_t*)beg,n=(uint32_t*)end;c<end;++c,++n)
-        *n|=(*c&Explorable);
-    }
+      //for(c=(uint32_t*)beg,n=(uint32_t*)end;c<end;++c,++n)
+       // *n|=(*c&Explorable);
+    }*/
+    unlock();
+  }
+
+  void StageTiling::usePreviousDoneTilesAsNewExplorableTiles()
+  { lock();
+    const uint32_t *beg = AUINT32(attr_) + current_plane_offset_,
+	  *end = beg + sz_plane_nelem_;
+    uint32_t *c, *n;
+	if ((current_plane_offset_ / sz_plane_nelem_) < (attr_->dims[2] - 1)) // if not last plane
+	{ for (c = (uint32_t*)beg, n = (uint32_t*)end; c < end; ++c, ++n)
+	  { *n&=~Explorable;
+		 if ((*c&Done) == Done) *n |= Explorable ;
+	  }
+	}
     unlock();
   }
 
@@ -673,7 +687,7 @@ DoneOutlining:
              *prev = beg-sz_plane_nelem_;
     #define DETECTED(e) ((*(e)&Detected)==Detected)
     for(c=beg,p=prev;c<end;c++,p++)
-    { if( DETECTED(c) || ((iplane>0)?DETECTED(p):0) )
+    { if( DETECTED(c))// || ((iplane>0)?DETECTED(p):0) )
       { *c |= Active;
         any=1;
       }

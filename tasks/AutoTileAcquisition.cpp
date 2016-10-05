@@ -185,15 +185,26 @@ Error:
       { Vector3f tilepos;
         unsigned any_explorable=0,
                  any_active=0;
-		float distanceFromCenterUm, sphereRadiusUm = 2000, crossSectionRadiusUm, maxzUm;
+		float distanceFromCenterUm, ellipseMajorAxisUm = 2000, crossSectionRadiusUm, maxzUm, ellipseMinorAxis, zEllipseCenterUm, targetZUm;
         cfg::tasks::AutoTile cfg=dc->get_config().autotile();
 		maxzUm = cfg.maxz_mm()*1000;
+		ellipseMinorAxis = (0.5*(maxzUm-500));
+		zEllipseCenterUm = 500+ellipseMinorAxis;
         size_t iplane=dc->stage()->getPosInLattice().z();
 
         device::StageTiling* tiling = dc->stage()->tiling();
+		tiling->usePreviousDoneTilesAsNewExplorableTiles();
+		int numExplorable = tiling->numberOfTilesWithGivenAttributes(tiling->Explorable);
         tiling->markAddressable(iplane); // make sure the current plane is marked addressable
+	    numExplorable = tiling->numberOfTilesWithGivenAttributes(tiling->Explorable);
         tiling->setCursorToPlane(iplane);
-
+			    numExplorable = tiling->numberOfTilesWithGivenAttributes(tiling->Explorable);
+		device::Digitizer::Config digcfg = dc->scanner._scanner2d._digitizer.get_config();
+		if (digcfg.kind() == cfg::device::Digitizer_DigitizerType_Simulated){
+			targetZUm = dc->stage()->getTarget().z()*1000.0;
+			crossSectionRadiusUm = ellipseMajorAxisUm*sqrt(1 - pow((zEllipseCenterUm - targetZUm) / ellipseMinorAxis, 2));
+			crossSectionRadiusUm = (crossSectionRadiusUm > 250) ? crossSectionRadiusUm : 250;
+		}
         device::TileSearchContext *ctx=0;
         while(  !dc->_agent->is_stopping()
               && tiling->nextSearchPosition(iplane,cfg.search_radius()/*radius - tiles*/,tilepos,&ctx))
@@ -207,13 +218,10 @@ Error:
 		  
           tiling->markExplored();
           tiling->markDetected(classify(im,cfg.ichan(),cfg.intensity_threshold(),cfg.area_threshold()));
-		  device::Digitizer::Config digcfg = dc->scanner._scanner2d._digitizer.get_config();
-		  if(digcfg.kind() == cfg::device::Digitizer_DigitizerType_Simulated){
-			  crossSectionRadiusUm = sqrt( sphereRadiusUm*sphereRadiusUm - ((maxzUm-500)/2 - (tilepos[2]-500))*((maxzUm-500)/2 - (tilepos[2]-500)));
-			  crossSectionRadiusUm = (crossSectionRadiusUm > 250) ? crossSectionRadiusUm:250;
-			  distanceFromCenterUm = sqrt((tilepos[0]-50000)*(tilepos[0]-50000) + (tilepos[1]-50000)*(tilepos[1]-50000) );
-			  if( distanceFromCenterUm > crossSectionRadiusUm)
-				tiling->markDetected(0);
+		  if (digcfg.kind() == cfg::device::Digitizer_DigitizerType_Simulated){
+			  distanceFromCenterUm = sqrt((tilepos[0] - 50000)*(tilepos[0] - 50000) + (tilepos[1] - 50000)*(tilepos[1] - 50000));
+			  if (distanceFromCenterUm > crossSectionRadiusUm)
+				  tiling->markDetected(false);
 		  }
           mylib::Free_Array(im);
         }
