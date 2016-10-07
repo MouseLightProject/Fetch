@@ -696,6 +696,11 @@ fetch::ui::PlanarStageController::PlanarStageController( device::Stage *stage, Q
     &listener_,SIGNAL(sig_velocityChanged()),
     this,SIGNAL(velocityChanged()),
     Qt::QueuedConnection);    
+
+  connect(
+    &listener_,SIGNAL(sig_dropDistanceMmChanged()),
+    this,SIGNAL(dropDistanceMmChanged()),
+    Qt::QueuedConnection);    
     
   connect(
     &listener_,SIGNAL(sig_referenced()),

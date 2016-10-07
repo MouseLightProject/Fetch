@@ -962,6 +962,12 @@ Error:
       (*i)->velocityChanged();
   }
 
+  void Stage::_notifyDropDistanceMmChanged()
+  { TListeners::iterator i;
+    for(i=_listeners.begin();i!=_listeners.end();++i)
+      (*i)->velocityChanged();
+  }
+
   void Stage::_notifyFOVGeometryChanged()
   {
     TListeners::iterator i;

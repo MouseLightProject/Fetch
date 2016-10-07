@@ -56,6 +56,8 @@ namespace device {
       virtual void setVelocityNoWait ( float vx, float vy, float vz)    = 0;
       inline  void setVelocityNoWait ( const Vector3f &r)                   {setVelocityNoWait(r[0],r[1],r[2]);}
       inline  void setVelocityNoWait ( float v )                            {setVelocityNoWait(v,v,v); }
+	  inline float getDropDistanceMm ()										{return dropDistanceMm_;}
+	  inline void setDropDistanceMm  ( float v )								{dropDistanceMm_ = v;} 
       virtual int  getPos            ( float *x, float *y, float *z)    = 0;
       virtual int  getTarget         ( float *x, float *y, float *z)    = 0;
       inline  Vector3f getPos        ()                                     {float x,y,z; getPos(&x,&y,&z); return Vector3f(x,y,z);}
@@ -77,6 +79,9 @@ namespace device {
 
       virtual bool prepareForCut     ( unsigned axis)=0;                    ///< Ready axis for cutting. \returns true on success, otherwise false.
       virtual bool doneWithCut       ( unsigned axis)=0;                    ///< Return axis to normal. \returns true on success, otherwise false.
+
+	private:
+	  float dropDistanceMm_;
   };
 
   template<class T>
@@ -249,6 +254,7 @@ namespace device {
       void    _notifyMoved();
       void    _notifyReferenced();
       void    _notiveVelocityChanged();
+	  void	  _notifyDropDistanceMmChanged();
       void    _notifyFOVGeometryChanged();
   };
 
@@ -288,6 +294,7 @@ namespace device {
     virtual void moved() {}                                                  ///< the stage position changed
     virtual void referenced() {}                                             ///< the stage was referenced
     virtual void velocityChanged() {}                                        ///< the velocity set for an axis changed
+	virtual void dropDistanceMmChanged() {}	
   };
 
   // end namespace fetch::Device
