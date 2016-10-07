@@ -449,7 +449,7 @@ namespace device {
     lock();
     if(!ctx)
     { *pctx=ctx=new TileSearchContext(this,radius);
-    }
+	}
     ctx->sync();
 Start:
     if(ctx->detected())

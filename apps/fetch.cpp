@@ -133,8 +133,8 @@ int main(int argc, char *argv[])
   mainwindow.setWindowTitle("Fetch V1.03"); //DGA: Window title now includes version number.
   gp_microscope->onUpdate(); // force update so gui gets notified - have to do this mostly for stage listeners ...
   mainwindow.show();
-
   unsigned int eflag = app.exec();
+
   eflag |= Shutdown_Soft();
   //debug("Press <Enter> to exit.\r\n");
   //getchar();
