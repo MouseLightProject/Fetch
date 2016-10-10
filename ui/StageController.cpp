@@ -721,28 +721,3 @@ QComboBox*
   connect(cb,SIGNAL(activated(int)),this,SLOT(moveToHistoryItem(int)));
   return cb;
 }
-
-QLineEdit*
-  fetch::ui::PlanarStageController::
-  createBackupAmountMmLineEdit(QWidget *parent)
-{ 
-  backupAmountMmLineEdit = new QLineEdit(parent);
-  connect(backupAmountMmLineEdit, SIGNAL(editingFinished()), this, SLOT(setBackupAmountMm()),Qt::QueuedConnection); //DGA: Connects check box's clicked signal to the setSkipSurfaceFindOnImageResume slot of this class instance, so that skipSurfaceFindOnImageResume_ of microscope_ will be updated when the checkbox is clicked
-  connect(&(stage_->backupAmountMmLineEditUpdater), SIGNAL(signal_valueSet(QString)),backupAmountMmLineEdit, SLOT(setText(QString)),Qt::QueuedConnection); //DGA: Connect the signal signal_valueSet(Qstring) of the thickness correction line edit updater object of vibratome_ to the setText slot of the line edit so the displayed text matches the value of the slice thickness variable of vibratome_
-  return backupAmountMmLineEdit; //DGA: Returns the checkbox
-}
-
-void 
-  fetch::ui::PlanarStageController::
-  setBackupAmountMm() //DGA: setBackupAmountMm slot
-{
-  bool ok;
-  float newBackupAmountMm = backupAmountMmLineEdit->text().toFloat(&ok); //Try to convert text to a float, if successful ok = true
-  Vector3f pos = stage_->getPos();
-  if (ok & ((pos[2] - newBackupAmountMm) >= stage_->minimumStageZMm)){ //DGA: Conversion was successful and is a valid number
-	  stage_->setBackupAmountMm(newBackupAmountMm); //DGA: set slice thickness correction member of vibratome_
-  }
-  else{
-	  backupAmountMmLineEdit->setText(QString::number(stage_->getBackupAmountMm())); //DGA: If conversion wasn't successful, then set the text of the line edit to the current sliceThicknessCorrection_um_
-  }
-}

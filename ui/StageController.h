@@ -232,8 +232,6 @@ namespace ui {
       device::Stage *stage()                                               {return stage_;}
 
       QComboBox *createHistoryComboBox(QWidget *parent=0);
-	  QLineEdit *createBackupAmountMmLineEdit(QWidget * parent=0); //DGA: Function to create the backup amount line edit, which takes in parent, a pointer to type QWidget, defaulted to 0
-	  QLineEdit* backupAmountMmLineEdit;
 
    signals:
       void moved();            ///< eventually updates the imitem's position
@@ -254,9 +252,6 @@ namespace ui {
 
       void updateTiling()                                                  { tiling_controller_.update();}
       //void invalidateTiling()                                              { tiling_controller_.update();}
-
-    public slots:
-      void setBackupAmountMm(); //DGA: slot to be called when need to set backupAmountMm_ in stage_
 
     private:
 
