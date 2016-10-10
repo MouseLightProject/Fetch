@@ -97,7 +97,10 @@ namespace fetch  {
   bool operator!=(const cfg::device::Stage& a, const cfg::device::Stage& b)                             {return !(a==b);}
 
 namespace device {
-
+	//Istageasdfasdf
+	void	IStage::setBackupAmountMm(float v){
+			{Vector3f pos = getPos(); backupAmountMm_ = ((pos[2]-v)>minimumStageZMm ?  v : pos[2]-minimumStageZMm);} //gotta add stuff about qsettings...might have to add qssettings to class now?
+		}
 
   //
   // C843Stage
@@ -957,12 +960,6 @@ Error:
   }
 
   void Stage::_notiveVelocityChanged()
-  { TListeners::iterator i;
-    for(i=_listeners.begin();i!=_listeners.end();++i)
-      (*i)->velocityChanged();
-  }
-
-  void Stage::_notifyDropDistanceMmChanged()
   { TListeners::iterator i;
     for(i=_listeners.begin();i!=_listeners.end();++i)
       (*i)->velocityChanged();

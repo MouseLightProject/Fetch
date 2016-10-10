@@ -128,12 +128,10 @@ namespace ui {
   public:
     virtual void moved(void)           {emit sig_moved();}
     virtual void velocityChanged(void) {emit sig_velocityChanged();}
-	virtual void dropAmountMmChanged(void) {emit sig_dropAmountMmChanged();}
     virtual void referenced(void)      {emit sig_referenced();}
   signals:
     void sig_moved();
     void sig_velocityChanged();
-	void sig_dropAmountMmChanged();
     void sig_referenced();
 
   };
@@ -226,7 +224,6 @@ namespace ui {
 
       QRectF  travel()                                                     { device::StageTravel t; stage_->getTravel(&t); return QRectF(QPointF(t.x.min,t.y.min),QPointF(t.x.max,t.y.max)); }
       QPointF velocity()                                                   { float vx,vy,vz; stage_->getVelocity(&vx,&vy,&vz); return QPointF(vx,vy); }
-	  float dropDistanceMm()											   { return stage_->getDropDistanceMm() };
       QPointF pos()                                                        { float  x, y, z; stage_->getPos(&x,&y,&z); return QPointF(x,y); } 
       QPointF target()                                                     { float  x, y, z; stage_->getTarget(&x,&y,&z); return QPointF(x,y); } 
 
@@ -235,18 +232,18 @@ namespace ui {
       device::Stage *stage()                                               {return stage_;}
 
       QComboBox *createHistoryComboBox(QWidget *parent=0);
+	  QLineEdit *createBackupAmountMmLineEdit(QWidget * parent=0); //DGA: Function to create the backup amount line edit, which takes in parent, a pointer to type QWidget, defaulted to 0
+	  QLineEdit* backupAmountMmLineEdit;
 
    signals:
       void moved();            ///< eventually updates the imitem's position
       void moved(QPointF pos); ///< eventually updates the imitem's position
       void velocityChanged();
-	  void dropDistanceMmChanged();
       void referenced();       ///< eventually updates the imitem's position
     
 	  public slots:
       
       void setVelocity(QPointF v)                                          { stage_->setVelocity(v.x(),v.y(),0.0); }
-	  void setDropDistanceMm(float v)									   { stage_->setDropDistanceMm(v); }
       void moveTo3d(float x, float y, float z)                             { stage_->setPosNoWait(x,y,z); history_.push(x,y,z); emit moved(QPointF(x,y));}
       void moveTo(QPointF r)                                               { float  x, y, z; stage_->getTarget(&x,&y,&z); moveTo3d(r.x(),r.y(),z); }
       void moveRel(QPointF dr)                                             { float  x, y, z; stage_->getTarget(&x,&y,&z); moveTo3d(x+dr.x(),y+dr.y(),z);} 
@@ -257,6 +254,9 @@ namespace ui {
 
       void updateTiling()                                                  { tiling_controller_.update();}
       //void invalidateTiling()                                              { tiling_controller_.update();}
+
+    public slots:
+      void setBackupAmountMm(); //DGA: slot to be called when need to set backupAmountMm_ in stage_
 
     private:
 
