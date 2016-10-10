@@ -212,6 +212,7 @@ vibratome {
     geometry {
     dz_mm: 0.123
   }
+  backup_amount_mm: 10
 }
 fov {
   x_size_um: 500
