@@ -103,12 +103,13 @@ namespace microscope {
   unsigned int Cut::run(device::Microscope* dc)
   {
     float cx,cy,cz,vx,vy,vz,ax,ay,bx,by,bz,v,dz,thick, thicknessCorrection; //DGA: Added thicknessCorrection float
+	float desiredBackupDistance_mm = dc->vibratome()->backupDistanceMm();
 	float minimumSafeZHeightToDropTo_mm = 8;
-	float desiredZHeightToDropTo_mm = 14;
-	float actualZHeightToDropTo_mm = (desiredZHeightToDropTo_mm < minimumSafeZHeightToDropTo_mm) ? minimumSafeZHeightToDropTo_mm : desiredZHeightToDropTo_mm;
     // get current pos,vel
     CHK( dc->stage()->getTarget(&cx,&cy,&cz));
     CHK( dc->stage()->getVelocity(&vx,&vy,&vz));
+
+	float actualZHeightToDropTo_mm = ((cz - desiredBackupDistance_mm) < minimumSafeZHeightToDropTo_mm) ? minimumSafeZHeightToDropTo_mm : (cz - desiredBackupDistance_mm);
 
     // Get parameters
     dc->vibratome()->feed_begin_pos_mm(&ax,&ay);

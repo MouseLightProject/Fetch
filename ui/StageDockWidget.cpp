@@ -193,9 +193,6 @@ namespace ui {
     s->setValue(0.1);
     pstep_=s;
 
-	///// Set the backup distance
-	parent->_stageController->createBackupAmountMmLineEdit();
-
     ///// Lock Controls
     QCheckBox *b = new QCheckBox();
 	b->setText("Lock Controls");
@@ -235,7 +232,6 @@ namespace ui {
     s->setValue(0.1);
     vstep_=s;
     form->addRow(row);
-	form->addRow("Backup Amount (mm)", parent->_stageController->backupAmountMmLineEdit);
 	form->addRow("",b); //DGA: Adds the row to the form, where "" allows the checkbox b to be aligned properly with other fields in the widget
 
     ///// Indicators
