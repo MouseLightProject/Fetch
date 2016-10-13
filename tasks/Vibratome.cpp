@@ -103,13 +103,15 @@ namespace microscope {
   unsigned int Cut::run(device::Microscope* dc)
   {
     float cx,cy,cz,vx,vy,vz,ax,ay,bx,by,bz,v,dz,thick, thicknessCorrection; //DGA: Added thicknessCorrection float
-	float desiredBackupDistance_mm = dc->vibratome()->backupDistanceMm();
-	float minimumSafeZHeightToDropTo_mm = 8;
+	float desiredBackupDistance_mm = dc->vibratome()->backupDistanceMm(); //DGA: The desired backup distance, desired because it might not be able to backup that far
+	float minimumDropDistance_mm = 0.5; //DGA: The stage must be dropped a minimum of 0.5 mm
+	desiredBackupDistance_mm = desiredBackupDistance_mm > minimumDropDistance_mm ? desiredBackupDistance_mm : minimumDropDistance_mm; //DGA: Ensure teh stage is dropped by at leas the minimum amount
+	float minimumSafeZHeightToDropTo_mm = 8; //DGA: The minimum safe z height that the stage can be lowered to
     // get current pos,vel
     CHK( dc->stage()->getTarget(&cx,&cy,&cz));
     CHK( dc->stage()->getVelocity(&vx,&vy,&vz));
 
-	float actualZHeightToDropTo_mm = ((cz - desiredBackupDistance_mm) < minimumSafeZHeightToDropTo_mm) ? minimumSafeZHeightToDropTo_mm : (cz - desiredBackupDistance_mm);
+	float actualZHeightToDropTo_mm = ((cz - desiredBackupDistance_mm) < minimumSafeZHeightToDropTo_mm) ? minimumSafeZHeightToDropTo_mm : (cz - desiredBackupDistance_mm); //DGA: The actual z height to drop to should be at a minimum 8 mm
 
     // Get parameters
     dc->vibratome()->feed_begin_pos_mm(&ax,&ay);
@@ -117,7 +119,8 @@ namespace microscope {
     thick = dc->vibratome()->thickness_um()*0.001;      // um->mm
     dz = dc->vibratome()->verticalOffset();             // when image plan is lower than cutting plane, dz should be negative
 	thicknessCorrection = dc->vibratome()->getSliceThicknessCorrectionUm()*0.001; //DGA: Get thickness correction in um
-    CHK( (v = dc->vibratome()->feed_vel_mm_p_s())>0.0); // must be non-zero
+
+	CHK( (v = dc->vibratome()->feed_vel_mm_p_s())>0.0); // must be non-zero
 
     // Move to the start of the cut
     bz = cz-dz+thick + (thicknessCorrection);		// DGA: cut z position = Current Z - delta Z offset + requested slice thickness ( + thickness correction); the first subtraction gets the blade to the top of the sample
