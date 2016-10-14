@@ -122,11 +122,12 @@ class server_t {
     buffers_t buffers; //We need a buffer to store data until command has completely received
 public:
     explicit server_t(device_t *device,unsigned port=1024)
-        : state_(ServerStopped)
+        : state_(ServerRunning) //DGA: Made it so that it says it is running by default. Alternatively could just "click" it after it is created so it will be outputted
         , device(device)
     {
         make_protocol();
         s.connect(&s,&QTcpServer::newConnection,[this](){this->on_connection();});
+		start(); //DGA: Actually make it start running by default
     }
     void toggle_state() {
         switch (state()) {
@@ -216,7 +217,7 @@ class server_widget_t : public QWidget {
 public:
     explicit server_widget_t(device_t *device,unsigned port=1024)
         : server(device,port) 
-    {        
+    {   
         auto *layout=new QVBoxLayout;
         setLayout(layout);
         auto *w=new QPushButton(get_start_button_label(server.state()));
