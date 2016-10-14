@@ -208,6 +208,8 @@ namespace fetch
 			  void     setSliceThicknessCorrectionUm(float um) ; //DGA: Function declaration of slice thickness correction setter
 			  float	   getSliceThicknessCorrectionUm(){return sliceThicknessCorrectionUm_;} //DGA: Getter of slice thickness correction
 			  ui::simpleUiUpdater sliceThicknessCorrectionUmLineEditUpdater, sliceThicknessCorrectionUmLabelUpdater; //DGA: Instances of simpleUiUpdater so that changed to sliceThicknessCorrectionUm_ can be transmitted to the UI
+
+			  float    minimumDropDistance_mm = 0.5, minimumSafeZHeightToDropTo_mm = 8;
     };
   
   } // end namespace device
