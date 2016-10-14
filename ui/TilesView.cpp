@@ -554,7 +554,7 @@ void TilesView::init_color_tables()
 #else // Layered colors
          if(FLAG(fetch::device::StageTiling::Done))       hue=120.0/360.0; // green
     else if(FLAG(fetch::device::StageTiling::Active))     hue= 60.0/360.0; // yellow
-    else if(FLAG(fetch::device::StageTiling::Detected))   hue= 37.5/360.0; // orange DGA: changed it from 30 to 37.5 to make it more yellow
+    else if(FLAG(fetch::device::StageTiling::Detected))   hue=220.0/360.0; // orange DGA: changed it from 30 to 220 to make it appear dark blue
     else if(FLAG(fetch::device::StageTiling::Explorable)) hue=  0.0/360.0; // red
     else if(FLAG(fetch::device::StageTiling::Safe))       hue=180.0/360.0; // lt blue
 #endif
