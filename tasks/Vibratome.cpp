@@ -103,22 +103,27 @@ namespace microscope {
   unsigned int Cut::run(device::Microscope* dc)
   {
     float cx,cy,cz,vx,vy,vz,ax,ay,bx,by,bz,v,dz,thick, thicknessCorrection; //DGA: Added thicknessCorrection float
-    // get current pos,vel
+	
+	// get current pos,vel
     CHK( dc->stage()->getTarget(&cx,&cy,&cz));
     CHK( dc->stage()->getVelocity(&vx,&vy,&vz));
+	dc->vibratome()->backupDistanceMm(); //DGA: The desired backup distance, desired because it might not be able to backup that far
+	float backupDistance_mm = (dc->vibratome()->backupDistanceMm() > dc->vibratome()->minimumDropDistance_mm) ? dc->vibratome()->backupDistanceMm() : dc->vibratome()->minimumDropDistance_mm; //DGA: Ensure the stage is dropped by at least the minimum amount
+	float actualZHeightToDropTo_mm = ((cz - backupDistance_mm) > dc->vibratome()->minimumSafeZHeightToDropTo_mm) ? (cz - backupDistance_mm) : dc->vibratome()->minimumSafeZHeightToDropTo_mm ; //DGA: The actual z height to drop to should be at a minimum 8 mm
 
     // Get parameters
     dc->vibratome()->feed_begin_pos_mm(&ax,&ay);
     dc->vibratome()->feed_end_pos_mm(&bx,&by);
     thick = dc->vibratome()->thickness_um()*0.001;      // um->mm
-    dz = dc->vibratome()->verticalOffset();             // when image plan is lower than cutting plane, dz should be negative
+    dz = dc->vibratome()->verticalOffset();             // when image plane is lower than cutting plane, dz should be negative
 	thicknessCorrection = dc->vibratome()->getSliceThicknessCorrectionUm()*0.001; //DGA: Get thickness correction in um
-    CHK( (v = dc->vibratome()->feed_vel_mm_p_s())>0.0); // must be non-zero
+
+	CHK( (v = dc->vibratome()->feed_vel_mm_p_s())>0.0); // must be non-zero
 
     // Move to the start of the cut
     bz = cz-dz+thick + (thicknessCorrection);		// DGA: cut z position = Current Z - delta Z offset + requested slice thickness ( + thickness correction); the first subtraction gets the blade to the top of the sample
-    CHK( dc->stage()->setPos(cx,cy,14));           // Drop to safe z first
-    CHK( dc->stage()->setPos(ax,ay,14));           // Move on safe z plane to cut position
+    CHK( dc->stage()->setPos(cx,cy,actualZHeightToDropTo_mm));           // Drop to safe z first
+    CHK( dc->stage()->setPos(ax,ay,actualZHeightToDropTo_mm));           // Move on safe z plane to cut position
     CHK( dc->stage()->setPos(ax,ay,bz));            // Move to final plane (bz)
 
     // do the cut
@@ -127,14 +132,14 @@ namespace microscope {
     CHK( dc->vibratome()->start());
     CHK( dc->stage()->setVelocity(v));              // set feed velocity
     CHK( dc->stage()->setPos(bx,by,bz));            // feed (Move to end of cut position)
-    CHK( dc->stage()->setPos(bx,by,14));  // Drop to safe z first, come up at an angle -- Note: vibratome still running!
+    CHK( dc->stage()->setPos(bx,by,actualZHeightToDropTo_mm));  // Drop to safe z first, come up at an angle -- Note: vibratome still running!
                                   //(0 to 12)   
     CHK( dc->stage()->setVelocity(vx,vy,vz));       // set back to default velocity
     CHK( dc->vibratome()->stop());					// turn off vibratome
     CHK( dc->stage()->doneWithCut(feedaxis));       // reset stage parameters
 
     // Move back
-    CHK( dc->stage()->setPos(cx,cy,14));           // Move on safe z plane
+    CHK( dc->stage()->setPos(cx,cy,actualZHeightToDropTo_mm));           // Move on safe z plane
     CHK( dc->stage()->setPos(cx,cy,cz+thick)); //DGA: Moves the stage back to cz+thick (the desired thickness)
     
     dc->_cut_count++;
