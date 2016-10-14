@@ -99,10 +99,10 @@ Error:
 	  // DGA: Function for simulating an ellipsoid (with circular cross sections) in 3D so that we can test, eg., if the explorable region shrinks as desired
 	  static bool insideSimulationOfEllipse(float maxzUm, float targetZUm, Vector3f tilepos)
 	  {
-		  float distanceFromXYCenterUm, ellipseMajorAxisUm = 2000, crossSectionRadiusUm, ellipseMinorAxis, zEllipseCenterUm; // DGA: Variables used to create ellipsoid in 3D
-		  ellipseMinorAxis = (0.5*(maxzUm - 500)); //DGA: Assumes initial offset of 500 um, so want minor axis to be equal to the total height/2
-		  zEllipseCenterUm = 500 + ellipseMinorAxis; //DGA: Center of ellipse in Z
-		  crossSectionRadiusUm = ellipseMajorAxisUm*sqrt(1 - pow((zEllipseCenterUm - targetZUm) / ellipseMinorAxis, 2)); //DGA: Calculate the cross section radius
+		  float distanceFromXYCenterUm, ellipseMajorAxisUm = 2000, crossSectionRadiusUm, ellipseMinorAxisUm, zEllipseCenterUm; // DGA: Variables used to create ellipsoid in 3D
+		  ellipseMinorAxisUm = (0.5*(maxzUm - 10000)); //DGA: Assumes initial offset of 10000 um, so want minor axis to be equal to the total height/2
+		  zEllipseCenterUm = 10000 + ellipseMinorAxisUm; //DGA: Center of ellipse in Z
+		  crossSectionRadiusUm = ellipseMajorAxisUm*sqrt(1 - pow((zEllipseCenterUm - targetZUm) / ellipseMinorAxisUm, 2)); //DGA: Calculate the cross section radius
 		  crossSectionRadiusUm = (crossSectionRadiusUm > 250) ? crossSectionRadiusUm : 250; //DGA: Set a minimum cross section since the program will stop if there aren't any detected tiles
 		  distanceFromXYCenterUm = sqrt((tilepos[0] - 50000)*(tilepos[0] - 50000) + (tilepos[1] - 50000)*(tilepos[1] - 50000)); //DGA: Calculate if the current tile is within the circular cross section, centered at (50 mm, 50 mm)
 		  return (distanceFromXYCenterUm < crossSectionRadiusUm); //DGA: If the tile is within the ellipse, return true
@@ -200,11 +200,10 @@ Error:
         size_t iplane=dc->stage()->getPosInLattice().z();
 
         device::StageTiling* tiling = dc->stage()->tiling();
-		tiling->usePreviousDoneTilesAsNewExplorableTiles();
         tiling->markAddressable(iplane); // make sure the current plane is marked addressable
         tiling->setCursorToPlane(iplane);
 
-		device::Digitizer::Config digcfg = dc->scanner._scanner2d._digitizer.get_config();
+		device::Digitizer::Config digcfg = dc->scanner._scanner2d._digitizer.get_config(); //DGA: Get the configuration of the digitizer to know if it is simulated
         device::TileSearchContext *ctx=0;
         while(  !dc->_agent->is_stopping()
               && tiling->nextSearchPosition(iplane,cfg.search_radius()/*radius - tiles*/,tilepos,&ctx))
@@ -218,8 +217,8 @@ Error:
           tiling->markExplored();
 
           tiling->markDetected(classify(im,cfg.ichan(),cfg.intensity_threshold(),cfg.area_threshold()));
-		  if (digcfg.kind() == cfg::device::Digitizer_DigitizerType_Simulated){	  
-			  if (!insideSimulationOfEllipse(cfg.maxz_mm()*1000, dc->stage()->getTarget().z()*1000.0, tilepos)) tiling->markDetected(false);
+		  if (digcfg.kind() == cfg::device::Digitizer_DigitizerType_Simulated){	//DGA: If digitizer is simulated, then simulate an ellipsoidal volume
+			  if (!insideSimulationOfEllipse(cfg.maxz_mm()*1000, dc->stage()->getTarget().z()*1000.0, tilepos)) tiling->markDetected(false); //DGA: If the tile is outside the simulated volume, mark as undetected (by default, simulation mode marks everything as detected)
 		  }
           mylib::Free_Array(im);
         }

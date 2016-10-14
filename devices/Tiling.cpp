@@ -429,8 +429,8 @@ namespace device {
     unlock();
   }
 
-  //DGA: Uses done tiles from previous plane as the explorable tiles for the current plane
-  void StageTiling::usePreviousDoneTilesAsNewExplorableTiles()
+  //DGA: Uses done tiles from current plane as the explorable tiles for the next plane
+  void StageTiling::useCurrentDoneTilesAsNextExplorableTiles()
   { const uint32_t *beg = AUINT32(attr_) + current_plane_offset_,
 	*end = beg + sz_plane_nelem_; //DGA: Beginning and end of plane
     uint32_t *c, *n; //DGA: Pointers to tiles in current (c) and next (n) planes
