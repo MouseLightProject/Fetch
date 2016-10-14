@@ -1,0 +1,136 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="12.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{820A53AD-9717-4CE7-AAD3-BD367C5FA0B0}</ProjectGuid>
+    <RootNamespace>testFiles</RootNamespace>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v120</PlatformToolset>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v120</PlatformToolset>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v120</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v120</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="..\..\..\davidBuild\fetchProperties.props" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="..\..\..\davidBuild\fetchProperties.props" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="..\..\..\davidBuild\fetchProperties.props" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="..\..\..\davidBuild\fetchProperties.props" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup />
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <SDLCheck>true</SDLCheck>
+      <AdditionalIncludeDirectories>C:\Users\ackermand\Google Drive\Janelia\ScientificComputing\src\3rdParty\protobuf-2.6.1\src;C:\Users\ackermand\Google Drive\Janelia\ScientificComputing\src\fetch\davidBuild;C:\Users\ackermand\Google Drive\Janelia\ScientificComputing\src\3rdParty\eigen;C:\Program Files (x86)\National Instruments\Shared\ExternalCompilerSupport\C\include;C:\Users\ackermand\Google Drive\Janelia\ScientificComputing\src\mylib;C:\Users\ackermand\Google Drive\Janelia\ScientificComputing\src\fetch\3rdParty\glew-1.8.0\x64\include;C:\Users\ackermand\Google Drive\Janelia\ScientificComputing\src\fetch\3rdParty\AlazarTech\ATS-SDK\6.0.3\Include;C:\Users\ackermand\Google Drive\Janelia\ScientificComputing\src\fetch\src;C:\Qt\5.5\msvc2013_64\include;C:\Qt\5.5\msvc2013_64\include\QtCore;C:\Qt\5.5\msvc2013_64\.\mkspecs\win32-msvc2013;C:\Qt\5.5\msvc2013_64\include\QtOpenGL;C:\Qt\5.5\msvc2013_64\include\QtWidgets;C:\Qt\5.5\msvc2013_64\include\QtGui;C:\Qt\5.5\msvc2013_64\include\QtPrintSupport;C:\Qt\5.5\msvc2013_64\include\QtOpenGLExtensions;C:\Qt\5.5\msvc2013_64\include\QtNetwork;C:\Qt\5.5\msvc2013_64\include\QtTest;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib;C:\Users\ackermand\Google Drive\Janelia\ScientificComputing\src\3rdParty\protobuf-2.6.1\vsprojects\x64\Debug\libprotobuf.lib;C:\Users\ackermand\Google Drive\Janelia\ScientificComputing\src\mylib\Visual Studio 10 Win64\Debug\mylib.lib;C:\Users\ackermand\Google Drive\Janelia\ScientificComputing\src\mylib\Visual Studio 10 Win64\Debug\mytiff.lib;C:\Users\ackermand\Google Drive\Janelia\ScientificComputing\src\mylib\Visual Studio 10 Win64\Debug\myfft.lib;glu32.lib;opengl32.lib;C:\Users\ackermand\Google Drive\Janelia\ScientificComputing\src\fetch\3rdParty\glew-1.8.0\x64\lib\glew32.lib;C:\Program Files (x86)\National Instruments\Shared\ExternalCompilerSupport\C\lib64\msvc\NIDAQmx.lib;C:\Users\ackermand\Google Drive\Janelia\ScientificComputing\src\fetch\3rdParty\AlazarTech\ATS-SDK\6.0.3\Library\x64\AtsApi.lib;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v7.5\lib\x64\cudart_static.lib;Imm32.lib;Ws2_32.lib;Winmm.lib;C:\Qt\5.5\msvc2013_64\lib\Qt5OpenGLd.lib;C:\Qt\5.5\msvc2013_64\lib\Qt5PrintSupportd.lib;C:\Qt\5.5\msvc2013_64\lib\Qt5OpenGLExtensionsd.lib;C:\Qt\5.5\msvc2013_64\lib\Qt5Networkd.lib;C:\Qt\5.5\msvc2013_64\lib\Qt5Widgetsd.lib;C:\Qt\5.5\msvc2013_64\lib\Qt5Guid.lib;C:\Qt\5.5\msvc2013_64\lib\Qt5Cored.lib;C:\Qt\5.5\msvc2013_64\lib\Qt5Testd.lib</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <SDLCheck>true</SDLCheck>
+      <AdditionalIncludeDirectories>C:\Users\ackermand\Google Drive\Janelia\ScientificComputing\src\3rdParty\protobuf-2.6.1\src;C:\Users\ackermand\Google Drive\Janelia\ScientificComputing\src\fetch\davidBuild;C:\Users\ackermand\Google Drive\Janelia\ScientificComputing\src\3rdParty\eigen;C:\Program Files (x86)\National Instruments\Shared\ExternalCompilerSupport\C\include;C:\Users\ackermand\Google Drive\Janelia\ScientificComputing\src\mylib;C:\Users\ackermand\Google Drive\Janelia\ScientificComputing\src\fetch\3rdParty\glew-1.8.0\x64\include;C:\Users\ackermand\Google Drive\Janelia\ScientificComputing\src\fetch\3rdParty\AlazarTech\ATS-SDK\6.0.3\Include;C:\Users\ackermand\Google Drive\Janelia\ScientificComputing\src\fetch\src;C:\Qt\5.5\msvc2013_64\include;C:\Qt\5.5\msvc2013_64\include\QtCore;C:\Qt\5.5\msvc2013_64\.\mkspecs\win32-msvc2013;C:\Qt\5.5\msvc2013_64\include\QtOpenGL;C:\Qt\5.5\msvc2013_64\include\QtWidgets;C:\Qt\5.5\msvc2013_64\include\QtGui;C:\Qt\5.5\msvc2013_64\include\QtPrintSupport;C:\Qt\5.5\msvc2013_64\include\QtOpenGLExtensions;C:\Qt\5.5\msvc2013_64\include\QtNetwork;C:\Qt\5.5\msvc2013_64\include\QtTest;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib;C:\Users\ackermand\Google Drive\Janelia\ScientificComputing\src\3rdParty\protobuf-2.6.1\vsprojects\x64\Debug\libprotobuf.lib;C:\Users\ackermand\Google Drive\Janelia\ScientificComputing\src\mylib\Visual Studio 10 Win64\Debug\mylib.lib;C:\Users\ackermand\Google Drive\Janelia\ScientificComputing\src\mylib\Visual Studio 10 Win64\Debug\mytiff.lib;C:\Users\ackermand\Google Drive\Janelia\ScientificComputing\src\mylib\Visual Studio 10 Win64\Debug\myfft.lib;glu32.lib;opengl32.lib;C:\Users\ackermand\Google Drive\Janelia\ScientificComputing\src\fetch\3rdParty\glew-1.8.0\x64\lib\glew32.lib;C:\Program Files (x86)\National Instruments\Shared\ExternalCompilerSupport\C\lib64\msvc\NIDAQmx.lib;C:\Users\ackermand\Google Drive\Janelia\ScientificComputing\src\fetch\3rdParty\AlazarTech\ATS-SDK\6.0.3\Library\x64\AtsApi.lib;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v7.5\lib\x64\cudart_static.lib;Imm32.lib;Ws2_32.lib;Winmm.lib;C:\Qt\5.5\msvc2013_64\lib\Qt5OpenGLd.lib;C:\Qt\5.5\msvc2013_64\lib\Qt5PrintSupportd.lib;C:\Qt\5.5\msvc2013_64\lib\Qt5OpenGLExtensionsd.lib;C:\Qt\5.5\msvc2013_64\lib\Qt5Networkd.lib;C:\Qt\5.5\msvc2013_64\lib\Qt5Widgetsd.lib;C:\Qt\5.5\msvc2013_64\lib\Qt5Guid.lib;C:\Qt\5.5\msvc2013_64\lib\Qt5Cored.lib;C:\Qt\5.5\msvc2013_64\lib\Qt5Testd.lib</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="firstTest.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\davidBuild\fetch.vcxproj">
+      <Project>{2905bfcd-7d7a-3397-9192-800efe48eb86}</Project>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>
