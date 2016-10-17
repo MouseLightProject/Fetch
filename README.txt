@@ -63,3 +63,9 @@ _______________
 		      longer configuration properties, but are instead QSettings. 
 		      Added field that displays the current slice thickness 
 		      correction setting.
+
+1.04   Oct 17, 2016   TCP server is started by default. The desired stage backup 
+		      distance is settable in the .microscope file. The "done" 
+		      tiles in one slice are used as the "explorable" tiles in 
+		      the next slice. The color of the "detected" tiles is now 
+		      dark blue.

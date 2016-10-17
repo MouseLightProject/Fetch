@@ -424,10 +424,7 @@ Error:
           HERE;
           d->_zpiezo.getScanRange(&ummin,&ummax,&umstep);
 		  srand(GetCurrentThreadId()); //DGA: This is necessary because otherwise each thread starts with the same seed
-		  if (ummin != ummax){
-			  //Then it is taking a stack
-			  isTakingStack = true;
-		  }
+		  (ummin != ummax) ? isTakingStack = true : Sleep(100); //DGA: Either it is taking a stack, or sleep for 100 ms so it is easier to see it moving in the main window
 	
 		  for (z_um = ummin; ((ummax - z_um) / umstep) >= -0.5f && !d->_agent->is_stopping(); z_um += umstep) //DGA: Now this is inclusive of ummin and ummax
           { size_t pitch[4];
