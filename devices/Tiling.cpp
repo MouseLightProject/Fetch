@@ -43,17 +43,17 @@ namespace device {
   //////////////////////////////////////////////////////////////////////
 
   //  Constructors  ////////////////////////////////////////////////////
-  StageTiling::StageTiling(const device::StageTravel &travel,
+  StageTilingBase::StageTilingBase(const device::StageTravel &travel,
                            const FieldOfViewGeometry &fov,
                            const Mode                 alignment)
     :
       attr_(NULL),
       cursor_(0),
-      current_plane_offset_(0),
+   //   current_plane_offset_(0),
       sz_plane_nelem_(0),
       latticeToStage_(),
       fov_(fov),
-      z_offset_um_(0.0),
+   //   z_offset_um_(0.0),
       travel_(travel),
       lock_(0),
       mode_(alignment)
@@ -64,7 +64,13 @@ namespace device {
     //markAddressable_(&travel_);
   }
 
-  //  Destructor  /////////////////////////////////////////////////////
+  //  Destructors  /////////////////////////////////////////////////////
+  StageTilingBase::~StageTilingBase()
+  {
+    if(attr_) Free_Array(attr_);
+    if(lock_) Mutex_Free(lock_);
+  }
+
   StageTiling::~StageTiling()
   {
     if(attr_) Free_Array(attr_);
@@ -77,7 +83,7 @@ namespace device {
   //  the lattice in stage space.
   //
   //  FOV angle should be between 0 and pi/2 (180 degrees).
-  void StageTiling::computeLatticeToStageTransform_
+  void StageTilingBase::computeLatticeToStageTransform_
                           (const FieldOfViewGeometry &fov,
                            const Mode                 alignment)
   { latticeToStage_ = TTransform::Identity();
