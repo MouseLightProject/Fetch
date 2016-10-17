@@ -15,7 +15,6 @@ namespace ui {
 	 //constructor is called with parent argument and microscope_ is set equal to microscope.
 	 MicroscopeController(device::Microscope *microscope, QObject *parent=0): QObject(parent), microscope_(microscope){} 
 	 QCheckBox * createSkipSurfaceFindOnImageResumeCheckBox(QWidget * parent=0); //DGA: Function to create skip surface find checkbox, which takes in parent, a pionter to type QWidget, defaulted to 0
-	 QCheckBox * skipSurfaceFindOnImageResumeCheckBox;	//DGA: Pointer to the skip surface find check box
 
    public slots: 
      void setSkipSurfaceFindOnImageResume(bool); //DGA: slot to be called when need to set skipSurfaceFindOnImageResume_ microscope_

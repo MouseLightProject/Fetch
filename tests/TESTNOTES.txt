@@ -1,6 +1,7 @@
 Fetch Test Notes
 ================
-To test code, use simulated.microscope file and tile small surface and mark as safe, and mark some internal area as explorable.
+To test code, use simulated.microscope file and tile small surface at 50x50x10 mm and mark as safe, and mark some internal area at 50x50x10 mm explorable. The simulation 
+produces an ellipsoidal simulated brain.
   
 1. File Numbering:             To enusre file numbering increases from one session to another, start an auto tile run and collect images.
 	                       Stop it part way and close the session. Open another session and make sure FileSeries has incremented.
@@ -9,9 +10,15 @@ To test code, use simulated.microscope file and tile small surface and mark as s
 2. Auto Tiling At Fixed z:     To test auto tiling at fixed z, start an auto tile run until images begin to be collected.
 			       Stop run and check box "Skip Surface Find On Image Resume." Click run, and imaging should resume immediately.
 			       Repeat, but now uncheck the box "Skip Surface Find on Image Resume." Click run, and surface find should begin/complete, followed by imaging.
-			       Change setting elsewhere in code (not in UI) to see if it updates fields appropriately.
 
 3. Slice Thickness Correction: To test slice thickness correction, try changing the correction and make sure it is actually changing via, eg. tasks/Vibratome.cpp.
 			       Make sure when stop and restart software, the previous value was saved/used.
 			       Ensure only valid values can be set and that the current slice thickness correction label is updated properly.
-			       Change setting elsewhere in code (not in UI) to see if it updates checkbox appropriately.
+
+4. TCP Server on Startup:      Check that TCP Server is starting on software startup.
+
+5. Stage Backup Distance:      The desired backup distance is settable in the .microscope file, but the actual backup distance used must be greater than 0.5 mm, with a
+			       minimum stage Z height of 8 mm. This should be checked in, eg., tasks/Vibratome.cpp.
+
+6. Search Region Can Shrink:   The simulated brain is ellipsoidal, meaning that the search region should grow up to the middle of the brain, beyond which it should shrink.
+			       The "done" tiles of one slice should be used as the "explorable" tiles in the next slice. 

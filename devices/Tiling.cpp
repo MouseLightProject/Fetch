@@ -425,13 +425,23 @@ namespace device {
       ctx->set_outline_mode(false);
     }
     cursor_=beg-AUINT32(attr_); // reset to start of plane
-    // Copy explorable to next plane
-    if( (current_plane_offset_/sz_plane_nelem_)<(attr_->dims[2]-1)) // if not last plane
-    { uint32_t *c,*n;
-      for(c=(uint32_t*)beg,n=(uint32_t*)end;c<end;++c,++n)
-        *n|=(*c&Explorable);
-    }
+								//DGA: Removed copying of explorable tiles from one frame to another since that means the explorable region always grows
     unlock();
+  }
+
+  //DGA: Uses done tiles from current plane as the explorable tiles for the next plane
+  void StageTiling::useCurrentDoneTilesAsNextExplorableTiles()
+  { const uint32_t *beg = AUINT32(attr_) + current_plane_offset_,
+	*end = beg + sz_plane_nelem_; //DGA: Beginning and end of plane
+    uint32_t *c, *n; //DGA: Pointers to tiles in current (c) and next (n) planes
+	{ AutoLock lock(lock_); //DGA: Scoped locking/unlocking since the destructor calls the unlock. This means that this section of code can only be accessed by one thread at a time.
+	  if ((current_plane_offset_ / sz_plane_nelem_) < (attr_->dims[2] - 1)) // if not last plane
+	  { for (c = (uint32_t*)beg, n = (uint32_t*)end; c < end; ++c, ++n) //DGA: Loop through current (c) and next (n) plane tiles
+	    { *n&=~Explorable; //DGA: Reset explorable, since you don't want to use what was initially defined as explorable
+		  if ((*c&Done) == Done) *n |= Explorable ; //DGA: If c was done, then make n (corresponding tile in next plane) explorable
+	    }
+	  }
+	}
   }
 
 #define ELIGABLE(e)          ((*(e)&eligable_mask)==eligable)
@@ -658,7 +668,7 @@ DoneOutlining:
 
 
   /**
-    Looks at tiles in this plane and the previous plane for detection events in
+    Looks at tiles in this plane for detection events in
     order to determine whether tiles in the plane should be marked Active
 
     \returns 1 if any tiles were marked active, otherwise 0.
@@ -672,8 +682,8 @@ DoneOutlining:
              *end  = beg+sz_plane_nelem_,
              *prev = beg-sz_plane_nelem_;
     #define DETECTED(e) ((*(e)&Detected)==Detected)
-    for(c=beg,p=prev;c<end;c++,p++)
-    { if( DETECTED(c) || ((iplane>0)?DETECTED(p):0) )
+    for(c=beg;c<end;c++)
+    { if( DETECTED(c)) //DGA: Removed condition to also check previous plane for detection events, which would be used to mark the current plane tiles active. Now only currently detected tiles are set to active.
       { *c |= Active;
         any=1;
       }
