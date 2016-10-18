@@ -49,7 +49,7 @@ namespace device {
     :
       attr_(NULL),
       cursor_(0),
-   //   current_plane_offset_(0),
+      current_plane_offset_(0),
       sz_plane_nelem_(0),
       latticeToStage_(),
       fov_(fov),
@@ -71,7 +71,7 @@ namespace device {
     if(lock_) Mutex_Free(lock_);
   }
 
-  StageTiling3D::~StageTiling3D::()
+  StageTiling3D::~StageTiling3D()
   {
     if(attr_) Free_Array(attr_);
     if(lock_) Mutex_Free(lock_);
@@ -401,7 +401,7 @@ namespace device {
     }
     void tile_search_history_t::flush() {i=0;}
  
-    TileSearchContext::TileSearchContext(StageTiling *t,int radius/*=0*/) : tiling(t), c(0),n(0),dir(0),mode(0),radius(radius) {}
+    TileSearchContext::TileSearchContext(StageTiling3D *t,int radius/*=0*/) : tiling(t), c(0),n(0),dir(0),mode(0),radius(radius) {}
     TileSearchContext::~TileSearchContext()
     { if(tiling) tiling->tileSearchCleanup(this);
     }
