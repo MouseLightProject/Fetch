@@ -463,6 +463,11 @@ Error:
 		skipSurfaceFindOnImageResumeCheckBoxUpdater.signal_valueSet(setValue); //DGA: Signal signal_valueSet(setValue) so that the skipSurfaceFindOnImageResume checkbox will be updated
 	}
 
+	void Microscope::setScheduleStopAfterNextCut(bool setValue){ //DGA: Defintion of scheduleStopAfterNextCut function
+		scheduleStopAfterNextCut_ = setValue; //DGA: set value of scheduleStopAfterNextCut_ equal to setValue
+		scheduleStopAfterNextCutCheckBoxUpdater.signal_valueSet(setValue); //DGA: Signal signal_valueSet(setValue) so that the scheduleStopAfterNextCut checkbox will be updated
+	}
+
     ///////////////////////////////////////////////////////////////////////
     // FileSeries
     ///////////////////////////////////////////////////////////////////////

@@ -261,6 +261,7 @@ Error:
 
           CHKJMP(   cut.config(dc));
           CHKJMP(0==cut.run(dc));
+		  if (dc->getScheduleStopAfterNextCut()) dc->_agent->stop();
         }
 
 Finalize:
