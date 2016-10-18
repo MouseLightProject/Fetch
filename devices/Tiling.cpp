@@ -43,7 +43,7 @@ namespace device {
   //////////////////////////////////////////////////////////////////////
 
   //  Constructors  ////////////////////////////////////////////////////
-  StageTilingBase::StageTilingBase(const device::StageTravel &travel,
+  StageTiling2D::StageTiling2D(const device::StageTravel &travel,
                            const FieldOfViewGeometry &fov,
                            const Mode                 alignment)
     :
@@ -53,7 +53,7 @@ namespace device {
       sz_plane_nelem_(0),
       latticeToStage_(),
       fov_(fov),
-   //   z_offset_um_(0.0),
+//    z_offset_um_(0.0),
       travel_(travel),
       lock_(0),
       mode_(alignment)
@@ -65,13 +65,13 @@ namespace device {
   }
 
   //  Destructors  /////////////////////////////////////////////////////
-  StageTilingBase::~StageTilingBase()
+  StageTiling2D::~StageTiling2D()
   {
     if(attr_) Free_Array(attr_);
     if(lock_) Mutex_Free(lock_);
   }
 
-  StageTiling::~StageTiling()
+  StageTiling3D::~StageTiling3D::()
   {
     if(attr_) Free_Array(attr_);
     if(lock_) Mutex_Free(lock_);
@@ -83,7 +83,40 @@ namespace device {
   //  the lattice in stage space.
   //
   //  FOV angle should be between 0 and pi/2 (180 degrees).
-  void StageTilingBase::computeLatticeToStageTransform_
+  void StageTiling2D::computeLatticeToStageTransform_
+                          (const FieldOfViewGeometry &fov,
+                           const Mode                 alignment)
+  { latticeToStage_ = TTransform::Identity();
+    Vector3f sc = fov.field_size_um_ - fov.overlap_um_;
+    switch(alignment)
+    {
+// should probably do the zoffset before rotate/shear but 
+// they're orthogonal to z so it doesn't matter.
+    case Mode::Stage_TilingMode_PixelAligned:
+        // Rotate the lattice
+        latticeToStage_
+          .rotate( AngleAxis<float>(fov.rotation_radians_,Vector3f::UnitZ()) )
+          //.translate(Vector3f(0,0,z_offset_um_))
+          .scale(sc)
+          ;
+        SHOW(latticeToStage_.matrix());
+        return;
+    case Mode::Stage_TilingMode_StageAligned:
+        // Shear the lattice
+        float th = fov.rotation_radians_;
+        latticeToStage_.linear() =
+          (Matrix3f() <<
+            1.0f/cos(th), -sin(th), 0,
+                       0,  cos(th), 0,
+                       0,        0, 1).finished();
+        latticeToStage_//.translate(Vector3f(0,0,z_offset_um_))
+                       .scale(sc)
+                       ;
+        return;
+    }
+  }
+
+ void StageTiling3D::computeLatticeToStageTransform_
                           (const FieldOfViewGeometry &fov,
                            const Mode                 alignment)
   { latticeToStage_ = TTransform::Identity();
@@ -116,15 +149,15 @@ namespace device {
     }
   }
 
- void StageTiling::set_z_offset_um(f64 z_um)
+ void StageTiling3D::set_z_offset_um(f64 z_um)
  { z_offset_um_=z_um;
    computeLatticeToStageTransform_(fov_,mode_);
  }
- void StageTiling::inc_z_offset_um(f64 z_um)
+ void StageTiling3D::inc_z_offset_um(f64 z_um)
  { z_offset_um_+=z_um;
    computeLatticeToStageTransform_(fov_,mode_);
  }
- f64 StageTiling::z_offset_um() 
+ f64 StageTiling3D::z_offset_um() 
  { return z_offset_um_;
  }
 
@@ -136,7 +169,7 @@ namespace device {
   //  The latticeToStage_ transfrom is adjusted so the minimal extrema is the
   //    origin.  That is, [min extremal] = T(0,0,0).
 
-  mylib::Coordinate* StageTiling::computeLatticeExtents_(const device::StageTravel& travel)
+  mylib::Coordinate* StageTiling2D::computeLatticeExtents_(const device::StageTravel& travel)
   {
     Matrix<float,8,3> sabox; // vertices of the cube, stage aligned
     sabox << // travel is in mm
@@ -173,7 +206,7 @@ namespace device {
   //  initAttr_  ///////////////////////////////////////////////////////
   //
 
-  void StageTiling::initAttr_(mylib::Coordinate *shape)
+  void StageTiling2D::initAttr_(mylib::Coordinate *shape)
   { AutoLock lock(lock_);
     attr_ = mylib::Make_Array_With_Shape(
       mylib::PLAIN_KIND,
@@ -191,7 +224,7 @@ namespace device {
 #define ON_LATTICE(e)  ((e) < (attr_->size))
 
   typedef mylib::Dimn_Type Dimn_Type;
-  void StageTiling::resetCursor()
+  void StageTiling2D::resetCursor()
   { AutoLock lock(lock_);
     cursor_ = 0;
 
@@ -216,7 +249,7 @@ namespace device {
   //
 
   /// \todo bounds checking
-  void StageTiling::setCursorToPlane(size_t iplane)
+  void StageTiling2D::setCursorToPlane(size_t iplane)
   { AutoLock lock(lock_);
     cursor_=current_plane_offset_=iplane*sz_plane_nelem_;
     cursor_--; // always incremented before query, so subtracting one here means first tile will not be skipped
@@ -225,7 +258,7 @@ namespace device {
   //  nextInPlanePosition  /////////////////////////////////////////////
   //
 
-  bool StageTiling::nextInPlanePosition(Vector3f &pos)
+  bool StageTiling2D::nextInPlanePosition(Vector3f &pos)
   { lock();
     uint32_t* mask = AUINT32(attr_);
     uint32_t attrmask = Addressable | Safe | Active | Done,
@@ -248,7 +281,7 @@ namespace device {
 
   //  nextInPlane                    /////////////////////////////////////////////
   //
-  bool StageTiling::nextInPlaneQuery(Vector3f &pos,uint32_t attrmask,uint32_t attr)
+  bool StageTiling2D::nextInPlaneQuery(Vector3f &pos,uint32_t attrmask,uint32_t attr)
   { lock();
     uint32_t* mask = AUINT32(attr_);
     do{++cursor_;}
@@ -276,7 +309,7 @@ namespace device {
       marked Active or Done.
   */
 
-  bool StageTiling::nextInPlaneExplorablePosition(Vector3f &pos)
+  bool StageTiling2D::nextInPlaneExplorablePosition(Vector3f &pos)
   { lock();
     uint32_t* mask = AUINT32(attr_);
     uint32_t attrmask = Explorable | Safe | Explored | Addressable | Active | Done,
@@ -299,7 +332,7 @@ namespace device {
 
   //  nextPosition  ////////////////////////////////////////////////////
   //
-  bool StageTiling::nextPosition(Vector3f &pos)
+  bool StageTiling2D::nextPosition(Vector3f &pos)
   { lock();
     uint32_t* mask    = AUINT32(attr_);
     uint32_t attrmask = Addressable | Safe | Active | Done,
@@ -411,11 +444,11 @@ namespace device {
     bool TileSearchContext::detected() {return CHECK(c,StageTiling::Detected); }
     void TileSearchContext::reserve()  { MARK(c,StageTiling::Reserved); }
 
-  bool StageTiling::on_plane(uint32_t *p)
+  bool StageTiling2D::on_plane(uint32_t *p)
   { return ON_PLANE(p-AUINT32(attr_));
   }
 
-  void StageTiling::tileSearchCleanup(TileSearchContext *ctx)
+  void StageTiling2D::tileSearchCleanup(TileSearchContext *ctx)
   { const uint32_t *beg = AUINT32(attr_)+current_plane_offset_,
                    *end = beg+sz_plane_nelem_;
     int iplane=current_plane_offset_/sz_plane_nelem_;
@@ -436,7 +469,7 @@ namespace device {
   }
 
   //DGA: Uses done tiles from current plane as the explorable tiles for the next plane
-  void StageTiling::useCurrentDoneTilesAsNextExplorableTiles()
+  void StageTiling2D::useCurrentDoneTilesAsNextExplorableTiles()
   { const uint32_t *beg = AUINT32(attr_) + current_plane_offset_,
 	*end = beg + sz_plane_nelem_; //DGA: Beginning and end of plane
     uint32_t *c, *n; //DGA: Pointers to tiles in current (c) and next (n) planes
@@ -455,7 +488,7 @@ namespace device {
 //#define IMPLY_DETECTED(e)    ((*(e)&(Done))==(Done)) | ((*(e)&(Active))==(Active))
 
   /* Sorry for the goto's.  don't hate. */
-  bool StageTiling::nextSearchPosition(int iplane, int radius, Vector3f &pos,TileSearchContext **pctx)
+  bool StageTiling2D::nextSearchPosition(int iplane, int radius, Vector3f &pos,TileSearchContext **pctx)
   { const uint32_t eligable_mask = Addressable | Safe | Explorable | Explored /*| Active | Done*/, // Active/Done do not imply detection and we don't want them to
                    eligable      = Addressable | Safe | Explorable,
                   *beg = AUINT32(attr_)+current_plane_offset_,
@@ -527,7 +560,7 @@ DoneOutlining:
 
   //  markDone  ////////////////////////////////////////////////////////
   //
-  void StageTiling::markDone(bool success)
+  void StageTiling2D::markDone(bool success)
   { uint32_t *m=0;
     { AutoLock lock(lock_);
       m = AUINT32(attr_) + cursor_;
@@ -540,7 +573,7 @@ DoneOutlining:
 
   //  markSafe  ////////////////////////////////////////////////////////
   //
-  void StageTiling::markSafe(bool success)
+  void StageTiling2D::markSafe(bool success)
   { uint32_t *m=0;
     { AutoLock lock(lock_);
       m = AUINT32(attr_) + cursor_;
@@ -553,7 +586,7 @@ DoneOutlining:
 
   //  markExplored  //////////////////////////////////////////////////////
   //
-  void StageTiling::markExplored(bool tf)
+  void StageTiling2D::markExplored(bool tf)
   { uint32_t *m=0;
     { AutoLock lock(lock_);
       m = AUINT32(attr_) + cursor_;
@@ -567,7 +600,7 @@ DoneOutlining:
 
   //  markDetected  //////////////////////////////////////////////////////
   //
-  void StageTiling::markDetected(bool tf)
+  void StageTiling2D::markDetected(bool tf)
   { uint32_t *m=0;
     { AutoLock lock(lock_);
       m = AUINT32(attr_) + cursor_;
@@ -581,7 +614,7 @@ DoneOutlining:
 
   //  markActive  ////////////////////////////////////////////////////////
   //
-  void StageTiling::markActive()
+  void StageTiling2D::markActive()
   { uint32_t *m=0;
     { AutoLock lock(lock_);
       m = AUINT32(attr_) + cursor_;
@@ -592,7 +625,7 @@ DoneOutlining:
 
   //  markUserReset  /////////////////////////////////////////////////////
   //
-  void StageTiling::markUserReset()
+  void StageTiling2D::markUserReset()
   { uint32_t *m=0;
     { AutoLock lock(lock_);
       m = AUINT32(attr_) + cursor_;
@@ -610,7 +643,7 @@ DoneOutlining:
   }
   /** Marks the indicated plane as addressable according to the travel.
   */
-  void StageTiling::markAddressable(size_t iplane)
+  void StageTiling2D::markAddressable(size_t iplane)
   {
     size_t old = cursor_;
     setCursorToPlane(iplane); // FIXME: chance for another thread to change the cursor...recursive locks not allowed
@@ -625,7 +658,7 @@ DoneOutlining:
 
   //  anyExplored  ///////////////////////////////////////////////////////////////
   //
-  int StageTiling::anyExplored(int iplane)
+  int StageTiling2D::anyExplored(int iplane)
   {
     setCursorToPlane(iplane);// FIXME: chance for another thread to change the cursor...recursive locks not allowed
     AutoLock lock(lock_);
@@ -679,7 +712,7 @@ DoneOutlining:
 
     \returns 1 if any tiles were marked active, otherwise 0.
   */
-  int StageTiling::updateActive(size_t iplane)
+  int StageTiling2D::updateActive(size_t iplane)
   { int any=0;
     setCursorToPlane(iplane);// FIXME: chance for another thread to change the cursor...recursive locks not allowed
     AutoLock lock(lock_);
@@ -702,10 +735,10 @@ DoneOutlining:
 
     Filled regions are 4-connected.
   */
-  void StageTiling::fillHolesInActive(size_t iplane)
+  void StageTiling2D::fillHolesInActive(size_t iplane)
   { fillHoles(iplane,Active);}
 
-  void StageTiling::fillHoles(size_t iplane, StageTiling::Flags flag)
+  void StageTiling2D::fillHoles(size_t iplane, StageTiling::Flags flag)
   {
     setCursorToPlane(iplane);// FIXME: chance for another thread to change the cursor...recursive locks not allowed
     AutoLock lock(lock_);
@@ -773,7 +806,7 @@ DoneOutlining:
   //
   #define countof(e) (sizeof(e)/sizeof(*e))
   /** Mark tiles as Active if they are 8-connected to an Active tile. */
-  void StageTiling::dilateActive(size_t iplane)
+  void StageTiling2D::dilateActive(size_t iplane)
   { dilate(iplane,1,Active,Active,1 /*restrict to explorable */);
   }
 
@@ -783,7 +816,7 @@ DoneOutlining:
   // Optionally restricts dilation to explorable tiles.
   //
   //
-  void StageTiling::dilate(size_t iplane, int n, StageTiling::Flags query_flag, StageTiling::Flags write_flag, int explorable_only)
+  void StageTiling2D::dilate(size_t iplane, int n, StageTiling::Flags query_flag, StageTiling::Flags write_flag, int explorable_only)
   {
     setCursorToPlane(iplane); // FIXME: chance for another thread to change the cursor...recursive locks not allowed
     AutoLock lock(lock_);
@@ -892,7 +925,7 @@ DoneOutlining:
     }
   };
 
-  int StageTiling::numberOfTilesWithGivenAttributes(uint32_t query_mask){ // DGA: This is the definition of the function to count the number of tiles with attributes defined by query mask
+  int StageTiling2D::numberOfTilesWithGivenAttributes(uint32_t query_mask){ // DGA: This is the definition of the function to count the number of tiles with attributes defined by query mask
 	  int numberOfTilesWithGivenAttributes=0;
 	  uint32_t *beg = AUINT32(attr_) + current_plane_offset_, // DGA: First tile in current plane
 			   *end = beg + sz_plane_nelem_; // DGA: Last tile in current plane, sz_plane_nelem_ is number of tiles in plane
@@ -903,7 +936,7 @@ DoneOutlining:
 	  return numberOfTilesWithGivenAttributes;
   }
 
-  int StageTiling::minDistTo(
+  int StageTiling2D::minDistTo(
     uint32_t search_mask,uint32_t search_flags, // area to search 
     uint32_t query_mask,uint32_t query_flags)  // tile to find
   { 
@@ -951,19 +984,19 @@ DoneOutlining:
     return dist;
   }
 
-  void StageTiling::notifyDone(size_t index, const Vector3f& pos, uint32_t sts)
+  void StageTiling2D::notifyDone(size_t index, const Vector3f& pos, uint32_t sts)
   { TListeners::iterator i;
     for(i=listeners_.begin();i!=listeners_.end();++i)
       (*i)->tile_done(index,pos,sts);
   }
 
-  void StageTiling::notifyNext(size_t index, const Vector3f& pos)
+  void StageTiling2D::notifyNext(size_t index, const Vector3f& pos)
   { TListeners::iterator i;
     for(i=listeners_.begin();i!=listeners_.end();++i)
       (*i)->tile_next(index,pos);
   }
 
-  const Vector3f StageTiling::computeCursorPos()
+  const Vector3f StageTiling2D::computeCursorPos()
   {
     mylib::Coordinate *c = mylib::Idx2CoordA(attr_,cursor_);
     mylib::Dimn_Type *d = (mylib::Dimn_Type*)ADIMN(c);
@@ -974,7 +1007,7 @@ DoneOutlining:
     return pos;
   }
 
-  void StageTiling::getCursorLatticePosition(int *x,int *y,int *z)
+  void StageTiling2D::getCursorLatticePosition(int *x,int *y,int *z)
   {
       mylib::Coordinate *c=mylib::Idx2CoordA(attr_,cursor_);
       mylib::Dimn_Type *d=(mylib::Dimn_Type*)ADIMN(c);
@@ -984,7 +1017,7 @@ DoneOutlining:
       Free_Array(c);      
   }
 
-  float StageTiling::plane_mm()
+  float StageTiling2D::plane_mm()
   {
     Vector3f r(0,0,(float)plane());
     r = latticeToStageTransform() * r * 0.001;

@@ -22,7 +22,7 @@ namespace device {
   //////////////////////////////////////////////////////////////////////
   class StageListener;
   struct TileSearchContext;
-  class StageTilingBase
+  class StageTiling2D
   {
 	   public:
     typedef fetch::cfg::device::Stage_TilingMode Mode;
@@ -57,10 +57,10 @@ namespace device {
       Reserved2   = 256                                                    ///< used internally to temporarily mark tiles
     };
 
-    StageTilingBase(const device::StageTravel& travel,
+    StageTiling2D(const device::StageTravel& travel,
                          const FieldOfViewGeometry& fov,
                          const Mode                 alignment);
-    virtual ~StageTilingBase();
+    virtual ~StageTiling2D();
 
     /* void     set_z_offset_um(f64 z_um);
     void     inc_z_offset_um(f64 z_um);
@@ -93,14 +93,14 @@ namespace device {
     void     fillHolesInActive(size_t iplane);                             //   2d
     void     dilateActive(size_t iplane);                                  //   2d
 
-    void     fillHoles(size_t iplane, StageTilingBase::Flags flag);            //   2d
-    void     dilate(size_t iplane, int ntimes, StageTilingBase::Flags query_flag, StageTilingBase::Flags write_flag, int explorable_only); // 2d
+    void     fillHoles(size_t iplane, StageTiling2D::Flags flag);            //   2d
+    void     dilate(size_t iplane, int ntimes, StageTiling2D::Flags query_flag, StageTiling2D::Flags write_flag, int explorable_only); // 2d
 
     inline mylib::Array*     attributeArray()                              {return attr_;}
     inline const TTransform& latticeToStageTransform()                     {return latticeToStage_; }
     inline const FieldOfViewGeometry& fov()                                {return fov_;}
     inline const device::StageTravel& travel()                             {return travel_;}
-    inline size_t plane()                                                  {return (size_t)(current_plane_offset_/sz_plane_nelem_); }
+  //  inline size_t plane()                                                  {return (size_t)(current_plane_offset_/sz_plane_nelem_); }
            float  plane_mm();
     const TListeners *listeners()                                          {return &listeners_;}
     inline void addListener(StageListener *listener)                       {listeners_.insert(listener);}
@@ -118,7 +118,7 @@ namespace device {
 
 	int numberOfTilesWithGivenAttributes(uint32_t query_mask); //DGA: Function to return the number of tiles with attributes defined by query_mask
   protected:
-    void computeLatticeToStageTransform_
+    virtual void computeLatticeToStageTransform_
                         (const FieldOfViewGeometry& fov,
                          const Mode                 alignment);
     mylib::Coordinate* computeLatticeExtents_(const device::StageTravel& travel); ///< returned pointer needs to be freed (w Free_Array).
@@ -134,7 +134,7 @@ namespace device {
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
   };
 
-  class StageTiling:StageTilingBase
+  class StageTiling3D:StageTiling2D
   {
   public:
     //typedef fetch::cfg::device::Stage_TilingMode Mode;
@@ -169,10 +169,10 @@ namespace device {
       Reserved2   = 256                                                    ///< used internally to temporarily mark tiles
     };*/
 
-    StageTiling(const device::StageTravel& travel,
+    StageTiling3D(const device::StageTravel& travel,
                          const FieldOfViewGeometry& fov,
                          const Mode                 alignment);
-    virtual ~StageTiling();
+    virtual ~StageTiling3D();
 
     void     set_z_offset_um(f64 z_um);
     void     inc_z_offset_um(f64 z_um);
@@ -229,10 +229,10 @@ namespace device {
  //   void getCursorLatticePosition(int* x,int* y,int* z);
 
 	//int numberOfTilesWithGivenAttributes(uint32_t query_mask); //DGA: Function to return the number of tiles with attributes defined by query_mask
- // protected:
- //   void computeLatticeToStageTransform_
- //                       (const FieldOfViewGeometry& fov,
- //                        const Mode                 alignment);
+  protected:
+    void computeLatticeToStageTransform_
+                        (const FieldOfViewGeometry& fov,
+                         const Mode                 alignment);
  //   mylib::Coordinate* computeLatticeExtents_(const device::StageTravel& travel); ///< returned pointer needs to be freed (w Free_Array).
  //   void initAttr_(mylib::Coordinate *shape);                                     ///< Free's shape
 
