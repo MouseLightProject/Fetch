@@ -169,12 +169,14 @@ namespace fetch
 
 	  bool getScheduleStopAfterNextCut() {return scheduleStopAfterNextCut_;}; //DGA: Getter for scheduleStopAfterNextCut_
 	  void setScheduleStopAfterNextCut(bool setValue); //DGA: Function setter prototype for scheduleStopAfterNextCut_
+
+	  void cutCompletedSoStop()          {cutCompletedSoStopSignaler.signal_valueSet();};
     public:
       FileSeries file_series;
 
     public:
       IDevice* _end_of_pipeline;
-	  ui::simpleUiUpdater skipSurfaceFindOnImageResumeCheckBoxUpdater, scheduleStopAfterNextCutCheckBoxUpdater; //DGA: Updater for skipSurfaceFindOnImageResumeCheckBox and scheduleStopAfterNextCutCheckBox
+	  ui::simpleUiUpdater skipSurfaceFindOnImageResumeCheckBoxUpdater, scheduleStopAfterNextCutCheckBoxUpdater, cutCompletedSoStopSignaler; //DGA: Updater for skipSurfaceFindOnImageResumeCheckBox and scheduleStopAfterNextCutCheckBox
 
       Agent __self_agent;
       Agent __scan_agent;

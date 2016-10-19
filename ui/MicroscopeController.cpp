@@ -1,6 +1,14 @@
 #include "MicroscopeController.h"
 #include <QtWidgets>
 
+  fetch::ui::MicroscopeController::
+  MicroscopeController(device::Microscope *microscope, AgentController *ac, QObject *parent): 
+  QObject(parent), 
+  microscope_(microscope)
+{ 
+    connect(&(microscope_->cutCompletedSoStopSignaler),SIGNAL(signal_valueSet()),ac,SLOT(stop()), Qt::QueuedConnection);
+} 
+
 QCheckBox *
   fetch::ui::MicroscopeController::
   createSkipSurfaceFindOnImageResumeCheckBox(QWidget *parent) //DGA: Definition of function from header
@@ -30,7 +38,7 @@ void
 
 void 
   fetch::ui::MicroscopeController::
-  setScheduleStopAfterNextCut(bool setValue) //DGA: setSkipSurfaceFindOnImageResume slot that takes in the setValue bool
+  setScheduleStopAfterNextCut(bool setValue) //DGA: setScheduleStopAfterNextCut slot that takes in the setValue bool
 {	
-  microscope_->setScheduleStopAfterNextCut(setValue); //DGA: sets micrsocope_->skipSurfaceFindOnImageResume_ to setValue
+  microscope_->setScheduleStopAfterNextCut(setValue); //DGA: sets micrsocope_->scheduleStopAfterNextCut_ to setValue
 }

@@ -258,10 +258,13 @@ Error:
            * we double check here as extra insurance against any extra cuts.
            */
           CHKJMP(dc->trip_detect.ok());
-
+		  
           CHKJMP(   cut.config(dc));
-          CHKJMP(0==cut.run(dc));
-		  if (dc->getScheduleStopAfterNextCut()) dc->_agent->stop();
+          CHKJMP(0==cut.run(dc)); 
+		  if (dc->getScheduleStopAfterNextCut()) {
+			  dc->cutCompletedSoStop();
+			  dc->setScheduleStopAfterNextCut(false);
+		  }
         }
 
 Finalize:
