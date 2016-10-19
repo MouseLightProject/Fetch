@@ -1,4 +1,5 @@
-#include "Tiling.h"
+#include "Tiling2D.h"
+#include "tiling.h"
 #include "Stage.h"
 
 #include <Eigen/Core>
@@ -39,11 +40,11 @@ namespace device {
   typedef uint32_t uint32;
 
   //////////////////////////////////////////////////////////////////////
-  //  StageTiling  /////////////////////////////////////////////////////
+  //  StageTiling2D  /////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////////////
 
   //  Constructors  ////////////////////////////////////////////////////
-  StageTiling::StageTiling(const device::StageTravel &travel,
+  StageTiling2D::StageTiling2D(const device::StageTravel &travel,
                            const FieldOfViewGeometry &fov,
                            const Mode                 alignment)
     :
@@ -65,7 +66,7 @@ namespace device {
   }
 
   //  Destructor  /////////////////////////////////////////////////////
-  StageTiling::~StageTiling()
+  StageTiling2D::~StageTiling2D()
   {
     if(attr_) Free_Array(attr_);
     if(lock_) Mutex_Free(lock_);
@@ -77,7 +78,7 @@ namespace device {
   //  the lattice in stage space.
   //
   //  FOV angle should be between 0 and pi/2 (180 degrees).
- void StageTiling::computeLatticeToStageTransform_
+  void StageTiling2D::computeLatticeToStageTransform_
                           (const FieldOfViewGeometry &fov,
                            const Mode                 alignment)
   { latticeToStage_ = TTransform::Identity();
@@ -110,15 +111,15 @@ namespace device {
     }
   }
 
- void StageTiling::set_z_offset_um(f64 z_um)
+ void StageTiling2D::set_z_offset_um(f64 z_um)
  { z_offset_um_=z_um;
    computeLatticeToStageTransform_(fov_,mode_);
  }
- void StageTiling::inc_z_offset_um(f64 z_um)
+ void StageTiling2D::inc_z_offset_um(f64 z_um)
  { z_offset_um_+=z_um;
    computeLatticeToStageTransform_(fov_,mode_);
  }
- f64 StageTiling::z_offset_um() 
+ f64 StageTiling2D::z_offset_um() 
  { return z_offset_um_;
  }
 
@@ -130,7 +131,7 @@ namespace device {
   //  The latticeToStage_ transfrom is adjusted so the minimal extrema is the
   //    origin.  That is, [min extremal] = T(0,0,0).
 
-  mylib::Coordinate* StageTiling::computeLatticeExtents_(const device::StageTravel& travel)
+  mylib::Coordinate* StageTiling2D::computeLatticeExtents_(const device::StageTravel& travel)
   {
     Matrix<float,8,3> sabox; // vertices of the cube, stage aligned
     sabox << // travel is in mm
@@ -167,7 +168,7 @@ namespace device {
   //  initAttr_  ///////////////////////////////////////////////////////
   //
 
-  void StageTiling::initAttr_(mylib::Coordinate *shape)
+  void StageTiling2D::initAttr_(mylib::Coordinate *shape)
   { AutoLock lock(lock_);
     attr_ = mylib::Make_Array_With_Shape(
       mylib::PLAIN_KIND,
@@ -185,7 +186,7 @@ namespace device {
 #define ON_LATTICE(e)  ((e) < (attr_->size))
 
   typedef mylib::Dimn_Type Dimn_Type;
-  void StageTiling::resetCursor()
+  void StageTiling2D::resetCursor()
   { AutoLock lock(lock_);
     cursor_ = 0;
 
@@ -210,7 +211,7 @@ namespace device {
   //
 
   /// \todo bounds checking
-  void StageTiling::setCursorToPlane(size_t iplane)
+  void StageTiling2D::setCursorToPlane(size_t iplane)
   { AutoLock lock(lock_);
     cursor_=current_plane_offset_=iplane*sz_plane_nelem_;
     cursor_--; // always incremented before query, so subtracting one here means first tile will not be skipped
@@ -219,7 +220,7 @@ namespace device {
   //  nextInPlanePosition  /////////////////////////////////////////////
   //
 
-  bool StageTiling::nextInPlanePosition(Vector3f &pos)
+  bool StageTiling2D::nextInPlanePosition(Vector3f &pos)
   { lock();
     uint32_t* mask = AUINT32(attr_);
     uint32_t attrmask = Addressable | Safe | Active | Done,
@@ -242,7 +243,7 @@ namespace device {
 
   //  nextInPlane                    /////////////////////////////////////////////
   //
-  bool StageTiling::nextInPlaneQuery(Vector3f &pos,uint32_t attrmask,uint32_t attr)
+  bool StageTiling2D::nextInPlaneQuery(Vector3f &pos,uint32_t attrmask,uint32_t attr)
   { lock();
     uint32_t* mask = AUINT32(attr_);
     do{++cursor_;}
@@ -270,7 +271,7 @@ namespace device {
       marked Active or Done.
   */
 
-  bool StageTiling::nextInPlaneExplorablePosition(Vector3f &pos)
+  bool StageTiling2D::nextInPlaneExplorablePosition(Vector3f &pos)
   { lock();
     uint32_t* mask = AUINT32(attr_);
     uint32_t attrmask = Explorable | Safe | Explored | Addressable | Active | Done,
@@ -293,7 +294,7 @@ namespace device {
 
   //  nextPosition  ////////////////////////////////////////////////////
   //
-  bool StageTiling::nextPosition(Vector3f &pos)
+  bool StageTiling2D::nextPosition(Vector3f &pos)
   { lock();
     uint32_t* mask    = AUINT32(attr_);
     uint32_t attrmask = Addressable | Safe | Active | Done,
@@ -318,64 +319,64 @@ namespace device {
   //
   // *ctx should be NULL on the first call.  It will be internally managed.
 
-  struct tile_search_parent_t
-  { uint32_t *c,dir,n;
-  };
+  //struct tile_search_parent_t
+  //{ uint32_t *c,dir,n;
+  //};
 
-  
-    tile_search_history_t::tile_search_history_t():history(0),i(0),n(0){}
-    tile_search_history_t::~tile_search_history_t() {if (history) {free(history);}}
-    /** Returns 0 on error (memory) */
-    int tile_search_history_t::push(uint32_t *c,int dir,int n)
-    { if(!request(i+1)) return 0;
-      ++i;
-      history[i].c  =c;
-      history[i].dir=(uint32_t)dir;
-      history[i].n  =(uint32_t)n;
-      return 1;
-    }
-    /** Returns 0 on underflow */
-    int tile_search_history_t::pop(uint32_t **pc, uint32_t *pdir, uint32_t* pn)
-    { if(i<=0) return 0; // zero is never written to, it's reserved for signalling empty
-      *pc  =history[i].c;
-      *pdir=history[i].dir;
-      *pn  =history[i].n;
-      --i;
-      return 1;
-    }
-    int tile_search_history_t::pop(uint32_t **pc, int *pdir, int *pn)
-    { uint32_t d,n;
-      int ret=pop(pc,&d,&n);
-      *pdir=d;
-      *pn=n;
-      return ret;
-    }
-    /** returns 0 on failure, otherwise 1 */
-    int tile_search_history_t::request(size_t  i_)
-    { if(i_>=n)
-      { size_t oldn=n;
-        n=1.2*i_+50;
-        history=(tile_search_parent_t*)realloc(history,sizeof(tile_search_parent_t)*n);
-        memset(history+oldn,0,sizeof(tile_search_parent_t)*(n-oldn));
-      }
-      return (history!=NULL);
-    }
-    void tile_search_history_t::flush() {i=0;}
+  //
+  //  tile_search_history_t::tile_search_history_t():history(0),i(0),n(0){}
+  //  tile_search_history_t::~tile_search_history_t() {if (history) {free(history);}}
+  //  /** Returns 0 on error (memory) */
+  //  int tile_search_history_t::push(uint32_t *c,int dir,int n)
+  //  { if(!request(i+1)) return 0;
+  //    ++i;
+  //    history[i].c  =c;
+  //    history[i].dir=(uint32_t)dir;
+  //    history[i].n  =(uint32_t)n;
+  //    return 1;
+  //  }
+  //  /** Returns 0 on underflow */
+  //  int tile_search_history_t::pop(uint32_t **pc, uint32_t *pdir, uint32_t* pn)
+  //  { if(i<=0) return 0; // zero is never written to, it's reserved for signalling empty
+  //    *pc  =history[i].c;
+  //    *pdir=history[i].dir;
+  //    *pn  =history[i].n;
+  //    --i;
+  //    return 1;
+  //  }
+  //  int tile_search_history_t::pop(uint32_t **pc, int *pdir, int *pn)
+  //  { uint32_t d,n;
+  //    int ret=pop(pc,&d,&n);
+  //    *pdir=d;
+  //    *pn=n;
+  //    return ret;
+  //  }
+  //  /** returns 0 on failure, otherwise 1 */
+  //  int tile_search_history_t::request(size_t  i_)
+  //  { if(i_>=n)
+  //    { size_t oldn=n;
+  //      n=1.2*i_+50;
+  //      history=(tile_search_parent_t*)realloc(history,sizeof(tile_search_parent_t)*n);
+  //      memset(history+oldn,0,sizeof(tile_search_parent_t)*(n-oldn));
+  //    }
+  //    return (history!=NULL);
+  //  }
+  //  void tile_search_history_t::flush() {i=0;}
  
-    TileSearchContext::TileSearchContext(StageTiling *t,int radius/*=0*/) : tiling(t), c(0),n(0),dir(0),mode(0),radius(radius) {}
-    TileSearchContext::~TileSearchContext()
+    TileSearchContext2D::TileSearchContext2D(StageTiling2D *t,int radius/*=0*/) : tiling(t), c(0),n(0),dir(0),mode(0),radius(radius) {}
+    TileSearchContext2D::~TileSearchContext2D()
     { if(tiling) tiling->tileSearchCleanup(this);
     }
-    void TileSearchContext::sync()
+    void TileSearchContext2D::sync()
     {  c    =AUINT32(tiling->attr_)+tiling->cursor_;
        line =tiling->attr_->dims[0];
        plane=tiling->sz_plane_nelem_;
        n=0;
     }
-    void TileSearchContext::set_outline_mode(bool tf/*=true*/) { mode=tf; if(!tf) flush();}
-    bool TileSearchContext::is_outline_mode() {return mode;}
-    bool TileSearchContext::is_hunt_mode()    {return !mode;}
-    uint32_t *TileSearchContext::next_neighbor()
+    void TileSearchContext2D::set_outline_mode(bool tf/*=true*/) { mode=tf; if(!tf) flush();}
+    bool TileSearchContext2D::is_outline_mode() {return mode;}
+    bool TileSearchContext2D::is_hunt_mode()    {return !mode;}
+    uint32_t *TileSearchContext2D::next_neighbor()
     { int steps[]={-1,-line,1,line};
       uint32_t *p=c+steps[ (dir+n)%4 ];
       ++n;
@@ -383,9 +384,9 @@ namespace device {
         return p;
       return 0;
     }
-    void TileSearchContext::flush() {n=dir=0;history.flush();}
+    void TileSearchContext2D::flush() {n=dir=0;history.flush();}
     /** returns 0 on failure, otherwise 1 */
-    int TileSearchContext::push(uint32_t* p)
+    int TileSearchContext2D::push(uint32_t* p)
     { if(!history.push(c,dir,n))
         return 0;
       c=p;
@@ -394,7 +395,7 @@ namespace device {
       n=0;
       return 1;
     }
-    int TileSearchContext::pop()
+    int TileSearchContext2D::pop()
     { if(!history.pop(&c,&dir,&n))
         return false;
       tiling->cursor_=c-AUINT32(tiling->attr_);
@@ -402,14 +403,14 @@ namespace device {
     }
 #define CHECK(e,flag) ((*(e)&(flag))==(flag))
 #define MARK(e,flag)  (*(e)|=(flag))
-    bool TileSearchContext::detected() {return CHECK(c,StageTiling::Detected); }
-    void TileSearchContext::reserve()  { MARK(c,StageTiling::Reserved); }
+    bool TileSearchContext2D::detected() {return CHECK(c,StageTiling2D::Detected); }
+    void TileSearchContext2D::reserve()  { MARK(c,StageTiling2D::Reserved); }
 
-  bool StageTiling::on_plane(uint32_t *p)
+  bool StageTiling2D::on_plane(uint32_t *p)
   { return ON_PLANE(p-AUINT32(attr_));
   }
 
-  void StageTiling::tileSearchCleanup(TileSearchContext *ctx)
+  void StageTiling2D::tileSearchCleanup(TileSearchContext2D *ctx)
   { const uint32_t *beg = AUINT32(attr_)+current_plane_offset_,
                    *end = beg+sz_plane_nelem_;
     int iplane=current_plane_offset_/sz_plane_nelem_;
@@ -430,7 +431,7 @@ namespace device {
   }
 
   //DGA: Uses done tiles from current plane as the explorable tiles for the next plane
-  void StageTiling::useCurrentDoneTilesAsNextExplorableTiles()
+  void StageTiling2D::useCurrentDoneTilesAsNextExplorableTiles()
   { const uint32_t *beg = AUINT32(attr_) + current_plane_offset_,
 	*end = beg + sz_plane_nelem_; //DGA: Beginning and end of plane
     uint32_t *c, *n; //DGA: Pointers to tiles in current (c) and next (n) planes
@@ -449,16 +450,16 @@ namespace device {
 //#define IMPLY_DETECTED(e)    ((*(e)&(Done))==(Done)) | ((*(e)&(Active))==(Active))
 
   /* Sorry for the goto's.  don't hate. */
-  bool StageTiling::nextSearchPosition(int iplane, int radius, Vector3f &pos,TileSearchContext **pctx)
+  bool StageTiling2D::nextSearchPosition(int iplane, int radius, Vector3f &pos,TileSearchContext2D **pctx)
   { const uint32_t eligable_mask = Addressable | Safe | Explorable | Explored /*| Active | Done*/, // Active/Done do not imply detection and we don't want them to
                    eligable      = Addressable | Safe | Explorable,
                   *beg = AUINT32(attr_)+current_plane_offset_,
                   *end = beg+sz_plane_nelem_;
     if(!pctx) return 0;
-    TileSearchContext *ctx=*pctx;
+    TileSearchContext2D *ctx=*pctx;
     lock();
     if(!ctx)
-    { *pctx=ctx=new TileSearchContext(this,radius);
+    { *pctx=ctx=new TileSearchContext2D(this,radius);
     }
     ctx->sync();
 Start:
@@ -521,7 +522,7 @@ DoneOutlining:
 
   //  markDone  ////////////////////////////////////////////////////////
   //
-  void StageTiling::markDone(bool success)
+  void StageTiling2D::markDone(bool success)
   { uint32_t *m=0;
     { AutoLock lock(lock_);
       m = AUINT32(attr_) + cursor_;
@@ -534,7 +535,7 @@ DoneOutlining:
 
   //  markSafe  ////////////////////////////////////////////////////////
   //
-  void StageTiling::markSafe(bool success)
+  void StageTiling2D::markSafe(bool success)
   { uint32_t *m=0;
     { AutoLock lock(lock_);
       m = AUINT32(attr_) + cursor_;
@@ -547,7 +548,7 @@ DoneOutlining:
 
   //  markExplored  //////////////////////////////////////////////////////
   //
-  void StageTiling::markExplored(bool tf)
+  void StageTiling2D::markExplored(bool tf)
   { uint32_t *m=0;
     { AutoLock lock(lock_);
       m = AUINT32(attr_) + cursor_;
@@ -561,7 +562,7 @@ DoneOutlining:
 
   //  markDetected  //////////////////////////////////////////////////////
   //
-  void StageTiling::markDetected(bool tf)
+  void StageTiling2D::markDetected(bool tf)
   { uint32_t *m=0;
     { AutoLock lock(lock_);
       m = AUINT32(attr_) + cursor_;
@@ -575,7 +576,7 @@ DoneOutlining:
 
   //  markActive  ////////////////////////////////////////////////////////
   //
-  void StageTiling::markActive()
+  void StageTiling2D::markActive()
   { uint32_t *m=0;
     { AutoLock lock(lock_);
       m = AUINT32(attr_) + cursor_;
@@ -586,7 +587,7 @@ DoneOutlining:
 
   //  markUserReset  /////////////////////////////////////////////////////
   //
-  void StageTiling::markUserReset()
+  void StageTiling2D::markUserReset()
   { uint32_t *m=0;
     { AutoLock lock(lock_);
       m = AUINT32(attr_) + cursor_;
@@ -604,7 +605,7 @@ DoneOutlining:
   }
   /** Marks the indicated plane as addressable according to the travel.
   */
-  void StageTiling::markAddressable(size_t iplane)
+  void StageTiling2D::markAddressable(size_t iplane)
   {
     size_t old = cursor_;
     setCursorToPlane(iplane); // FIXME: chance for another thread to change the cursor...recursive locks not allowed
@@ -619,7 +620,7 @@ DoneOutlining:
 
   //  anyExplored  ///////////////////////////////////////////////////////////////
   //
-  int StageTiling::anyExplored(int iplane)
+  int StageTiling2D::anyExplored(int iplane)
   {
     setCursorToPlane(iplane);// FIXME: chance for another thread to change the cursor...recursive locks not allowed
     AutoLock lock(lock_);
@@ -673,7 +674,7 @@ DoneOutlining:
 
     \returns 1 if any tiles were marked active, otherwise 0.
   */
-  int StageTiling::updateActive(size_t iplane)
+  int StageTiling2D::updateActive(size_t iplane)
   { int any=0;
     setCursorToPlane(iplane);// FIXME: chance for another thread to change the cursor...recursive locks not allowed
     AutoLock lock(lock_);
@@ -696,10 +697,10 @@ DoneOutlining:
 
     Filled regions are 4-connected.
   */
-  void StageTiling::fillHolesInActive(size_t iplane)
+  void StageTiling2D::fillHolesInActive(size_t iplane)
   { fillHoles(iplane,Active);}
 
-  void StageTiling::fillHoles(size_t iplane, StageTiling::Flags flag)
+  void StageTiling2D::fillHoles(size_t iplane, StageTiling2D::Flags flag)
   {
     setCursorToPlane(iplane);// FIXME: chance for another thread to change the cursor...recursive locks not allowed
     AutoLock lock(lock_);
@@ -767,7 +768,7 @@ DoneOutlining:
   //
   #define countof(e) (sizeof(e)/sizeof(*e))
   /** Mark tiles as Active if they are 8-connected to an Active tile. */
-  void StageTiling::dilateActive(size_t iplane)
+  void StageTiling2D::dilateActive(size_t iplane)
   { dilate(iplane,1,Active,Active,1 /*restrict to explorable */);
   }
 
@@ -777,7 +778,7 @@ DoneOutlining:
   // Optionally restricts dilation to explorable tiles.
   //
   //
-  void StageTiling::dilate(size_t iplane, int n, StageTiling::Flags query_flag, StageTiling::Flags write_flag, int explorable_only)
+  void StageTiling2D::dilate(size_t iplane, int n, StageTiling2D::Flags query_flag, StageTiling2D::Flags write_flag, int explorable_only)
   {
     setCursorToPlane(iplane); // FIXME: chance for another thread to change the cursor...recursive locks not allowed
     AutoLock lock(lock_);
@@ -886,7 +887,7 @@ DoneOutlining:
     }
   };
 
-  int StageTiling::numberOfTilesWithGivenAttributes(uint32_t query_mask){ // DGA: This is the definition of the function to count the number of tiles with attributes defined by query mask
+  int StageTiling2D::numberOfTilesWithGivenAttributes(uint32_t query_mask){ // DGA: This is the definition of the function to count the number of tiles with attributes defined by query mask
 	  int numberOfTilesWithGivenAttributes=0;
 	  uint32_t *beg = AUINT32(attr_) + current_plane_offset_, // DGA: First tile in current plane
 			   *end = beg + sz_plane_nelem_; // DGA: Last tile in current plane, sz_plane_nelem_ is number of tiles in plane
@@ -897,7 +898,7 @@ DoneOutlining:
 	  return numberOfTilesWithGivenAttributes;
   }
 
-  int StageTiling::minDistTo(
+  int StageTiling2D::minDistTo(
     uint32_t search_mask,uint32_t search_flags, // area to search 
     uint32_t query_mask,uint32_t query_flags)  // tile to find
   { 
@@ -945,19 +946,19 @@ DoneOutlining:
     return dist;
   }
 
-  void StageTiling::notifyDone(size_t index, const Vector3f& pos, uint32_t sts)
+  void StageTiling2D::notifyDone(size_t index, const Vector3f& pos, uint32_t sts)
   { TListeners::iterator i;
     for(i=listeners_.begin();i!=listeners_.end();++i)
       (*i)->tile_done(index,pos,sts);
   }
 
-  void StageTiling::notifyNext(size_t index, const Vector3f& pos)
+  void StageTiling2D::notifyNext(size_t index, const Vector3f& pos)
   { TListeners::iterator i;
     for(i=listeners_.begin();i!=listeners_.end();++i)
       (*i)->tile_next(index,pos);
   }
 
-  const Vector3f StageTiling::computeCursorPos()
+  const Vector3f StageTiling2D::computeCursorPos()
   {
     mylib::Coordinate *c = mylib::Idx2CoordA(attr_,cursor_);
     mylib::Dimn_Type *d = (mylib::Dimn_Type*)ADIMN(c);
@@ -968,7 +969,7 @@ DoneOutlining:
     return pos;
   }
 
-  void StageTiling::getCursorLatticePosition(int *x,int *y,int *z)
+  void StageTiling2D::getCursorLatticePosition(int *x,int *y,int *z)
   {
       mylib::Coordinate *c=mylib::Idx2CoordA(attr_,cursor_);
       mylib::Dimn_Type *d=(mylib::Dimn_Type*)ADIMN(c);
@@ -978,7 +979,7 @@ DoneOutlining:
       Free_Array(c);      
   }
 
-  float StageTiling::plane_mm()
+  float StageTiling2D::plane_mm()
   {
     Vector3f r(0,0,(float)plane());
     r = latticeToStageTransform() * r * 0.001;
