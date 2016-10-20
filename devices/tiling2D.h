@@ -17,7 +17,7 @@ using namespace Eigen;
 namespace fetch {
 namespace device {
 
-  typedef Matrix<size_t,1,3> Vector3z;
+  typedef Matrix<size_t,1,2> Vector2z;
 
   //  StageTiling  /////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////////////
@@ -27,7 +27,7 @@ namespace device {
   {
   public:
     typedef fetch::cfg::device::Stage_TilingMode Mode;
-    typedef Transform<float,3,Affine>            TTransform;
+    typedef Transform<float,2,Affine>            TTransform2D;
     typedef std::set<StageListener*>             TListeners;
 
   public: // pseudo-private
@@ -35,7 +35,7 @@ namespace device {
     mylib::Indx_Type           cursor_;                                    ///< marks the current tile
     mylib::Indx_Type           current_plane_offset_;                      ///< marks the current plane
     mylib::Indx_Type           sz_plane_nelem_;                            ///< the size of a plane in the tile database
-    TTransform                 latticeToStage_;                            ///< Transforms lattice coordinates to the tiles anchor point on the stage
+    TTransform2D                 latticeToStage_;                            ///< Transforms lattice coordinates to the tiles anchor point on the stage
     TListeners                 listeners_;                                 ///< set of objects to be notified of tiling events
     FieldOfViewGeometry        fov_;                                       ///< the geometry used to generate the tiling
     f64                        z_offset_um_;
@@ -63,12 +63,12 @@ namespace device {
                          const Mode                 alignment);
     virtual ~StageTiling2D();
 
-    void     set_z_offset_um(f64 z_um);
+    /*void     set_z_offset_um(f64 z_um);
     void     inc_z_offset_um(f64 z_um);
     f64          z_offset_um();
     inline void     set_z_offset_mm(f64 z_mm) {set_z_offset_um(1000.0*z_mm);}
     inline void     inc_z_offset_mm(f64 z_mm) {inc_z_offset_um(1000.0*z_mm);}
-    inline f64          z_offset_mm()         {return z_offset_um()*1e-3;}
+    inline f64          z_offset_mm()         {return z_offset_um()*1e-3;}*/
 
     void     resetCursor();
     void     setCursorToPlane(size_t iplane);
@@ -98,7 +98,7 @@ namespace device {
     void     dilate(size_t iplane, int ntimes, StageTiling2D::Flags query_flag, StageTiling2D::Flags write_flag, int explorable_only); // 2d
 
     inline mylib::Array*     attributeArray()                              {return attr_;}
-    inline const TTransform& latticeToStageTransform()                     {return latticeToStage_; }
+    inline const TTransform2D latticeToStageTransform()                    {return latticeToStage_; }
     inline const FieldOfViewGeometry& fov()                                {return fov_;}
     inline const device::StageTravel& travel()                             {return travel_;}
     inline size_t plane()                                                  {return (size_t)(current_plane_offset_/sz_plane_nelem_); }

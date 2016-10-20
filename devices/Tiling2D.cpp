@@ -81,8 +81,8 @@ namespace device {
   void StageTiling2D::computeLatticeToStageTransform_
                           (const FieldOfViewGeometry &fov,
                            const Mode                 alignment)
-  { latticeToStage_ = TTransform::Identity();
-    Vector3f sc = fov.field_size_um_ - fov.overlap_um_;
+  { latticeToStage_ = TTransform2D::Identity();//TTransform::Identity();
+    Vector2f sc(fov.field_size_um_(0)-fov.overlap_um_(0), fov.field_size_um_(1) - fov.overlap_um_(1)); //fov.field_size_um_ - fov.overlap_um_;
     switch(alignment)
     {
 // should probably do the zoffset before rotate/shear but 
@@ -90,8 +90,8 @@ namespace device {
     case Mode::Stage_TilingMode_PixelAligned:
         // Rotate the lattice
         latticeToStage_
-          .rotate( AngleAxis<float>(fov.rotation_radians_,Vector3f::UnitZ()) )
-          .translate(Vector3f(0,0,z_offset_um_))
+          .rotate(Rotation2D<float>(fov.rotation_radians_))//rotate( AngleAxis<float>(fov.rotation_radians_,Vector3f::UnitZ()) )
+          //.translate(Vector3f(0,0,z_offset_um_))
           .scale(sc)
           ;
         SHOW(latticeToStage_.matrix());
@@ -99,19 +99,23 @@ namespace device {
     case Mode::Stage_TilingMode_StageAligned:
         // Shear the lattice
         float th = fov.rotation_radians_;
-        latticeToStage_.linear() =
+		latticeToStage_.linear() = 
+			(Matrix2f() <<
+			  1.0f/cos(th), -sin(th),
+						 0,  cos(th)).finished();
+    /*    latticeToStage_.linear() =
           (Matrix3f() <<
             1.0f/cos(th), -sin(th), 0,
                        0,  cos(th), 0,
-                       0,        0, 1).finished();
-        latticeToStage_.translate(Vector3f(0,0,z_offset_um_))
+                       0,        0, 1).finished();*/
+        latticeToStage_//.translate(Vector3f(0,0,z_offset_um_))
                        .scale(sc)
                        ;
         return;
     }
   }
 
- void StageTiling2D::set_z_offset_um(f64 z_um)
+ /*void StageTiling2D::set_z_offset_um(f64 z_um)
  { z_offset_um_=z_um;
    computeLatticeToStageTransform_(fov_,mode_);
  }
@@ -121,7 +125,7 @@ namespace device {
  }
  f64 StageTiling2D::z_offset_um() 
  { return z_offset_um_;
- }
+ }*/
 
   //  computeLatticeExtents_  //////////////////////////////////////////
   //
@@ -133,28 +137,23 @@ namespace device {
 
   mylib::Coordinate* StageTiling2D::computeLatticeExtents_(const device::StageTravel& travel)
   {
-    Matrix<float,8,3> sabox; // vertices of the cube, stage aligned
+    Matrix<float,4,2> sabox; // vertices of the box, stage aligned
     sabox << // travel is in mm
-         travel.x.min,   travel.y.min,   travel.z.min,
-         travel.x.min,   travel.y.max,   travel.z.min,
-         travel.x.max,   travel.y.max,   travel.z.min,
-         travel.x.max,   travel.y.min,   travel.z.min,
-
-         travel.x.min,   travel.y.min,   travel.z.max,
-         travel.x.min,   travel.y.max,   travel.z.max,
-         travel.x.max,   travel.y.max,   travel.z.max,
-         travel.x.max,   travel.y.min,   travel.z.max;
+         travel.x.min,   travel.y.min,   
+         travel.x.min,   travel.y.max,  
+         travel.x.max,   travel.y.max,   
+         travel.x.max,   travel.y.min;
     sabox *= 1000.0; //mm to um
 
-    Matrix<float,3,8> labox; // vertices of the cube, lattice aligned
+    Matrix<float,2,4> labox; // vertices of the box, lattice aligned
     labox.noalias() = latticeToStage_.inverse() * sabox.transpose();
 
-    Vector3f maxs,mins;
+    Vector2f maxs,mins;
     maxs.noalias() = labox.rowwise().maxCoeff();
     mins.noalias() = labox.rowwise().minCoeff();
 
     latticeToStage_.translate(mins);
-    Vector3z c((maxs-mins).unaryExpr(std::ptr_fun<float,float>(ceil)).cast<size_t>());
+    Vector2z c((maxs-mins).unaryExpr(std::ptr_fun<float,float>(ceil)).cast<size_t>());//Vector3z c((maxs-mins).unaryExpr(std::ptr_fun<float,float>(ceil)).cast<size_t>());
     SHOW(sabox);
     SHOW(labox);
     SHOW(mins);
