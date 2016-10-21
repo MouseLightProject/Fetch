@@ -219,7 +219,7 @@ Error:
           TS_TOC;          
         } // end loop over tiles
         eflag |= dc->stopPipeline();           // wait till the  pipeline stops
-		tiling->useCurrentDoneTilesAsNextExplorableTiles(); //DGA: After imaging tiles, set the next explorable tiles equal to the current done tiles
+		//dc->stage()->getUseTwoDimensionalTiling() ? tiling->updateTwoDimensionalTilingPlaneForNextSlice() : tiling->useCurrentDoneTilesAsNextExplorableTiles(); //DGA: After imaging tiles, set the next explorable tiles equal to the current done tiles
         TS_CLOSE;
         return eflag;
 Error:

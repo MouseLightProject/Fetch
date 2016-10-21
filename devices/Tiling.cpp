@@ -444,6 +444,22 @@ namespace device {
 	}
   }
 
+  void StageTiling::updateTwoDimensionalTilingPlaneForNextSlice()
+  { const uint32_t *beg = AUINT32(attr_) + current_plane_offset_,
+	*end = beg + sz_plane_nelem_; //DGA: Beginning and end of plane
+    uint32_t *c; //DGA: Pointers to tiles in current (c) plane
+	{ AutoLock lock(lock_); //DGA: Scoped locking/unlocking since the destructor calls the unlock. This means that this section of code can only be accessed by one thread at a time.
+	  { for (c = (uint32_t*)beg; c < end; ++c) //DGA: Loop through current (c) and next (n) plane tiles
+	    { *c&=(Addressable | Safe | Done); //DGA: Reset explorable, since you don't want to use what was initially defined as explorable
+		  if ((*c&Done) == Done){
+			  *c |= Explorable ; //DGA: If c was done, then make n (corresponding tile in next plane) explorable
+			  *c &= ~Done ;
+		  }
+	    }
+	  }
+	}
+  }
+
 #define ELIGABLE(e)          ((*(e)&eligable_mask)==eligable)
 #define ALREADY_DETECTED(e)  ((*(e)&(Addressable|Explorable|Detected|Reserved))==(Addressable|Explorable|Detected))
 //#define IMPLY_DETECTED(e)    ((*(e)&(Done))==(Done)) | ((*(e)&(Active))==(Active))
