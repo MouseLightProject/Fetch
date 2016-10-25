@@ -114,6 +114,7 @@ Error:
 		numberImaged = tiling->numberOfTilesWithGivenAttributes(attributes);
 		// 1. iterate over tiles to measure the average tile offset
         tiling->resetCursor();
+
 		bool skipSurfaceFindOnImageResume = dc->getSkipSurfaceFindOnImageResume();//DGA: Is skipSurfaceFindOnImageResume true
 		if ( numberImaged==0 ? true : !skipSurfaceFindOnImageResume){ //DGA: If no tiles have been imaged, then will iterate over tiles as usual. If at least one has been imaged, then will skip this iteration if skipSurfaceFindOnImageResume is true; else will do the iteration (which will update z)
 			while (eflag == 0 && !dc->_agent->is_stopping() && tiling->nextInPlanePosition(tilepos))
@@ -126,10 +127,7 @@ Error:
 						// M O V E
 						Vector3f curpos = dc->stage()->getTarget(); // use current target z for tilepos z
 						debug("%s(%d)"ENDL "\t[Adaptive Tiling Task] curpos: %5.1f %5.1f %5.1f"ENDL, __FILE__, __LINE__, curpos[0] * 1000.0f, curpos[1] * 1000.0f, curpos[2] * 1000.0f);
-						Vector3f temp = dc->stage()->getPos();
-						if (dc->stage()->getUseTwoDimensionalTiling()) tilepos(2) = ceil(temp(2)/.150)*150;
 						dc->stage()->setPos(0.001f*tilepos);        // convert um to mm
-						temp = dc->stage()->getPos();
 						curpos = dc->stage()->getTarget(); // use current target z for tilepos z
 						debug("%s(%d)"ENDL "\t[Adaptive Tiling Task] curpos: %5.1f %5.1f %5.1f"ENDL, __FILE__, __LINE__, curpos[0] * 1000.0f, curpos[1] * 1000.0f, curpos[2] * 1000.0f);
 
@@ -180,7 +178,7 @@ Error:
 
           // Move stage
           Vector3f curpos = dc->stage()->getTarget(); // use current target z for tilepos z
-          debug("%s(%d)"ENDL "\t[Adaptive Tiling Task] curpos: %5.1f %5.1f %5.1f"ENDL,__FILE__,__LINE__,curpos[0]*1000.0f,curpos[1]*1000.0f,curpos[2]*1000.0f);          
+          debug("%s(%d)"ENDL "\t[Adaptive Tiling Task] curpos: %5.1f %5.1f %5.1f"ENDL,__FILE__,__LINE__,curpos[0]*1000.0f,curpos[1]*1000.0f,curpos[2]*1000.0f);
           dc->stage()->setPos(0.001f*tilepos);        // convert um to mm
           curpos = dc->stage()->getTarget(); // use current target z for tilepos z
           debug("%s(%d)"ENDL "\t[Adaptive Tiling Task] curpos: %5.1f %5.1f %5.1f"ENDL,__FILE__,__LINE__,curpos[0]*1000.0f,curpos[1]*1000.0f,curpos[2]*1000.0f);

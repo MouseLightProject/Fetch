@@ -51,6 +51,7 @@ namespace device {
       cursor_(0),
       current_plane_offset_(0),
       sz_plane_nelem_(0),
+	  previousPosInLattice_(-1),
       latticeToStage_(),
       fov_(fov),
       z_offset_um_(0.0),
@@ -441,6 +442,18 @@ namespace device {
 		  if ((*c&Done) == Done) *n |= Explorable ; //DGA: If c was done, then make n (corresponding tile in next plane) explorable
 	    }
 	  }
+	}
+  }
+
+    //DGA: Uses done tiles from current plane as the explorable tiles for the next plane
+  void StageTiling::copyTileAttributesFromOneSliceToAnother(int previousPosInLattice, int currentPosInLattice)
+  { const uint32_t *previousBeg = AUINT32(attr_) + previousPosInLattice*sz_plane_nelem_,
+	*previousEnd = previousBeg + sz_plane_nelem_, //DGA: Beginning and end of plane
+	*currentBeg = AUINT32(attr_) + currentPosInLattice*sz_plane_nelem_;
+    uint32_t *p, *c; //DGA: Pointers to tiles in current (c) and next (n) planes
+	{ //AutoLock lock(lock_); //DGA: Scoped locking/unlocking since the destructor calls the unlock. This means that this section of code can only be accessed by one thread at a time.
+	  for (p = (uint32_t*)previousBeg, c = (uint32_t*)currentBeg; p < previousEnd; ++p, ++c) //DGA: Loop through current (c) and next (n) plane tiles= *p;
+		  *c = *p;
 	}
   }
 

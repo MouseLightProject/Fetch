@@ -261,8 +261,9 @@ Error:
 
           CHKJMP(   cut.config(dc));
           CHKJMP(0==cut.run(dc));
-		 dc->stage()->getUseTwoDimensionalTiling() ? dc->stage()->tiling()->updateTwoDimensionalTilingPlaneForNextSlice() : dc->stage()->tiling()->useCurrentDoneTilesAsNextExplorableTiles(); //DGA: After imaging tiles, set the next explorable tiles equal to the current done tiles
-
+		  dc->stage()->getPosInLattice();
+		  dc->stage()->getUseTwoDimensionalTiling() ? dc->stage()->tiling()->updateTwoDimensionalTilingPlaneForNextSlice() : dc->stage()->tiling()->useCurrentDoneTilesAsNextExplorableTiles(); //DGA: After imaging tiles, set the next explorable tiles equal to the current done tiles
+		//  dc->stage()->tiling()->useCurrentDoneTilesAsNextExplorableTiles();
         }
 
 Finalize:
