@@ -178,7 +178,8 @@ Error:
           // Move stage
           Vector3f curpos = dc->stage()->getTarget(); // use current target z for tilepos z
           debug("%s(%d)"ENDL "\t[Adaptive Tiling Task] curpos: %5.1f %5.1f %5.1f"ENDL,__FILE__,__LINE__,curpos[0]*1000.0f,curpos[1]*1000.0f,curpos[2]*1000.0f);          
-          dc->stage()->setPos(0.001f*tilepos);        // convert um to mm
+          if (skipSurfaceFindOnImageResume) tilepos(2) = dc->stage()->getPos().z()*1000; //DGA: When surface find is skipped, imaging resumes at the stage's current z value (in um);
+		  dc->stage()->setPos(0.001f*tilepos);        // convert um to mm
           curpos = dc->stage()->getTarget(); // use current target z for tilepos z
           debug("%s(%d)"ENDL "\t[Adaptive Tiling Task] curpos: %5.1f %5.1f %5.1f"ENDL,__FILE__,__LINE__,curpos[0]*1000.0f,curpos[1]*1000.0f,curpos[2]*1000.0f);
 
