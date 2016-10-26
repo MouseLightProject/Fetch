@@ -939,6 +939,7 @@ DoneOutlining:
     #undef isvalid
     #undef isinbounds
     #undef maybe
+	#undef maybeAndReserve
   Finalize:
     for(uint32_t *t=(uint32_t*)beg;t<end;++t) // Reset Reserved
       *t = t[0]&~Reserved;
