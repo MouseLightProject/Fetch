@@ -34,7 +34,7 @@ namespace device {
     mylib::Indx_Type           cursor_;                                    ///< marks the current tile
     mylib::Indx_Type           current_plane_offset_;                      ///< marks the current plane
     mylib::Indx_Type           sz_plane_nelem_;                            ///< the size of a plane in the tile database
-	int					       previousPosInLattice_;
+	int					       currentPosInLattice_;
     TTransform                 latticeToStage_;                            ///< Transforms lattice coordinates to the tiles anchor point on the stage
     TListeners                 listeners_;                                 ///< set of objects to be notified of tiling events
     FieldOfViewGeometry        fov_;                                       ///< the geometry used to generate the tiling
@@ -81,7 +81,7 @@ namespace device {
     void     tileSearchCleanup(TileSearchContext *ctx);
 	void	 useCurrentDoneTilesAsNextExplorableTiles(); //DGA: Declaration of function to use current done tiles as the next explorable ones
 	void     copyTileAttributesFromOneSliceToAnother(int previousPosInLattice, int currentPosInLattice);
-	void	 updateTwoDimensionalTilingPlaneForNextSlice();
+	void	 useCurrentDoneTilesAsCurrentExplorableTiles(int iplane);
 
     void     markDone(bool success);
     void     markActive(); // used by gui to explicitly set tiles to image

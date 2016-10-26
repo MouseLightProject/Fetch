@@ -867,10 +867,10 @@ Error:
   { StageTiling::TTransform l2s(_tiling->latticeToStageTransform());
     Vector3f r(getTarget()*1000.0); // convert to um
     Vector3z out=Vector3z((l2s.inverse() * r).unaryExpr(std::ptr_fun<float,float>(myroundf)).cast<size_t>());
-	if (getUseTwoDimensionalTiling() && _tiling->previousPosInLattice_!=out[2] && _tiling->previousPosInLattice_!=-1){
-		_tiling->copyTileAttributesFromOneSliceToAnother(_tiling->previousPosInLattice_, out[2]);
+	if (getUseTwoDimensionalTiling() && _tiling->currentPosInLattice_!=out[2] && _tiling->currentPosInLattice_!=-1){
+		_tiling->copyTileAttributesFromOneSliceToAnother(_tiling->currentPosInLattice_, out[2]);
 	}
-	_tiling->previousPosInLattice_=out[2];
+	_tiling->currentPosInLattice_=out[2];
 
     std::cout << __FILE__ << "(" << __LINE__ << ")\r\n\t" << out << std::endl;
     return out;
