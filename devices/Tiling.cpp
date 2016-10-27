@@ -195,7 +195,7 @@ namespace device {
               attr     = Addressable | Safe | Active;
 
     while( (mask[cursor_] & attrmask) != attr
-        && ON_LATTICE(cursor_) )
+        && ON_LATTICE(cursor_) ) //DGA: Starting at beginning of lattice, will stop when it finds the first tile that is addressable, safe, active and NOT done OR it will stop at the end of the lattice
     {++cursor_;}
 
     if(ON_LATTICE(cursor_) &&  (mask[cursor_] & attrmask) == attr)
@@ -459,6 +459,17 @@ namespace device {
 	    }
 	  }
 	}
+  }
+
+  void StageTiling::copyTileAttributesFromFirstSliceToAnotherSlice(int currentPosInLattice)
+  { const uint32_t *previousBeg = AUINT32(attr_),
+    *previousEnd = previousBeg + sz_plane_nelem_, //DGA: Beginning and end of plane
+    *currentBeg = AUINT32(attr_) + currentPosInLattice*sz_plane_nelem_;
+    uint32_t *p, *c; //DGA: Pointers to tiles in current (c) and next (n) planes
+    { AutoLock lock(lock_); //DGA: Scoped locking/unlocking since the destructor calls the unlock. This means that this section of code can only be accessed by one thread at a time.
+      for (p = (uint32_t*)previousBeg, c = (uint32_t*)currentBeg; p < previousEnd; ++p, ++c) //DGA: Loop through current (c) and next (n) plane tiles= *p;
+          *c = *p;
+    }
   }
 
 #define ELIGABLE(e)          ((*(e)&eligable_mask)==eligable)
@@ -981,7 +992,7 @@ DoneOutlining:
     mylib::Dimn_Type *d = (mylib::Dimn_Type*)ADIMN(c);
     Vector3z r;
     r << d[0],d[1],d[2];
-	//r(2) = currentPosInLattice_;
+	r(2) = currentPosInLattice_;
     Vector3f pos = latticeToStage_ * r.transpose().cast<float>();
     Free_Array(c);
     return pos;

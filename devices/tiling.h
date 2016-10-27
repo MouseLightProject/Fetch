@@ -80,6 +80,7 @@ namespace device {
     bool     nextSearchPosition(int iplane, int ntimes, Vector3f &pos,TileSearchContext **ctx);     ///< *ctx should be NULL on the first call.  It will be internally managed.
     void     tileSearchCleanup(TileSearchContext *ctx);
 	void	 useCurrentDoneTilesAsNextExplorableTiles(); //DGA: Declaration of function to use current done tiles as the next explorable ones
+	void     copyTileAttributesFromFirstSliceToAnotherSlice(int currentPosInLattice);
 	void	 useDoneTilesAsExplorableTilesForTwoDimensionalTiling();
 
     void     markDone(bool success);

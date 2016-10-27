@@ -265,9 +265,13 @@ Error:
           CHKJMP(0==cut.run(dc));
 		  if(dc->stage()->getUseTwoDimensionalTiling())
 		  { previousPosInLattice = tiling->currentPosInLattice_;
-		    currentPosInLattice = dc->stage()->getPosInLattice().z();
+		    dc->stage()->getPosInLattice();
+		    currentPosInLattice = tiling->currentPosInLattice_;
 			if(previousPosInLattice != currentPosInLattice)
-				tiling->useDoneTilesAsExplorableTilesForTwoDimensionalTiling();
+			{
+			  tiling->copyTileAttributesFromFirstSliceToAnotherSlice(previousPosInLattice);
+			  tiling->useDoneTilesAsExplorableTilesForTwoDimensionalTiling();
+			}
 		  }
 		  else tiling->useCurrentDoneTilesAsNextExplorableTiles(); //DGA: After imaging tiles, set the next explorable tiles equal to the current done tiles
         }
