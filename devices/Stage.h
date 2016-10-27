@@ -234,7 +234,7 @@ namespace device {
       void     set_tiling_z_offset_mm(float dz_mm);
       void     inc_tiling_z_offset_mm(float dz_mm);
       void     getLastTarget         ( float *x, float *y, float *z)        { cfg::device::Point3d r=_config->last_target_mm(); *x=r.x();*y=r.y();*z=r.z(); }
-
+	  bool     getUseTwoDimensionalTiling()                                 { return _config->use_two_dimensional_tiling(); }
               void addListener(StageListener *listener);
               void delListener(StageListener *listener);
       inline  StageTiling* tiling()                                         {return _tiling;}

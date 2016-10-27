@@ -49,5 +49,6 @@ message Stage
   optional Point3d              default_velocity_mm_per_sec = 4;
   optional Point3d              last_target_mm              = 5;
   optional TilingMode           tilemode                    = 6;
-  optional double               tile_z_offset_mm            = 7 [default=0.0];
+  optional bool 				use_two_dimensional_tiling  = 7 [default=true];
+  optional double               tile_z_offset_mm            = 8 [default=0.0];
 }

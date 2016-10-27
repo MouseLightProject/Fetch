@@ -77,7 +77,7 @@ namespace device {
   //  the lattice in stage space.
   //
   //  FOV angle should be between 0 and pi/2 (180 degrees).
- void StageTiling::computeLatticeToStageTransform_
+  void StageTiling::computeLatticeToStageTransform_
                           (const FieldOfViewGeometry &fov,
                            const Mode                 alignment)
   { latticeToStage_ = TTransform::Identity();
@@ -939,6 +939,7 @@ DoneOutlining:
     #undef isvalid
     #undef isinbounds
     #undef maybe
+	#undef maybeAndReserve
   Finalize:
     for(uint32_t *t=(uint32_t*)beg;t<end;++t) // Reset Reserved
       *t = t[0]&~Reserved;
@@ -963,6 +964,7 @@ DoneOutlining:
     mylib::Dimn_Type *d = (mylib::Dimn_Type*)ADIMN(c);
     Vector3z r;
     r << d[0],d[1],d[2];
+	r(2) = currentPosInLattice_;
     Vector3f pos = latticeToStage_ * r.transpose().cast<float>();
     Free_Array(c);
     return pos;
