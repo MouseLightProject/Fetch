@@ -243,6 +243,8 @@ Error:
         AdaptiveTiledAcquisition adaptive_tiling;
         MicroscopeTask *tile=0;
         Cut cut;
+		int previousPosInLattice, currentPosInLattice;
+		device::StageTiling * tiling = dc->stage()->tiling();
 
         tile=cfg.use_adaptive_tiling()?((MicroscopeTask*)&adaptive_tiling):((MicroscopeTask*)&nonadaptive_tiling);
 
@@ -261,6 +263,13 @@ Error:
 
           CHKJMP(   cut.config(dc));
           CHKJMP(0==cut.run(dc));
+		  if(dc->stage()->getUseTwoDimensionalTiling())
+		  { previousPosInLattice = tiling->currentPosInLattice_;
+		    currentPosInLattice = dc->stage()->getPosInLattice().z();
+			if(previousPosInLattice != currentPosInLattice)
+				tiling->useDoneTilesAsExplorableTilesForTwoDimensionalTiling();
+		  }
+		  else tiling->useCurrentDoneTilesAsNextExplorableTiles(); //DGA: After imaging tiles, set the next explorable tiles equal to the current done tiles
         }
 
 Finalize:

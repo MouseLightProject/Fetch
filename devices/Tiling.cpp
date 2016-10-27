@@ -51,6 +51,7 @@ namespace device {
       cursor_(0),
       current_plane_offset_(0),
       sz_plane_nelem_(0),
+	  currentPosInLattice_(-1),
       latticeToStage_(),
       fov_(fov),
       z_offset_um_(0.0),
@@ -439,6 +440,22 @@ namespace device {
 	  { for (c = (uint32_t*)beg, n = (uint32_t*)end; c < end; ++c, ++n) //DGA: Loop through current (c) and next (n) plane tiles
 	    { *n&=~Explorable; //DGA: Reset explorable, since you don't want to use what was initially defined as explorable
 		  if ((*c&Done) == Done) *n |= Explorable ; //DGA: If c was done, then make n (corresponding tile in next plane) explorable
+	    }
+	  }
+	}
+  }
+
+  void StageTiling::useDoneTilesAsExplorableTilesForTwoDimensionalTiling()
+  { const uint32_t *beg = AUINT32(attr_),
+    *end = beg + sz_plane_nelem_; //DGA: Beginning and end of plane
+    uint32_t *c; //DGA: Pointers to tiles in current (c) and next (n) planes
+	{ AutoLock lock(lock_); //DGA: Scoped locking/unlocking since the destructor calls the unlock. This means that this section of code can only be accessed by one thread at a time.
+	  for (c = (uint32_t*)beg; c < end; ++c) //DGA: Loop through current (c) and next (n) plane tiles
+	  { *c&=(Addressable | Safe | Done); //DGA: Reset explorable, since you don't want to use what was initially defined as explorable
+		if ((*c&Done) == Done)
+		{
+	      *c |= Explorable ; //DGA: If c was done, then make n (corresponding tile in next plane) explorable
+		  *c &= ~Done;
 	    }
 	  }
 	}
@@ -964,7 +981,7 @@ DoneOutlining:
     mylib::Dimn_Type *d = (mylib::Dimn_Type*)ADIMN(c);
     Vector3z r;
     r << d[0],d[1],d[2];
-	r(2) = currentPosInLattice_;
+	//r(2) = currentPosInLattice_;
     Vector3f pos = latticeToStage_ * r.transpose().cast<float>();
     Free_Array(c);
     return pos;

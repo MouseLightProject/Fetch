@@ -867,10 +867,8 @@ Error:
   { StageTiling::TTransform l2s(_tiling->latticeToStageTransform());
     Vector3f r(getTarget()*1000.0); // convert to um
     Vector3z out=Vector3z((l2s.inverse() * r).unaryExpr(std::ptr_fun<float,float>(myroundf)).cast<size_t>());
-	if (getUseTwoDimensionalTiling())
-	{ _tiling->currentPosInLattice_ = out(2);
-	  out(2)=0;
-	}
+	_tiling->currentPosInLattice_ = out(2);
+	if (getUseTwoDimensionalTiling()) out(2)=0;
     std::cout << __FILE__ << "(" << __LINE__ << ")\r\n\t" << out << std::endl;
     return out;
   }
