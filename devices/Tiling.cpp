@@ -45,7 +45,8 @@ namespace device {
   //  Constructors  ////////////////////////////////////////////////////
   StageTiling::StageTiling(const device::StageTravel &travel,
                            const FieldOfViewGeometry &fov,
-                           const Mode                 alignment)
+                           const Mode                 alignment,
+						   bool useTwoDimensionalTiling)
     :
       attr_(NULL),
       cursor_(0),
@@ -57,7 +58,8 @@ namespace device {
       z_offset_um_(0.0),
       travel_(travel),
       lock_(0),
-      mode_(alignment)
+      mode_(alignment),
+	  useTwoDimensionalTiling_(useTwoDimensionalTiling)
   {
     PANIC(lock_=Mutex_Alloc());
     computeLatticeToStageTransform_(fov,alignment);
@@ -161,7 +163,8 @@ namespace device {
     SHOW(maxs);
     SHOW(c);
 
-    mylib::Coordinate* out = mylib::Coord3(c(2)+1,c(1)+1,c(0)+1); //shape of the lattice
+    mylib::Coordinate* out;
+	useTwoDimensionalTiling_ ? out = mylib::Coord3(1, c(1)+1, c(0)+1) : out = mylib::Coord3(c(2)+1,c(1)+1,c(0)+1); //shape of the lattice
     return out;
   }
 
@@ -233,7 +236,7 @@ namespace device {
     if(ON_PLANE(cursor_) &&  (mask[cursor_] & attrmask) == attr)
     { pos = computeCursorPos();
       unlock();
-      notifyNext(cursor_,pos);
+      notifyNext(cursor_);
       return true;
     } else
     { unlock();
@@ -253,7 +256,7 @@ namespace device {
     if(ON_PLANE(cursor_) &&  (mask[cursor_] & attrmask) == attr)
     { pos = computeCursorPos();
       unlock();
-      notifyNext(cursor_,pos);
+      notifyNext(cursor_);
       return true;
     } else
     { unlock();
@@ -284,7 +287,7 @@ namespace device {
     if(ON_PLANE(cursor_) &&  (mask[cursor_] & attrmask) == attr)
     { pos = computeCursorPos();
       unlock();
-      notifyNext(cursor_,pos);
+      notifyNext(cursor_);
       return true;
     } else
     { unlock();
@@ -307,7 +310,7 @@ namespace device {
     if(ON_LATTICE(cursor_))
     { pos = computeCursorPos();
       unlock();
-      notifyNext(cursor_,pos);
+      notifyNext(cursor_);
       return true;
     } else
     { unlock();
@@ -535,7 +538,7 @@ Hunt:
 Yield:
     pos=computeCursorPos();
     unlock();
-    notifyNext(cursor_,pos);
+    notifyNext(cursor_);
     return true;
 DoneOutlining:
     unlock(); // FIXME - racy
@@ -557,7 +560,7 @@ DoneOutlining:
       if(!success)
         *m |= TileError;
     }
-    notifyDone(cursor_,computeCursorPos(),*m);
+    notifyDone(cursor_,*m);
   }
 
   //  markSafe  ////////////////////////////////////////////////////////
@@ -570,7 +573,7 @@ DoneOutlining:
       if(!success)
         *m |= TileError;
     }
-    notifyDone(cursor_,computeCursorPos(),*m);
+    notifyDone(cursor_,*m);
   }
 
   //  markExplored  //////////////////////////////////////////////////////
@@ -584,7 +587,7 @@ DoneOutlining:
       else
         *m &= ~Explored;
     }
-    notifyDone(cursor_,computeCursorPos(),*m);
+    notifyDone(cursor_,*m);
   }
 
   //  markDetected  //////////////////////////////////////////////////////
@@ -598,7 +601,7 @@ DoneOutlining:
       else
         *m &= ~Detected;
     }
-    notifyDone(cursor_,computeCursorPos(),*m);
+    notifyDone(cursor_,*m);
   }
 
   //  markActive  ////////////////////////////////////////////////////////
@@ -609,7 +612,7 @@ DoneOutlining:
       m = AUINT32(attr_) + cursor_;
       *m |= Active;
     }
-    notifyDone(cursor_,computeCursorPos(),*m);
+    notifyDone(cursor_,*m);
   }
 
   //  markUserReset  /////////////////////////////////////////////////////
@@ -620,7 +623,7 @@ DoneOutlining:
       m = AUINT32(attr_) + cursor_;
       *m &= ~( Active|Detected|Explored|Explorable|Safe|Done );
     }
-    notifyDone(cursor_,computeCursorPos(),*m);
+    notifyDone(cursor_,*m);
   }
 
   //  markAddressable  ///////////////////////////////////////////////////
@@ -707,8 +710,7 @@ DoneOutlining:
     AutoLock lock(lock_);
     uint32_t *c,*p,
              *beg  = AUINT32(attr_)+current_plane_offset_,
-             *end  = beg+sz_plane_nelem_,
-             *prev = beg-sz_plane_nelem_;
+             *end  = beg+sz_plane_nelem_;
     #define DETECTED(e) ((*(e)&Detected)==Detected)
     for(c=beg;c<end;c++)
     { if( DETECTED(c)) //DGA: Removed condition to also check previous plane for detection events, which would be used to mark the current plane tiles active. Now only currently detected tiles are set to active.
@@ -974,16 +976,16 @@ DoneOutlining:
     return dist;
   }
 
-  void StageTiling::notifyDone(size_t index, const Vector3f& pos, uint32_t sts)
+  void StageTiling::notifyDone(size_t index, uint32_t sts)
   { TListeners::iterator i;
     for(i=listeners_.begin();i!=listeners_.end();++i)
-      (*i)->tile_done(index,pos,sts);
+      (*i)->tile_done(index,sts);
   }
 
-  void StageTiling::notifyNext(size_t index, const Vector3f& pos)
+  void StageTiling::notifyNext(size_t index)
   { TListeners::iterator i;
     for(i=listeners_.begin();i!=listeners_.end();++i)
-      (*i)->tile_next(index,pos);
+      (*i)->tile_next(index);
   }
 
   const Vector3f StageTiling::computeCursorPos()
@@ -992,7 +994,6 @@ DoneOutlining:
     mylib::Dimn_Type *d = (mylib::Dimn_Type*)ADIMN(c);
     Vector3z r;
     r << d[0],d[1],d[2];
-	r(2) = currentPosInLattice_;
     Vector3f pos = latticeToStage_ * r.transpose().cast<float>();
     Free_Array(c);
     return pos;

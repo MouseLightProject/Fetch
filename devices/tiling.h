@@ -35,6 +35,8 @@ namespace device {
     mylib::Indx_Type           current_plane_offset_;                      ///< marks the current plane
     mylib::Indx_Type           sz_plane_nelem_;                            ///< the size of a plane in the tile database
 	int						   currentPosInLattice_;
+	bool					   useTwoDimensionalTiling_;
+
     TTransform                 latticeToStage_;                            ///< Transforms lattice coordinates to the tiles anchor point on the stage
     TListeners                 listeners_;                                 ///< set of objects to be notified of tiling events
     FieldOfViewGeometry        fov_;                                       ///< the geometry used to generate the tiling
@@ -60,7 +62,8 @@ namespace device {
 
              StageTiling(const device::StageTravel& travel,
                          const FieldOfViewGeometry& fov,
-                         const Mode                 alignment);
+                         const Mode                 alignment,
+						 bool useTwoDimensionalTiling);
     virtual ~StageTiling();
 
     void     set_z_offset_um(f64 z_um);
@@ -111,9 +114,9 @@ namespace device {
 
     void lock()                                                            {Mutex_Lock(lock_);}
     void unlock()                                                          {Mutex_Unlock(lock_);}
-
+	
     bool on_plane(uint32_t *p); //used by TileSearch    
-
+	
     int minDistTo( // used by adaptive tiling
     uint32_t search_mask,uint32_t search_flags,   // area to search 
     uint32_t query_mask ,uint32_t query_flags);  // tile to find
@@ -127,8 +130,8 @@ namespace device {
     mylib::Coordinate* computeLatticeExtents_(const device::StageTravel& travel); ///< returned pointer needs to be freed (w Free_Array).
     void initAttr_(mylib::Coordinate *shape);                                     ///< Free's shape
 
-    void notifyDone(size_t i, const Vector3f& pos, uint32_t sts);
-    void notifyNext(size_t i, const Vector3f& pos);
+    void notifyDone(size_t i, uint32_t sts);
+    void notifyNext(size_t i);
 
     const Vector3f computeCursorPos();
     

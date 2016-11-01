@@ -269,7 +269,7 @@ Error:
 		    currentPosInLattice = tiling->currentPosInLattice_;
 			if(previousPosInLattice != currentPosInLattice)
 			{
-			  tiling->copyTileAttributesFromFirstSliceToAnotherSlice(previousPosInLattice);
+		//	  tiling->copyTileAttributesFromFirstSliceToAnotherSlice(previousPosInLattice);
 			  tiling->useDoneTilesAsExplorableTilesForTwoDimensionalTiling();
 			}
 		  }
