@@ -226,10 +226,10 @@ Error:
         { WARN("No tiles found to image.\n");
           goto Error;
         }
-        if(any_explorable)
+		if(!dc->_agent->is_stopping() && any_explorable)
           tiling->dilateActive(iplane);
-        tiling->fillHolesInActive(iplane);
-        if(ctx) delete ctx;
+		tiling->fillHolesInActive(iplane);
+		if(ctx) delete ctx;
         return 1;
       Error:
         if(ctx) delete ctx;
