@@ -34,7 +34,6 @@ namespace device {
     mylib::Indx_Type           cursor_;                                    ///< marks the current tile
     mylib::Indx_Type           current_plane_offset_;                      ///< marks the current plane
     mylib::Indx_Type           sz_plane_nelem_;                            ///< the size of a plane in the tile database
-	int						   currentPosInLattice_;
 	bool					   useTwoDimensionalTiling_;
 
     TTransform                 latticeToStage_;                            ///< Transforms lattice coordinates to the tiles anchor point on the stage

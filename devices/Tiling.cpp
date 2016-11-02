@@ -52,7 +52,6 @@ namespace device {
       cursor_(0),
       current_plane_offset_(0),
       sz_plane_nelem_(0),
-	  currentPosInLattice_(-1),
       latticeToStage_(),
       fov_(fov),
       z_offset_um_(0.0),
