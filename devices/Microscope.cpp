@@ -225,7 +225,7 @@ ESCAN:
         Vector3z r=stage_.getPosInLattice();
         data.mutable_current_lattice_position()->set_x(r(0));
         data.mutable_current_lattice_position()->set_y(r(1));
-        data.mutable_current_lattice_position()->set_z(r(2));
+        data.mutable_current_lattice_position()->set_z(_cut_count); //DGA: Replace z lattice position with cut count since that is the most useful metric
         #endif
         
         data.set_cut_count(_cut_count);
