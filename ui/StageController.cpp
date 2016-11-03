@@ -419,7 +419,8 @@ bool fetch::ui::TilingController::mark( const QPainterPath& path, int attr, QPai
   //    Eigen to Qt :(
   QTransform l2s, s2l;
   TRY(latticeTransform(&l2s));
-  s2l = l2s.inverted();                                  
+  s2l = l2s.inverted();       
+ // s2l=QTransform(s2l.m11(), s2l.m12(), s2l.m21(), s2l.m22(), 0.5,0.5);
   // 2. Get access to the attribute data  
   TRY(latticeAttrImage(&im)); // locks the stage's tiling mutex, need to unlock when done with im
   // 3. Fill in the path
@@ -453,6 +454,7 @@ bool fetch::ui::TilingController::mark_all_planes( const QPainterPath& path, int
   QTransform l2s, s2l;
   latticeTransform(&l2s);
   s2l = l2s.inverted();
+ // s2l=QTransform(s2l.m11(), s2l.m12(), s2l.m21(), s2l.m22(), 0.5,0.5);
   QPainterPath lpath = s2l.map(path);
                                   
   // 2. Get access to the attribute data
