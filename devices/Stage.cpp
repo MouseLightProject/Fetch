@@ -743,7 +743,14 @@ Error:
     if( is_in_bounds(*_config,0,x)
       &&is_in_bounds(*_config,1,y)
       &&is_in_bounds(*_config,2,z))
-    { x_=x;y_=y;z_=z;
+    { 
+	  while(x_!=x || y_!=y || z_!=z){ // DGA: while one of the coordinates has not gotten to its final position
+	  if (x_!=x) abs(x_-x)/.480 < 0.05 ? x_=x : (x_<x ? x_+=.480/10.0 : x_-=.480/10.0);
+	  if (y_!=y) abs(y_-y)/.380 < 0.05 ? y_=y : (y_<y ? y_+=.380/10.0 : y_-=.380/10.0);
+	  if (z_!=z) abs(z_-x)/.150 < 0.05 ? z_=z : (z_<z ? z_+=.150/10.0 : z_-=.150/10.0);
+	  Sleep(10);
+	}
+		//x_=x;y_=y;z_=z;
     } else
     { WARN("Position out of bounds.");
       return 0;
