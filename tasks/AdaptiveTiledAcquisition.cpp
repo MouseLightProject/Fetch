@@ -106,6 +106,7 @@ Error:
         int adapt_count=0;
         int adapt_thresh=dc->get_config().adaptive_tiling().every();
         int adapt_mindist=dc->get_config().adaptive_tiling().mindist();
+		int minDistToOffsetMeasured;
         TS_OPEN("timer-tiles.f32");
         CHKJMP(dc->__scan_agent.is_runnable());
 		
@@ -121,7 +122,8 @@ Error:
 				if (adapt_mindist <= tiling->minDistTo(0, 0,  // domain query   -- do not restrict to a particular tile type
 					device::StageTiling::Active, 0)) // boundary query -- this is defines what is "outside"
 				{	
-					if (++adapt_count > adapt_thresh) // is it time to try?
+					minDistToOffsetMeasured = tiling->minDistTo(0,0, device::StageTiling::OffsetMeasured,device::StageTiling::OffsetMeasured);
+					if ( adapt_thresh <  minDistToOffsetMeasured || minDistToOffsetMeasured == 0)
 					{	adapt_count = 0;
 						// M O V E
 						Vector3f curpos = dc->stage()->getTarget(); // use current target z for tilepos z
@@ -140,7 +142,8 @@ Error:
 						//surface_find.config();  -- arms stack task as scan agent...redundant
 						eflag |= surface_find.run(dc);
 						if (surface_find.hit())
-						{	tiling_offset_acc_mm += dc->stage()->tiling_z_offset_mm();
+						{	tiling->markOffsetMeasured(true);
+							tiling_offset_acc_mm += dc->stage()->tiling_z_offset_mm();
 							++nsamp;
 						}
 
@@ -155,8 +158,8 @@ Error:
         } else {
           debug("%s(%d)"ENDL "\t[Adaptive Tiling Task] Average tile offset (samples: %5d) %f"ENDL,__FILE__,__LINE__,(int)nsamp,tiling_offset_acc_mm/nsamp);
           dc->stage()->set_tiling_z_offset_mm(tiling_offset_acc_mm/nsamp);
+		  tiling->markResetGivenAttributes(device::StageTiling::OffsetMeasured);
         }
-
 		// retore connection between end of pipeline and disk 
         IDevice::connect(&dc->disk,0,dc->_end_of_pipeline,0);
 

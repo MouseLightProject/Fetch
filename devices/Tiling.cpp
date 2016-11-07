@@ -584,6 +584,20 @@ DoneOutlining:
     notifyDone(cursor_,computeCursorPos(),*m);
   }
 
+  //  markOffsetMeasured  ////////////////////////////////////////////////////////
+  //
+  void StageTiling::markOffsetMeasured(bool tf)
+  { uint32_t *m=0;
+    { AutoLock lock(lock_);
+      m = AUINT32(attr_) + cursor_;
+      if(tf)
+        *m |= OffsetMeasured;
+      else
+        *m &= ~OffsetMeasured;
+    }
+    notifyDone(cursor_,computeCursorPos(),*m);
+  }
+
   //  markUserReset  /////////////////////////////////////////////////////
   //
   void StageTiling::markUserReset()
@@ -593,6 +607,24 @@ DoneOutlining:
       *m &= ~( Active|Detected|Explored|Explorable|Safe|Done );
     }
     notifyDone(cursor_,computeCursorPos(),*m);
+  }
+
+    //  markResetGivenAttributes  /////////////////////////////////////////////////////
+  //
+  void StageTiling::markResetGivenAttributes(uint32_t query_mask)
+  {  
+	{ 
+	  uint32_t *beg = AUINT32(attr_) + current_plane_offset_, // DGA: First tile in current plane
+			   *end = beg + sz_plane_nelem_; // DGA: Last tile in current plane, sz_plane_nelem_ is number of tiles in plane
+	  for (uint32_t *t = beg; t < end; ++t){
+		  if (((*t)&query_mask) == query_mask)
+		  {   AutoLock lock(lock_);
+			  // DGA: Can have more attributes than query_mask, but must at least have all of the ones in query_mask
+			  (*t)&=~query_mask;
+		      notifyDone(cursor_,computeCursorPos(),*t);
+		  }
+	    }
+	  }
   }
 
   //  markAddressable  ///////////////////////////////////////////////////
@@ -853,7 +885,7 @@ DoneOutlining:
     size_t estore_i;
     e_t elem() { // alloc new element
       estore_i++;
-      if(estore_i>=estore_sz)
+      if(estore_i>estore_sz)
         return 0;
       return estore+(estore_i-1); // DGA: go to next address (a_pointer+a_number is actually a_pointer + (a_number*sizeof(*a_pointer))
     }
@@ -909,10 +941,9 @@ DoneOutlining:
 		   	 *beg = AUINT32(attr_) + current_plane_offset_, // DGA: First tile in current plane
 		     *end = beg + sz_plane_nelem_; // DGA: Last tile in current plane, sz_plane_nelem_ is number of tiles in plane
     q_t q(w*h); // DGA: q is of class q_t with input size n = width * height (number of frames?). class variable estore_i set to 0
-    
+
     for(uint32_t *t=(uint32_t*)beg;t<end;++t) // Reset Reserved
       *t = t[0]&~Reserved; // DGA: Mark all the tiles as not reserved (Reserved = 512, eg 1000000000, so ~Reserved = 0111111111, resets 10th bit to 0?)
-
     #define isvalid(p)    ((*(p)&(search_mask|Reserved)) == search_flags)
     #define isinbounds(p) (beg<=(p) && (p)<end)
     #define maybe(p)      ( (isvalid(p)&&isinbounds(p)) ?(p):NULL)
