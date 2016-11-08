@@ -11,4 +11,4 @@ namespace fetch{ namespace ui{ //DGA: This class is in namespace fetch and ui
 		void signaler(bool setValue);
 		void signaler(QString setValue);
 	};
-}}//DGA: end of ui and fetch namespace
+}}//DGA: end of ui and fetch namespaces
