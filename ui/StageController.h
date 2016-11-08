@@ -54,7 +54,8 @@ namespace ui {
     bool latticeAttrImage (QImage *out);                                   /// \returns false if tiling is invalid
     bool latticeAttrImageAtPlane(QImage *out, int iplane);
     bool stageAlignedBBox (QRectF *out);                                   /// \returns false if tiling is invalid
-
+	
+	bool translatePath(QPainterPath& path);
     bool markAddressable();                                                /// \returns false if tiling is invalid
     bool markActive(const QPainterPath& path);                             /// \returns false if tiling is invalid
     bool markInactive(const QPainterPath& path);                           /// \returns false if tiling is invalid

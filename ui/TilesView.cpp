@@ -219,7 +219,7 @@ void TilesView::paint_lattice_(const QPainterPath& path, const QColor& pc, const
 }
 
 void TilesView::addSelection( QPainterPath& path )
-{
+{ tc_->translatePath(path);
   tc_->markActive(path);
   paint_lattice_attribute_image_();
   updateCBO();
@@ -227,7 +227,7 @@ void TilesView::addSelection( QPainterPath& path )
 }
 
 void TilesView::removeSelection( QPainterPath& path )
-{
+{ tc_->translatePath(path);
   tc_->markInactive(path);
   paint_lattice_attribute_image_();
   updateCBO();
@@ -235,7 +235,7 @@ void TilesView::removeSelection( QPainterPath& path )
 }
 
 void TilesView::markSelectedAreaUserReset( QPainterPath& path)
-{
+{ tc_->translatePath(path);
   tc_->markUserReset(path);
   paint_lattice_attribute_image_();
   updateCBO();
@@ -243,7 +243,7 @@ void TilesView::markSelectedAreaUserReset( QPainterPath& path)
 }
 
 void TilesView::markSelectedAreaAsDone( QPainterPath& path)
-{
+{ tc_->translatePath(path);
   tc_->markDone(path);
   paint_lattice_attribute_image_();
   updateCBO();
@@ -251,7 +251,7 @@ void TilesView::markSelectedAreaAsDone( QPainterPath& path)
 }
 
 void TilesView::markSelectedAreaAsSafe( QPainterPath& path)
-{
+{ tc_->translatePath(path);
   tc_->markSafe(path);
   paint_lattice_attribute_image_();
   updateCBO();
@@ -259,7 +259,7 @@ void TilesView::markSelectedAreaAsSafe( QPainterPath& path)
 }
 
 void TilesView::markSelectedAreaAsNotSafe( QPainterPath& path)
-{
+{ tc_->translatePath(path);
   tc_->markNotSafe(path);
   paint_lattice_attribute_image_();
   updateCBO();
@@ -267,7 +267,7 @@ void TilesView::markSelectedAreaAsNotSafe( QPainterPath& path)
 }
 
 void TilesView::markSelectedAreaAsNotDone( QPainterPath& path)
-{
+{ tc_->translatePath(path);
   tc_->markNotDone(path);
   paint_lattice_attribute_image_();
   updateCBO();
@@ -275,7 +275,7 @@ void TilesView::markSelectedAreaAsNotDone( QPainterPath& path)
 }
 
 void TilesView::markSelectedAreaAsExplorable( QPainterPath& path)
-{
+{ tc_->translatePath(path);
   tc_->markAllPlanesExplorable(path);
   paint_lattice_attribute_image_();
   updateCBO();
@@ -283,7 +283,7 @@ void TilesView::markSelectedAreaAsExplorable( QPainterPath& path)
 }
 
 void TilesView::markSelectedAreaAsNotExplorable( QPainterPath& path)
-{
+{ tc_->translatePath(path);
   tc_->markAllPlanesNotExplorable(path);
   paint_lattice_attribute_image_();
   updateCBO();

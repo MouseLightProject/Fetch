@@ -410,6 +410,18 @@ static void zero_alpha(QImage &im)
     d[4*i]=0;                            // zero out the alpha component
 }
 
+bool fetch::ui::TilingController::translatePath(QPainterPath& path)
+{ device::StageTiling *tiling;
+  if(tiling=stage_->tilingLocked())
+  {
+    device::FieldOfViewGeometry fov(tiling->fov());
+	path.translate(fov.field_size_um_[0]/2.0, fov.field_size_um_[1]/2.0);
+	stage_->tilingUnlock();
+    return true;
+  }
+  return false;
+}
+
 bool fetch::ui::TilingController::mark( const QPainterPath& path, int attr, QPainter::CompositionMode mode )
 { 
   QColor color((QRgb)attr);
