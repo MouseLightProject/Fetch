@@ -259,7 +259,7 @@ Error:
            * we double check here as extra insurance against any extra cuts.
            */
           CHKJMP(dc->trip_detect.ok());
-
+		  
           CHKJMP(   cut.config(dc));
           CHKJMP(0==cut.run(dc));
 		  if(tiling->useTwoDimensionalTiling_)
@@ -267,6 +267,12 @@ Error:
 			if (PlaneInBounds(dc,cfg.maxz_mm())) tiling->useDoneTilesAsExplorableTilesForTwoDimensionalTiling();
 		  }
 		  else tiling->useCurrentDoneTilesAsNextExplorableTiles(); //DGA: After imaging tiles, set the next explorable tiles equal to the current done tiles
+
+		  if(dc->getScheduleStopAfterNextCut()) //DGA: if a stop is scheduled
+		  {
+			dc->cutCompletedSoStop(); //DGA: Call function to stop autotile
+			dc->setScheduleStopAfterNextCut(false); //DGA: Uncheck stop after next cut checkbox
+		  }
         }
 
 Finalize:
