@@ -234,7 +234,7 @@ namespace device {
       void     set_tiling_z_offset_mm(float dz_mm);
       void     inc_tiling_z_offset_mm(float dz_mm);
       void     getLastTarget         ( float *x, float *y, float *z)        { cfg::device::Point3d r=_config->last_target_mm(); *x=r.x();*y=r.y();*z=r.z(); } 
-	  bool     getUseTwoDimensionalTiling()									{ return (bool) _config->use_two_dimensional_tiling();}
+	  bool     getUseTwoDimensionalTiling()									{ return (bool) _config->use_two_dimensional_tiling();} //DGA:Getter for two dimensional tiling
 
               void addListener(StageListener *listener);
               void delListener(StageListener *listener);
@@ -243,7 +243,6 @@ namespace device {
       /** Only locks if tiling is not NULL */
       inline  StageTiling* tilingLocked()                                   {Mutex_Lock(_tiling_lock); if(!_tiling) Mutex_Unlock(_tiling_lock); return _tiling;}
       inline  void         tilingUnlock()                                   {Mutex_Unlock(_tiling_lock);}
-
   protected:
       void    _createTiling();       ///< only call when disarmed
       void    _destroyTiling();      ///< only call when disarmed

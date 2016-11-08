@@ -907,7 +907,7 @@ Error:
       _destroyTiling();                                           // this call will invalidate the _fov pointer :(  bad design [??? 2011-11 this comment seems questionable]
 
       Mutex_Lock(_tiling_lock);
-      _tiling = new StageTiling(travel, fov, _config->tilemode(),getUseTwoDimensionalTiling());
+      _tiling = new StageTiling(travel, fov, _config->tilemode(), getUseTwoDimensionalTiling()); //DGA: Added getUseTwoDimensionalTiling() for constructor
       Mutex_Unlock(_tiling_lock);
       { TListeners::iterator i;
         for(i=_listeners.begin();i!=_listeners.end();++i)
