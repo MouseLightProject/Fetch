@@ -34,8 +34,7 @@ namespace device {
     mylib::Indx_Type           cursor_;                                    ///< marks the current tile
     mylib::Indx_Type           current_plane_offset_;                      ///< marks the current plane
     mylib::Indx_Type           sz_plane_nelem_;                            ///< the size of a plane in the tile database
-	bool					   useTwoDimensionalTiling_;
-
+	bool					   useTwoDimensionalTiling_;				   ///< whether or not to use two dimensional tiling
     TTransform                 latticeToStage_;                            ///< Transforms lattice coordinates to the tiles anchor point on the stage
     TListeners                 listeners_;                                 ///< set of objects to be notified of tiling events
     FieldOfViewGeometry        fov_;                                       ///< the geometry used to generate the tiling
@@ -62,7 +61,7 @@ namespace device {
              StageTiling(const device::StageTravel& travel,
                          const FieldOfViewGeometry& fov,
                          const Mode                 alignment,
-						 bool useTwoDimensionalTiling);
+						 bool useTwoDimensionalTiling); //DGA: Added useTwoDimensionalTiling to constructor
     virtual ~StageTiling();
 
     void     set_z_offset_um(f64 z_um);
@@ -82,8 +81,7 @@ namespace device {
     bool     nextSearchPosition(int iplane, int ntimes, Vector3f &pos,TileSearchContext **ctx);     ///< *ctx should be NULL on the first call.  It will be internally managed.
     void     tileSearchCleanup(TileSearchContext *ctx);
 	void	 useCurrentDoneTilesAsNextExplorableTiles(); //DGA: Declaration of function to use current done tiles as the next explorable ones
-	void     copyTileAttributesFromFirstSliceToAnotherSlice(int currentPosInLattice);
-	void	 useDoneTilesAsExplorableTilesForTwoDimensionalTiling();
+	void	 useDoneTilesAsExplorableTilesForTwoDimensionalTiling(); //DGA: declaration of function to use current done tiles as explorable tiles when two dimensional tiling is being used
 
     void     markDone(bool success);
     void     markActive(); // used by gui to explicitly set tiles to image

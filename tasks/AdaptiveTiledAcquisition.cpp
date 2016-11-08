@@ -114,7 +114,7 @@ Error:
 		numberImaged = tiling->numberOfTilesWithGivenAttributes(attributes);
 		// 1. iterate over tiles to measure the average tile offset
         tiling->resetCursor();
-		float startingZForImagingTiles_um = dc->stage()->getPos().z()*1000.0f;
+		float startingZForImagingTilesForTwoDimensionalTiling_um = dc->stage()->getPos().z()*1000.0f; //DGA: Gets the current stage position in z and stores that as the startingZForImagingTilesForTwoDimensionalTiling_um
 		if (tiling->useTwoDimensionalTiling_) dc->stage()->set_tiling_z_offset_mm(0);
 
 		bool skipSurfaceFindOnImageResume = dc->getSkipSurfaceFindOnImageResume();//DGA: Is skipSurfaceFindOnImageResume true
@@ -129,7 +129,7 @@ Error:
 						// M O V E
 						Vector3f curpos = dc->stage()->getTarget(); // use current target z for tilepos z
 						debug("%s(%d)"ENDL "\t[Adaptive Tiling Task] curpos: %5.1f %5.1f %5.1f"ENDL, __FILE__, __LINE__, curpos[0] * 1000.0f, curpos[1] * 1000.0f, curpos[2] * 1000.0f);
-						if (tiling->useTwoDimensionalTiling_) tilepos[2] = curpos[2]*1000.0f; // DGA: Use current target z for tilepos z
+						if (tiling->useTwoDimensionalTiling_) tilepos[2] = curpos[2]*1000.0f; // DGA: Use current target z for tilepos z if using two dimensional tiling (rather than the lattice position)
 						dc->stage()->setPos(0.001f*tilepos);        // convert um to mm
 						curpos = dc->stage()->getTarget(); // use current target z for tilepos z
 						debug("%s(%d)"ENDL "\t[Adaptive Tiling Task] curpos: %5.1f %5.1f %5.1f"ENDL, __FILE__, __LINE__, curpos[0] * 1000.0f, curpos[1] * 1000.0f, curpos[2] * 1000.0f);
@@ -159,7 +159,7 @@ Error:
         } else {
           debug("%s(%d)"ENDL "\t[Adaptive Tiling Task] Average tile offset (samples: %5d) %f"ENDL,__FILE__,__LINE__,(int)nsamp,tiling_offset_acc_mm/nsamp);
           dc->stage()->set_tiling_z_offset_mm(tiling_offset_acc_mm/nsamp);
-		  startingZForImagingTiles_um += dc->stage()->tiling_z_offset_mm()*1000.0f;
+		  startingZForImagingTilesForTwoDimensionalTiling_um += dc->stage()->tiling_z_offset_mm()*1000.0f; //DGA: If offset measurement has been performed, add the average tiling offset to the starting z position for two dimensional tiling imaging
         }
 
 		// retore connection between end of pipeline and disk 
@@ -183,7 +183,7 @@ Error:
           // Move stage
           Vector3f curpos = dc->stage()->getTarget(); // use current target z for tilepos z
           debug("%s(%d)"ENDL "\t[Adaptive Tiling Task] curpos: %5.1f %5.1f %5.1f"ENDL,__FILE__,__LINE__,curpos[0]*1000.0f,curpos[1]*1000.0f,curpos[2]*1000.0f);
-		  if (tiling->useTwoDimensionalTiling_) tilepos[2] = startingZForImagingTiles_um; // DGA: Use current target z for tilepos z
+		  if (tiling->useTwoDimensionalTiling_) tilepos[2] = startingZForImagingTilesForTwoDimensionalTiling_um; // DGA: Use current target z for tilepos z
           dc->stage()->setPos(0.001f*tilepos);        // convert um to mm
           curpos = dc->stage()->getTarget(); // use current target z for tilepos z
           debug("%s(%d)"ENDL "\t[Adaptive Tiling Task] curpos: %5.1f %5.1f %5.1f"ENDL,__FILE__,__LINE__,curpos[0]*1000.0f,curpos[1]*1000.0f,curpos[2]*1000.0f);

@@ -58,7 +58,7 @@ namespace device {
       travel_(travel),
       lock_(0),
       mode_(alignment),
-	  useTwoDimensionalTiling_(useTwoDimensionalTiling)
+	  useTwoDimensionalTiling_(useTwoDimensionalTiling) //DGA: Added initialization of useTwoDimensionalTiling_
   {
     PANIC(lock_=Mutex_Alloc());
     computeLatticeToStageTransform_(fov,alignment);
@@ -163,7 +163,7 @@ namespace device {
     SHOW(c);
 
     mylib::Coordinate* out;
-	useTwoDimensionalTiling_ ? out = mylib::Coord3(1, c(1)+1, c(0)+1) : out = mylib::Coord3(c(2)+1,c(1)+1,c(0)+1); //shape of the lattice
+	useTwoDimensionalTiling_ ? out = mylib::Coord3(1, c(1)+1, c(0)+1) : out = mylib::Coord3(c(2)+1,c(1)+1,c(0)+1); //shape of the lattice. DGA: If useTwoDimensionalTiling_ = true, then out will be set to 1 by c(1)+1 by x(0)+1 (where the first coordinate is z). Else, out will be what it normally is (c(2)+1, c(1)+1,c(0)+1) 
     return out;
   }
 
@@ -447,31 +447,21 @@ namespace device {
 	}
   }
 
-  void StageTiling::useDoneTilesAsExplorableTilesForTwoDimensionalTiling()
+  //DGA: Use current done tiles as explorable tiles when two dimensional tiling is being used
+  void StageTiling::useDoneTilesAsExplorableTilesForTwoDimensionalTiling() 
   { const uint32_t *beg = AUINT32(attr_),
     *end = beg + sz_plane_nelem_; //DGA: Beginning and end of plane
-    uint32_t *c; //DGA: Pointers to tiles in current (c) and next (n) planes
+    uint32_t *c; //DGA: Pointers to tiles in current plane
 	{ AutoLock lock(lock_); //DGA: Scoped locking/unlocking since the destructor calls the unlock. This means that this section of code can only be accessed by one thread at a time.
 	  for (c = (uint32_t*)beg; c < end; ++c) //DGA: Loop through current (c) and next (n) plane tiles
-	  { *c&=(Addressable | Safe | Done); //DGA: Reset explorable, since you don't want to use what was initially defined as explorable
-		if ((*c&Done) == Done)
+	  { *c&=(Addressable | Safe | Done); //DGA: Reset everything except if the tile is Addressable, Safe and Done
+		if ((*c&Done) == Done) //DGA: If tile c is done
 		{
-	      *c |= Explorable ; //DGA: If c was done, then make n (corresponding tile in next plane) explorable
+	      *c |= Explorable ; //DGA: If c was done, then make it explorable and then mark it as not done
 		  *c &= ~Done;
 	    }
 	  }
 	}
-  }
-
-  void StageTiling::copyTileAttributesFromFirstSliceToAnotherSlice(int currentPosInLattice)
-  { const uint32_t *previousBeg = AUINT32(attr_),
-    *previousEnd = previousBeg + sz_plane_nelem_, //DGA: Beginning and end of plane
-    *currentBeg = AUINT32(attr_) + currentPosInLattice*sz_plane_nelem_;
-    uint32_t *p, *c; //DGA: Pointers to tiles in current (c) and next (n) planes
-    { AutoLock lock(lock_); //DGA: Scoped locking/unlocking since the destructor calls the unlock. This means that this section of code can only be accessed by one thread at a time.
-      for (p = (uint32_t*)previousBeg, c = (uint32_t*)currentBeg; p < previousEnd; ++p, ++c) //DGA: Loop through current (c) and next (n) plane tiles= *p;
-          *c = *p;
-    }
   }
 
 #define ELIGABLE(e)          ((*(e)&eligable_mask)==eligable)
