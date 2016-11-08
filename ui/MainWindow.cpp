@@ -121,9 +121,9 @@ fetch::ui::MainWindow::MainWindow(device::Microscope *dc)
   ,_display(0)
   ,_player(0)
   ,_scope_state_controller(&dc->__self_agent)
-  ,_microscopeController(NULL) //DGA: Initialize _micrsocopeController pointer to NULL pointer
+  ,_microscopeController(NULL) //DGA: Initialize _microscopeController pointer to NULL pointer
   ,_stageController(NULL)
-  ,_vibratomeController(NULL) //DGA: Initialize _micrsocopeController pointer to NULL pointer
+  ,_vibratomeController(NULL) //DGA: Initialize _vibratomeController pointer to NULL pointer
   ,_resonant_turn_controller(NULL)
   ,_vlines_controller(NULL)
   ,_lsm_vert_range_controller(NULL)
@@ -140,7 +140,7 @@ fetch::ui::MainWindow::MainWindow(device::Microscope *dc)
   _zpiezo_min_control       = new ZPiezoMinController(dc->zpiezo(), "Z Mi&n (um)",this);
   _zpiezo_step_control      = new ZPiezoStepController(dc->zpiezo(),"Z &Step (um)",this);
 
-  _microscopeController		= new MicroscopeController(dc); //DGA: Dynamically allocate _microsocpeController to point to instance of MicroscopeController class that takes in microscope device dc
+  _microscopeController		= new MicroscopeController(dc, &_scope_state_controller); //DGA: Dynamically allocate _microscopeController to point to instance of MicroscopeController class that takes in microscope device dc and pointer to _scope_state_controller
   _stageController          = new PlanarStageController(dc->stage());
   _vibratomeController		= new VibratomeController(dc->vibratome()); //DGA: Dynamically allocate _vibratomeController to point to instance of VibratomeController class that takes in vibratome device dc->vibratome
   _vibratome_amp_controller = new VibratomeAmplitudeController(dc->vibratome(),"Amplitude (0-255)",this);

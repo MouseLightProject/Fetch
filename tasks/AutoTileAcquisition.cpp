@@ -258,9 +258,14 @@ Error:
            * we double check here as extra insurance against any extra cuts.
            */
           CHKJMP(dc->trip_detect.ok());
-
+		  
           CHKJMP(   cut.config(dc));
-          CHKJMP(0==cut.run(dc));
+          CHKJMP(0==cut.run(dc)); 
+		  if(dc->getScheduleStopAfterNextCut()) //DGA: if a stop is scheduled
+		  {
+			dc->cutCompletedSoStop(); //DGA: Call function to stop autotile
+			dc->setScheduleStopAfterNextCut(false); //DGA: Uncheck stop after next cut checkbox
+		  }
         }
 
 Finalize:
