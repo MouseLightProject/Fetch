@@ -5,8 +5,8 @@
   MicroscopeController(device::Microscope *microscope, AgentController *ac, QObject *parent): 
   QObject(parent), 
   microscope_(microscope)
-{ 
-    connect(&(microscope_->cutCompletedSoStopSignaler),SIGNAL(signal_valueSet()),ac,SLOT(stop()), Qt::QueuedConnection);
+{ //DGA: MicroscopeController constructor which initializes microscope_ to microscope and QObject with argument parent
+    connect(&(microscope_->cutCompletedSoStopSignaler),SIGNAL(signaler()),ac,SLOT(stop()), Qt::QueuedConnection); //DGA: Connects signal_setValue() of cutCompletedSoStopSignaler to ac
 } 
 
 QCheckBox *
@@ -14,7 +14,7 @@ QCheckBox *
   createSkipSurfaceFindOnImageResumeCheckBox(QWidget *parent) //DGA: Definition of function from header
 {	QCheckBox *skipSurfaceFindOnImageResumeCheckBox = new QCheckBox(parent);  //DGA: Dynamically allocates check box
 	connect(skipSurfaceFindOnImageResumeCheckBox, SIGNAL(clicked(bool)), this, SLOT(setSkipSurfaceFindOnImageResume(bool)),Qt::QueuedConnection); //DGA: Connects check box's clicked signal to the setSkipSurfaceFindOnImageResume slot of this class instance, so that skipSurfaceFindOnImageResume_ of microscope_ will be updated when the checkbox is clicked
-	connect(&(microscope_->skipSurfaceFindOnImageResumeCheckBoxUpdater), SIGNAL(signal_valueSet(bool)),skipSurfaceFindOnImageResumeCheckBox, SLOT(setChecked(bool)),Qt::QueuedConnection); //DGA: Connect signal _valueSet of microscope_'s skipSurfaceFindOnImageResumeCheckBoxUpdater to setChecked slot so that changing skipSurfaceFindOnImageResume_ will update the checkbox
+	connect(&(microscope_->skipSurfaceFindOnImageResumeCheckBoxUpdater), SIGNAL(signaler(bool)),skipSurfaceFindOnImageResumeCheckBox, SLOT(setChecked(bool)),Qt::QueuedConnection); //DGA: Connect signaler of microscope_'s skipSurfaceFindOnImageResumeCheckBoxUpdater to setChecked slot so that changing skipSurfaceFindOnImageResume_ will update the checkbox
 	skipSurfaceFindOnImageResumeCheckBox->clicked(false);//DGA: Initialize the checkbox to off
 	return skipSurfaceFindOnImageResumeCheckBox; //DGA: Returns the checkbox
 }
@@ -24,7 +24,7 @@ QCheckBox *
   createScheduleStopAfterNextCutCheckBox(QWidget *parent) //DGA: Definition of function from header
 {	QCheckBox *scheduleStopAfterNextCutCheckBox = new QCheckBox(parent);  //DGA: Dynamically allocates check box
 	connect(scheduleStopAfterNextCutCheckBox, SIGNAL(clicked(bool)), this, SLOT(setScheduleStopAfterNextCut(bool)),Qt::QueuedConnection); //DGA: Connects check box's clicked signal to the scheduleStopAfterNextCut slot of this class instance, so that scheduleStopAfterNextCut_ of microscope_ will be updated when the checkbox is clicked
-	connect(&(microscope_->scheduleStopAfterNextCutCheckBoxUpdater), SIGNAL(signal_valueSet(bool)),scheduleStopAfterNextCutCheckBox, SLOT(setChecked(bool)),Qt::QueuedConnection); //DGA: Connect signal _valueSet of microscope_'s scheduleStopAfterNextCutCheckBoxUpdater to setChecked slot so that changing skipSurfaceFindOnImageResume_ will update the checkbox
+	connect(&(microscope_->scheduleStopAfterNextCutCheckBoxUpdater), SIGNAL(signaler(bool)),scheduleStopAfterNextCutCheckBox, SLOT(setChecked(bool)),Qt::QueuedConnection); //DGA: Connect signaler of microscope_'s scheduleStopAfterNextCutCheckBoxUpdater to setChecked slot so that changing scheduleStopAfterNextCut_ will update the checkbox
 	scheduleStopAfterNextCutCheckBox->clicked(false);//DGA: Initialize the checkbox to off
 	return scheduleStopAfterNextCutCheckBox; //DGA: Returns the checkbox
 }

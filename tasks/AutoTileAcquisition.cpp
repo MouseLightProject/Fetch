@@ -261,9 +261,10 @@ Error:
 		  
           CHKJMP(   cut.config(dc));
           CHKJMP(0==cut.run(dc)); 
-		  if (dc->getScheduleStopAfterNextCut()) {
-			  dc->cutCompletedSoStop();
-			  dc->setScheduleStopAfterNextCut(false);
+		  if(dc->getScheduleStopAfterNextCut()) //DGA: if a stop is scheduled
+		  {
+			dc->cutCompletedSoStop(); //DGA: Call function to stop autotile
+			dc->setScheduleStopAfterNextCut(false); //DGA: Uncheck stop after next cut checkbox
 		  }
         }
 

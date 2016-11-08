@@ -23,7 +23,7 @@ namespace ui{
 	skipSurfaceFindOnImageResumeCheckBox->setText("Skip Surface Find On Image Resume"); //DGA: Set the text then add the checkbox so that is aligned properly with other widgets
 	form->addRow("",skipSurfaceFindOnImageResumeCheckBox);
 
-	QCheckBox * scheduleStopAfterNextCutCheckBox = parent->_microscopeController->createScheduleStopAfterNextCutCheckBox(); //DGA: create skipSurfaceFindOnImageResumeCheckBox
+	QCheckBox * scheduleStopAfterNextCutCheckBox = parent->_microscopeController->createScheduleStopAfterNextCutCheckBox(); //DGA: create scheduleStopAfterNextCutCheckBox
 	scheduleStopAfterNextCutCheckBox->setText("Schedule Stop After Next Cut"); //DGA: Set the text then add the checkbox so that is aligned properly with other widgets
 	form->addRow("", scheduleStopAfterNextCutCheckBox);
 

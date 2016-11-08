@@ -3,7 +3,7 @@
 #include <devices/Microscope.h>
 #include "AgentController.h"
 
-//DGA: Controller class to interface between vibratome settings (that are not defined in cfg file) and ui
+//DGA: Controller class to interface between microscope settings (that are not defined in cfg file) and ui
 namespace fetch { //DGA: This class is in namespace fetch and ui
 namespace ui {
 
@@ -12,7 +12,7 @@ namespace ui {
     device::Microscope       *microscope_; //DGA: Creates microscope_, which is a private pointer to a Microscope device
 
    public:
-	 //DGA: MicroscopeController constructor that takes in a pointer to a microscope device and a QObject pointer to the parent object, with default parameter 0. The base class QObject
+	 //DGA: MicroscopeController constructor that takes in a pointer to a microscope device, a pointer to an agent controller object and a QObject pointer to the parent object, with default parameter 0. The base class QObject
 	 //constructor is called with parent argument and microscope_ is set equal to microscope.
 	 MicroscopeController(device::Microscope *microscope, AgentController *ac, QObject *parent=0);
 
