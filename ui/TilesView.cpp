@@ -218,7 +218,7 @@ void TilesView::paint_lattice_(const QPainterPath& path, const QColor& pc, const
   update();
 }
 
-void TilesView::addSelection( const QPainterPath& path )
+void TilesView::addSelection( QPainterPath& path )
 {
   tc_->markActive(path);
   paint_lattice_attribute_image_();
@@ -226,7 +226,7 @@ void TilesView::addSelection( const QPainterPath& path )
   update();
 }
 
-void TilesView::removeSelection( const QPainterPath& path )
+void TilesView::removeSelection( QPainterPath& path )
 {
   tc_->markInactive(path);
   paint_lattice_attribute_image_();
@@ -234,7 +234,7 @@ void TilesView::removeSelection( const QPainterPath& path )
   update();
 }
 
-void TilesView::markSelectedAreaUserReset(const QPainterPath& path)
+void TilesView::markSelectedAreaUserReset( QPainterPath& path)
 {
   tc_->markUserReset(path);
   paint_lattice_attribute_image_();
@@ -242,7 +242,7 @@ void TilesView::markSelectedAreaUserReset(const QPainterPath& path)
   update();
 }
 
-void TilesView::markSelectedAreaAsDone(const QPainterPath& path)
+void TilesView::markSelectedAreaAsDone( QPainterPath& path)
 {
   tc_->markDone(path);
   paint_lattice_attribute_image_();
@@ -250,7 +250,7 @@ void TilesView::markSelectedAreaAsDone(const QPainterPath& path)
   update();
 }
 
-void TilesView::markSelectedAreaAsSafe(const QPainterPath& path)
+void TilesView::markSelectedAreaAsSafe( QPainterPath& path)
 {
   tc_->markSafe(path);
   paint_lattice_attribute_image_();
@@ -258,7 +258,7 @@ void TilesView::markSelectedAreaAsSafe(const QPainterPath& path)
   update();
 }
 
-void TilesView::markSelectedAreaAsNotSafe(const QPainterPath& path)
+void TilesView::markSelectedAreaAsNotSafe( QPainterPath& path)
 {
   tc_->markNotSafe(path);
   paint_lattice_attribute_image_();
@@ -266,7 +266,7 @@ void TilesView::markSelectedAreaAsNotSafe(const QPainterPath& path)
   update();
 }
 
-void TilesView::markSelectedAreaAsNotDone(const QPainterPath& path)
+void TilesView::markSelectedAreaAsNotDone( QPainterPath& path)
 {
   tc_->markNotDone(path);
   paint_lattice_attribute_image_();
@@ -274,7 +274,7 @@ void TilesView::markSelectedAreaAsNotDone(const QPainterPath& path)
   update();
 }
 
-void TilesView::markSelectedAreaAsExplorable(const QPainterPath& path)
+void TilesView::markSelectedAreaAsExplorable( QPainterPath& path)
 {
   tc_->markAllPlanesExplorable(path);
   paint_lattice_attribute_image_();
@@ -282,7 +282,7 @@ void TilesView::markSelectedAreaAsExplorable(const QPainterPath& path)
   update();
 }
 
-void TilesView::markSelectedAreaAsNotExplorable(const QPainterPath& path)
+void TilesView::markSelectedAreaAsNotExplorable( QPainterPath& path)
 {
   tc_->markAllPlanesNotExplorable(path);
   paint_lattice_attribute_image_();
