@@ -460,7 +460,12 @@ Error:
 
 	void Microscope::setSkipSurfaceFindOnImageResume(bool setValue){ //DGA: Defintion of setSkipSurfaceFindOnImageResume function
 		skipSurfaceFindOnImageResume_ = setValue; //DGA: set value of skipSurfaceFindOnImageResume_ equal to setValue
-		skipSurfaceFindOnImageResumeCheckBoxUpdater.signal_valueSet(setValue); //DGA: Signal signal_valueSet(setValue) so that the skipSurfaceFindOnImageResume checkbox will be updated
+		skipSurfaceFindOnImageResumeCheckBoxUpdater.signaler(setValue); //DGA: Signal signal_valueSet(setValue) so that the skipSurfaceFindOnImageResume checkbox will be updated
+	}
+
+	void Microscope::setScheduleStopAfterNextCut(bool setValue){ //DGA: Defintion of scheduleStopAfterNextCut function
+		scheduleStopAfterNextCut_ = setValue; //DGA: set value of scheduleStopAfterNextCut_ equal to setValue
+		scheduleStopAfterNextCutCheckBoxUpdater.signaler(setValue); //DGA: Signal signal_valueSet(setValue) so that the scheduleStopAfterNextCut checkbox will be updated
 	}
 
     ///////////////////////////////////////////////////////////////////////

@@ -243,6 +243,7 @@ Error:
         AdaptiveTiledAcquisition adaptive_tiling;
         MicroscopeTask *tile=0;
         Cut cut;
+		device::StageTiling * tiling = dc->stage()->tiling(); //DGA: Pointer to tiling object
 
         tile=cfg.use_adaptive_tiling()?((MicroscopeTask*)&adaptive_tiling):((MicroscopeTask*)&nonadaptive_tiling);
 
@@ -258,9 +259,20 @@ Error:
            * we double check here as extra insurance against any extra cuts.
            */
           CHKJMP(dc->trip_detect.ok());
-
+		  
           CHKJMP(   cut.config(dc));
           CHKJMP(0==cut.run(dc));
+		  if(tiling->useTwoDimensionalTiling_) //DGA: If using two dimensional tiling
+		  {
+			if (PlaneInBounds(dc,cfg.maxz_mm())) tiling->useDoneTilesAsExplorableTilesForTwoDimensionalTiling(); //DGA: If the next position is in bounds (ie, not beyond the max z), then update the tiling, otherwise do nothing.
+		  }
+		  else tiling->useCurrentDoneTilesAsNextExplorableTiles(); //DGA: After imaging tiles, set the next explorable tiles equal to the current done tiles
+
+		  if(dc->getScheduleStopAfterNextCut()) //DGA: if a stop is scheduled
+		  {
+			dc->cutCompletedSoStop(); //DGA: Call function to stop autotile
+			dc->setScheduleStopAfterNextCut(false); //DGA: Uncheck stop after next cut checkbox
+		  }
         }
 
 Finalize:

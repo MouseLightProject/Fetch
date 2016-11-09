@@ -486,8 +486,8 @@ Error:
 	if (um > -1000 && um < 1000){ //DGA: If um is in valid range
 		sliceThicknessCorrectionUm_ = um; //DGA: set sliceThicknessCorrectionUm_ to um
 		QString currentSliceThicknessCorrectionUm = QString::number(um); //DGA: Convert um to QString currentSliceThicknessCorrectionUm
-		sliceThicknessCorrectionUmLineEditUpdater.signal_valueSet(currentSliceThicknessCorrectionUm); //DGA: Signal to the slice thickness correction line edit that the slice thickness correction has been set
-		sliceThicknessCorrectionUmLabelUpdater.signal_valueSet(currentSliceThicknessCorrectionUm); //DGA: Signal to the slice thickness correction label that the slice thickness correction has been set
+		sliceThicknessCorrectionUmLineEditUpdater.signaler(currentSliceThicknessCorrectionUm); //DGA: Signal to the slice thickness correction line edit that the slice thickness correction has been set
+		sliceThicknessCorrectionUmLabelUpdater.signaler(currentSliceThicknessCorrectionUm); //DGA: Signal to the slice thickness correction label that the slice thickness correction has been set
 		QSettings settings; //DGA: settings is a QSettings
 		settings.setValue("sliceThicknessCorrectionUm",um); //DGA: Set the sliceThicknessCorrectionUm settings
 	}
