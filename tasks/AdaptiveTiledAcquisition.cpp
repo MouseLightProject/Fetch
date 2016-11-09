@@ -115,7 +115,7 @@ Error:
 		// 1. iterate over tiles to measure the average tile offset
         tiling->resetCursor();
 		float startingZForImagingTilesForTwoDimensionalTiling_um = dc->stage()->getPos().z()*1000.0f; //DGA: Gets the current stage position in z and stores that as the startingZForImagingTilesForTwoDimensionalTiling_um
-		if (tiling->useTwoDimensionalTiling_) dc->stage()->set_tiling_z_offset_mm(0);
+		if (tiling->useTwoDimensionalTiling_) dc->stage()->set_tiling_z_offset_mm(0.0f); //DGA: Resets tiling z offset to 0
 
 		bool skipSurfaceFindOnImageResume = dc->getSkipSurfaceFindOnImageResume();//DGA: Is skipSurfaceFindOnImageResume true
 		if ( numberImaged==0 ? true : !skipSurfaceFindOnImageResume){ //DGA: If no tiles have been imaged, then will iterate over tiles as usual. If at least one has been imaged, then will skip this iteration if skipSurfaceFindOnImageResume is true; else will do the iteration (which will update z)

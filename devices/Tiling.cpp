@@ -163,7 +163,7 @@ namespace device {
     SHOW(c);
 
     mylib::Coordinate* out;
-	useTwoDimensionalTiling_ ? out = mylib::Coord3(1, c(1)+1, c(0)+1) : out = mylib::Coord3(c(2)+1,c(1)+1,c(0)+1); //shape of the lattice. DGA: If useTwoDimensionalTiling_ = true, then out will be set to 1 by c(1)+1 by x(0)+1 (where the first coordinate is z). Else, out will be what it normally is (c(2)+1, c(1)+1,c(0)+1) 
+	useTwoDimensionalTiling_ ? out = mylib::Coord3(1, c(1)+1, c(0)+1) : out = mylib::Coord3(c(2)+1,c(1)+1,c(0)+1); //shape of the lattice. DGA: If useTwoDimensionalTiling_ = true, then out will be set to 1 by c(1)+1 by c(0)+1 (where the first coordinate is z). Else, out will be what it normally is (c(2)+1, c(1)+1,c(0)+1) 
     return out;
   }
 
@@ -453,7 +453,7 @@ namespace device {
     *end = beg + sz_plane_nelem_; //DGA: Beginning and end of plane
     uint32_t *c; //DGA: Pointers to tiles in current plane
 	{ AutoLock lock(lock_); //DGA: Scoped locking/unlocking since the destructor calls the unlock. This means that this section of code can only be accessed by one thread at a time.
-	  for (c = (uint32_t*)beg; c < end; ++c) //DGA: Loop through current (c) and next (n) plane tiles
+	  for (c = (uint32_t*)beg; c < end; ++c) //DGA: Loop through current (c) plane tiles
 	  { *c&=(Addressable | Safe | Done); //DGA: Reset everything except if the tile is Addressable, Safe and Done
 		if ((*c&Done) == Done) //DGA: If tile c is done
 		{
