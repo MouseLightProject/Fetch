@@ -55,7 +55,8 @@ namespace device {
       Detected    = 64,                                                    ///< indicates some signal was found at the bootom of this tile
       Safe        = 128,                                                   ///< indicates a tile is safe to image; it is within the allowed travel of the stages
       Reserved    = 512,                                                   ///< used internally to temporarily mark tiles
-      Reserved2   = 256                                                    ///< used internally to temporarily mark tiles
+      Reserved2   = 256,                                                   ///< used internally to temporarily mark tiles
+	  OffsetMeasured = 1024												   ///< used internally to temporarily mark tiles when their offset has been measured 
     };
 
              StageTiling(const device::StageTravel& travel,
@@ -88,8 +89,10 @@ namespace device {
     void     markSafe(bool tf=true);
     void     markExplored(bool tf=true);
     void     markDetected(bool tf=true);
+	void	 markOffsetMeasured(bool tf=true); ///< Marks a tile if its offset has been measured, with the default being to set it to true
     void     markAddressable(size_t iplane); ///< Marks the indicated plane as addressable according to the travel.
     void     markUserReset(); ///< Resets user-settable flags to default
+	void	 markResetGivenAttributeCombinationForTilesInCurrentPlane(uint32_t query_mask); //DGA: Resets given attributes combination for the tiles in the current plane
 
     int      anyExplored(int iplane);                                      //   2d
     int      updateActive(size_t iplane);                                  //   2d - returns 1 if any tiles were marked active, otherwise 0.
