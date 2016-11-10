@@ -225,7 +225,7 @@ ESCAN:
         Vector3z r=stage_.getPosInLattice();
         data.mutable_current_lattice_position()->set_x(r(0));
         data.mutable_current_lattice_position()->set_y(r(1));
-        data.mutable_current_lattice_position()->set_z(r(2));
+        data.mutable_current_lattice_position()->set_z(_cut_count); //DGA: Replace z lattice position with cut count since that is the most useful metric
         #endif
         
         data.set_cut_count(_cut_count);
@@ -460,7 +460,12 @@ Error:
 
 	void Microscope::setSkipSurfaceFindOnImageResume(bool setValue){ //DGA: Defintion of setSkipSurfaceFindOnImageResume function
 		skipSurfaceFindOnImageResume_ = setValue; //DGA: set value of skipSurfaceFindOnImageResume_ equal to setValue
-		skipSurfaceFindOnImageResumeCheckBoxUpdater.signal_valueSet(setValue); //DGA: Signal signal_valueSet(setValue) so that the skipSurfaceFindOnImageResume checkbox will be updated
+		skipSurfaceFindOnImageResumeCheckBoxUpdater.signaler(setValue); //DGA: Signal signal_valueSet(setValue) so that the skipSurfaceFindOnImageResume checkbox will be updated
+	}
+
+	void Microscope::setScheduleStopAfterNextCut(bool setValue){ //DGA: Defintion of scheduleStopAfterNextCut function
+		scheduleStopAfterNextCut_ = setValue; //DGA: set value of scheduleStopAfterNextCut_ equal to setValue
+		scheduleStopAfterNextCutCheckBoxUpdater.signaler(setValue); //DGA: Signal signal_valueSet(setValue) so that the scheduleStopAfterNextCut checkbox will be updated
 	}
 
     ///////////////////////////////////////////////////////////////////////
