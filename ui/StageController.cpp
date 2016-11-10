@@ -410,6 +410,18 @@ static void zero_alpha(QImage &im)
     d[4*i]=0;                            // zero out the alpha component
 }
 
+bool fetch::ui::TilingController::translatePathSoTileCentersAreUsedForSelection(QPainterPath& path) //DGA: Definition of function to translate given path, passed by reference
+{ device::StageTiling *tiling; //DGA: Create StageTiling object pointer
+  if(tiling=stage_->tilingLocked())
+  { //DGA: If stage_->_tiling is not NULL, and has been locked
+    device::FieldOfViewGeometry fov(tiling->fov()); //DGA: Get fov values
+	path.translate(fov.field_size_um_[0]/2.0, fov.field_size_um_[1]/2.0); //DGA: Translate the path by half a tile in each dimension, ensuring that a tile will only be selected if its center is included in selection 
+	stage_->tilingUnlock(); //DGA: Unlock stage
+    return true;
+  }
+  return false;
+}
+
 bool fetch::ui::TilingController::mark( const QPainterPath& path, int attr, QPainter::CompositionMode mode )
 { 
   QColor color((QRgb)attr);
@@ -419,7 +431,7 @@ bool fetch::ui::TilingController::mark( const QPainterPath& path, int attr, QPai
   //    Eigen to Qt :(
   QTransform l2s, s2l;
   TRY(latticeTransform(&l2s));
-  s2l = l2s.inverted();                                  
+  s2l = l2s.inverted();       
   // 2. Get access to the attribute data  
   TRY(latticeAttrImage(&im)); // locks the stage's tiling mutex, need to unlock when done with im
   // 3. Fill in the path

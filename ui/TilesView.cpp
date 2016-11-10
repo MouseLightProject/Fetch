@@ -218,72 +218,72 @@ void TilesView::paint_lattice_(const QPainterPath& path, const QColor& pc, const
   update();
 }
 
-void TilesView::addSelection( const QPainterPath& path )
-{
+void TilesView::addSelection( QPainterPath& path )
+{ tc_->translatePathSoTileCentersAreUsedForSelection(path); //DGA: Translate path 
   tc_->markActive(path);
   paint_lattice_attribute_image_();
   updateCBO();
   update();
 }
 
-void TilesView::removeSelection( const QPainterPath& path )
-{
+void TilesView::removeSelection( QPainterPath& path )
+{ tc_->translatePathSoTileCentersAreUsedForSelection(path); //DGA: Translate path 
   tc_->markInactive(path);
   paint_lattice_attribute_image_();
   updateCBO();
   update();
 }
 
-void TilesView::markSelectedAreaUserReset(const QPainterPath& path)
-{
+void TilesView::markSelectedAreaUserReset( QPainterPath& path)
+{ tc_->translatePathSoTileCentersAreUsedForSelection(path); //DGA: Translate path 
   tc_->markUserReset(path);
   paint_lattice_attribute_image_();
   updateCBO();
   update();
 }
 
-void TilesView::markSelectedAreaAsDone(const QPainterPath& path)
-{
+void TilesView::markSelectedAreaAsDone( QPainterPath& path)
+{ tc_->translatePathSoTileCentersAreUsedForSelection(path); //DGA: Translate path 
   tc_->markDone(path);
   paint_lattice_attribute_image_();
   updateCBO();
   update();
 }
 
-void TilesView::markSelectedAreaAsSafe(const QPainterPath& path)
-{
+void TilesView::markSelectedAreaAsSafe( QPainterPath& path)
+{ tc_->translatePathSoTileCentersAreUsedForSelection(path); //DGA: Translate path 
   tc_->markSafe(path);
   paint_lattice_attribute_image_();
   updateCBO();
   update();
 }
 
-void TilesView::markSelectedAreaAsNotSafe(const QPainterPath& path)
-{
+void TilesView::markSelectedAreaAsNotSafe( QPainterPath& path)
+{ tc_->translatePathSoTileCentersAreUsedForSelection(path); //DGA: Translate path 
   tc_->markNotSafe(path);
   paint_lattice_attribute_image_();
   updateCBO();
   update();
 }
 
-void TilesView::markSelectedAreaAsNotDone(const QPainterPath& path)
-{
+void TilesView::markSelectedAreaAsNotDone( QPainterPath& path)
+{ tc_->translatePathSoTileCentersAreUsedForSelection(path); //DGA: Translate path 
   tc_->markNotDone(path);
   paint_lattice_attribute_image_();
   updateCBO();
   update();
 }
 
-void TilesView::markSelectedAreaAsExplorable(const QPainterPath& path)
-{
+void TilesView::markSelectedAreaAsExplorable( QPainterPath& path)
+{ tc_->translatePathSoTileCentersAreUsedForSelection(path); //DGA: Translate path 
   tc_->markAllPlanesExplorable(path);
   paint_lattice_attribute_image_();
   updateCBO();
   update();
 }
 
-void TilesView::markSelectedAreaAsNotExplorable(const QPainterPath& path)
-{
+void TilesView::markSelectedAreaAsNotExplorable( QPainterPath& path)
+{ tc_->translatePathSoTileCentersAreUsedForSelection(path); //DGA: Translate path 
   tc_->markAllPlanesNotExplorable(path);
   paint_lattice_attribute_image_();
   updateCBO();
