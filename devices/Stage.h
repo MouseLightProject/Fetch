@@ -188,7 +188,7 @@ namespace device {
     FieldOfViewGeometry *_fov;
     FieldOfViewGeometry  _lastfov;
     Mutex               *_tiling_lock;
-    
+
     public:
       Stage(Agent *agent);
       Stage(Agent *agent, Config *cfg);
@@ -233,12 +233,13 @@ namespace device {
       float    tiling_z_offset_mm();
       void     set_tiling_z_offset_mm(float dz_mm);
       void     inc_tiling_z_offset_mm(float dz_mm);
-      void     getLastTarget         ( float *x, float *y, float *z)        { cfg::device::Point3d r=_config->last_target_mm(); *x=r.x();*y=r.y();*z=r.z(); }
+      void     getLastTarget         ( float *x, float *y, float *z)        { cfg::device::Point3d r=_config->last_target_mm(); *x=r.x();*y=r.y();*z=r.z(); } 
+	  bool     getUseTwoDimensionalTiling()									{ return (bool) _config->use_two_dimensional_tiling();} //DGA:Getter for two dimensional tiling
 
               void addListener(StageListener *listener);
               void delListener(StageListener *listener);
       inline  StageTiling* tiling()                                         {return _tiling;}
-
+	  
       /** Only locks if tiling is not NULL */
       inline  StageTiling* tilingLocked()                                   {Mutex_Lock(_tiling_lock); if(!_tiling) Mutex_Unlock(_tiling_lock); return _tiling;}
       inline  void         tilingUnlock()                                   {Mutex_Unlock(_tiling_lock);}
@@ -281,8 +282,8 @@ namespace device {
   {
   public:
     virtual void tiling_changed() {}                                         ///< a new tiling was created.
-    virtual void tile_done(size_t index, const Vector3f& pos,uint32_t sts) {}///< the specified tile was marked as done
-    virtual void tile_next(size_t index, const Vector3f& pos) {}             ///< the next tile was requested (stage not necessarily moved yet)
+    virtual void tile_done(size_t index,uint32_t sts) {}///< the specified tile was marked as done
+    virtual void tile_next(size_t index) {}             ///< the next tile was requested (stage not necessarily moved yet)
 
     virtual void fov_changed(const FieldOfViewGeometry *fov) {}              ///< the field of view size changed
     virtual void moved() {}                                                  ///< the stage position changed

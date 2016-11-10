@@ -45,7 +45,8 @@ namespace device {
   //  Constructors  ////////////////////////////////////////////////////
   StageTiling::StageTiling(const device::StageTravel &travel,
                            const FieldOfViewGeometry &fov,
-                           const Mode                 alignment)
+                           const Mode                 alignment,
+						   bool useTwoDimensionalTiling)
     :
       attr_(NULL),
       cursor_(0),
@@ -56,7 +57,8 @@ namespace device {
       z_offset_um_(0.0),
       travel_(travel),
       lock_(0),
-      mode_(alignment)
+      mode_(alignment),
+	  useTwoDimensionalTiling_(useTwoDimensionalTiling) //DGA: Added initialization of useTwoDimensionalTiling_
   {
     PANIC(lock_=Mutex_Alloc());
     computeLatticeToStageTransform_(fov,alignment);
@@ -160,7 +162,8 @@ namespace device {
     SHOW(maxs);
     SHOW(c);
 
-    mylib::Coordinate* out = mylib::Coord3(c(2)+1,c(1)+1,c(0)+1); //shape of the lattice
+    mylib::Coordinate* out;
+	useTwoDimensionalTiling_ ? out = mylib::Coord3(1, c(1)+1, c(0)+1) : out = mylib::Coord3(c(2)+1,c(1)+1,c(0)+1); //shape of the lattice. DGA: If useTwoDimensionalTiling_ = true, then out will be set to 1 by c(1)+1 by c(0)+1 (where the first coordinate is z). Else, out will be what it normally is (c(2)+1, c(1)+1,c(0)+1) 
     return out;
   }
 
@@ -194,7 +197,7 @@ namespace device {
               attr     = Addressable | Safe | Active;
 
     while( (mask[cursor_] & attrmask) != attr
-        && ON_LATTICE(cursor_) )
+        && ON_LATTICE(cursor_) ) //DGA: Starting at beginning of lattice, will stop when it finds the first tile that is addressable, safe, active and NOT done OR it will stop at the end of the lattice
     {++cursor_;}
 
     if(ON_LATTICE(cursor_) &&  (mask[cursor_] & attrmask) == attr)
@@ -232,7 +235,7 @@ namespace device {
     if(ON_PLANE(cursor_) &&  (mask[cursor_] & attrmask) == attr)
     { pos = computeCursorPos();
       unlock();
-      notifyNext(cursor_,pos);
+      notifyNext(cursor_);
       return true;
     } else
     { unlock();
@@ -252,7 +255,7 @@ namespace device {
     if(ON_PLANE(cursor_) &&  (mask[cursor_] & attrmask) == attr)
     { pos = computeCursorPos();
       unlock();
-      notifyNext(cursor_,pos);
+      notifyNext(cursor_);
       return true;
     } else
     { unlock();
@@ -283,7 +286,7 @@ namespace device {
     if(ON_PLANE(cursor_) &&  (mask[cursor_] & attrmask) == attr)
     { pos = computeCursorPos();
       unlock();
-      notifyNext(cursor_,pos);
+      notifyNext(cursor_);
       return true;
     } else
     { unlock();
@@ -306,7 +309,7 @@ namespace device {
     if(ON_LATTICE(cursor_))
     { pos = computeCursorPos();
       unlock();
-      notifyNext(cursor_,pos);
+      notifyNext(cursor_);
       return true;
     } else
     { unlock();
@@ -444,6 +447,23 @@ namespace device {
 	}
   }
 
+  //DGA: Use current done tiles as explorable tiles when two dimensional tiling is being used
+  void StageTiling::useDoneTilesAsExplorableTilesForTwoDimensionalTiling() 
+  { const uint32_t *beg = AUINT32(attr_),
+    *end = beg + sz_plane_nelem_; //DGA: Beginning and end of plane
+    uint32_t *c; //DGA: Pointers to tiles in current plane
+	{ AutoLock lock(lock_); //DGA: Scoped locking/unlocking since the destructor calls the unlock. This means that this section of code can only be accessed by one thread at a time.
+	  for (c = (uint32_t*)beg; c < end; ++c) //DGA: Loop through current (c) plane tiles
+	  { *c&=(Addressable | Safe | Done); //DGA: Reset everything except if the tile is Addressable, Safe and Done
+		if ((*c&Done) == Done) //DGA: If tile c is done
+		{
+	      *c |= Explorable ; //DGA: If c was done, then make it explorable and then mark it as not done
+		  *c &= ~Done;
+	    }
+	  }
+	}
+  }
+
 #define ELIGABLE(e)          ((*(e)&eligable_mask)==eligable)
 #define ALREADY_DETECTED(e)  ((*(e)&(Addressable|Explorable|Detected|Reserved))==(Addressable|Explorable|Detected))
 //#define IMPLY_DETECTED(e)    ((*(e)&(Done))==(Done)) | ((*(e)&(Active))==(Active))
@@ -507,7 +527,7 @@ Hunt:
 Yield:
     pos=computeCursorPos();
     unlock();
-    notifyNext(cursor_,pos);
+    notifyNext(cursor_);
     return true;
 DoneOutlining:
     unlock(); // FIXME - racy
@@ -529,7 +549,7 @@ DoneOutlining:
       if(!success)
         *m |= TileError;
     }
-    notifyDone(cursor_,computeCursorPos(),*m);
+    notifyDone(cursor_,*m);
   }
 
   //  markSafe  ////////////////////////////////////////////////////////
@@ -542,7 +562,7 @@ DoneOutlining:
       if(!success)
         *m |= TileError;
     }
-    notifyDone(cursor_,computeCursorPos(),*m);
+    notifyDone(cursor_,*m);
   }
 
   //  markExplored  //////////////////////////////////////////////////////
@@ -556,7 +576,7 @@ DoneOutlining:
       else
         *m &= ~Explored;
     }
-    notifyDone(cursor_,computeCursorPos(),*m);
+    notifyDone(cursor_,*m);
   }
 
   //  markDetected  //////////////////////////////////////////////////////
@@ -570,7 +590,7 @@ DoneOutlining:
       else
         *m &= ~Detected;
     }
-    notifyDone(cursor_,computeCursorPos(),*m);
+    notifyDone(cursor_,*m);
   }
 
   //  markActive  ////////////////////////////////////////////////////////
@@ -581,7 +601,21 @@ DoneOutlining:
       m = AUINT32(attr_) + cursor_;
       *m |= Active;
     }
-    notifyDone(cursor_,computeCursorPos(),*m);
+    notifyDone(cursor_,*m);
+  }
+
+  //  markOffsetMeasured  ////////////////////////////////////////////////////////
+  //
+  void StageTiling::markOffsetMeasured(bool tf)
+  { uint32_t *m=0; //DGA: pointer to tile address
+    { AutoLock lock(lock_);
+      m = AUINT32(attr_) + cursor_;
+      if(tf)
+        *m |= OffsetMeasured; //DGA: Mark OffsetMeasured
+      else
+        *m &= ~OffsetMeasured; //DGA: Unmark OffsetMeasured
+    }
+    notifyDone(cursor_,*m); //DGA: Used to notify that the tile has been changed
   }
 
   //  markUserReset  /////////////////////////////////////////////////////
@@ -592,7 +626,25 @@ DoneOutlining:
       m = AUINT32(attr_) + cursor_;
       *m &= ~( Active|Detected|Explored|Explorable|Safe|Done );
     }
-    notifyDone(cursor_,computeCursorPos(),*m);
+    notifyDone(cursor_,*m);
+  }
+
+    //  markResetGivenAttributes  /////////////////////////////////////////////////////
+  //
+  void StageTiling::markResetGivenAttributeCombinationForTilesInCurrentPlane(uint32_t query_mask)
+  {  
+	{ 
+	  uint32_t *beg = AUINT32(attr_) + current_plane_offset_, // DGA: First tile in current plane
+			   *end = beg + sz_plane_nelem_; // DGA: Last tile in current plane, sz_plane_nelem_ is number of tiles in plane
+	  for (uint32_t *t = beg; t < end; ++t)
+	  {
+	    if (((*t)&query_mask) == query_mask) //DGA: If the tile has the attributes of the query mask
+		{ AutoLock lock(lock_); //DGA: Scoped locking
+		  (*t)&=~query_mask; //DGA: Reset the 
+		   notifyDone(cursor_,*t); //DGA: Used to notify that the tile has been changed
+		}
+	  }
+	}
   }
 
   //  markAddressable  ///////////////////////////////////////////////////
@@ -679,8 +731,7 @@ DoneOutlining:
     AutoLock lock(lock_);
     uint32_t *c,*p,
              *beg  = AUINT32(attr_)+current_plane_offset_,
-             *end  = beg+sz_plane_nelem_,
-             *prev = beg-sz_plane_nelem_;
+             *end  = beg+sz_plane_nelem_;
     #define DETECTED(e) ((*(e)&Detected)==Detected)
     for(c=beg;c<end;c++)
     { if( DETECTED(c)) //DGA: Removed condition to also check previous plane for detection events, which would be used to mark the current plane tiles active. Now only currently detected tiles are set to active.
@@ -853,7 +904,7 @@ DoneOutlining:
     size_t estore_i;
     e_t elem() { // alloc new element
       estore_i++;
-      if(estore_i>=estore_sz)
+      if(estore_i>estore_sz)
         return 0;
       return estore+(estore_i-1); // DGA: go to next address (a_pointer+a_number is actually a_pointer + (a_number*sizeof(*a_pointer))
     }
@@ -909,7 +960,7 @@ DoneOutlining:
 		   	 *beg = AUINT32(attr_) + current_plane_offset_, // DGA: First tile in current plane
 		     *end = beg + sz_plane_nelem_; // DGA: Last tile in current plane, sz_plane_nelem_ is number of tiles in plane
     q_t q(w*h); // DGA: q is of class q_t with input size n = width * height (number of frames?). class variable estore_i set to 0
-    
+
     for(uint32_t *t=(uint32_t*)beg;t<end;++t) // Reset Reserved
       *t = t[0]&~Reserved; // DGA: Mark all the tiles as not reserved (Reserved = 512, eg 1000000000, so ~Reserved = 0111111111, resets 10th bit to 0?)
 
@@ -939,22 +990,23 @@ DoneOutlining:
     #undef isvalid
     #undef isinbounds
     #undef maybe
+	#undef maybeAndReserve
   Finalize:
     for(uint32_t *t=(uint32_t*)beg;t<end;++t) // Reset Reserved
       *t = t[0]&~Reserved;
     return dist;
   }
 
-  void StageTiling::notifyDone(size_t index, const Vector3f& pos, uint32_t sts)
+  void StageTiling::notifyDone(size_t index, uint32_t sts)
   { TListeners::iterator i;
     for(i=listeners_.begin();i!=listeners_.end();++i)
-      (*i)->tile_done(index,pos,sts);
+      (*i)->tile_done(index,sts);
   }
 
-  void StageTiling::notifyNext(size_t index, const Vector3f& pos)
+  void StageTiling::notifyNext(size_t index)
   { TListeners::iterator i;
     for(i=listeners_.begin();i!=listeners_.end();++i)
-      (*i)->tile_next(index,pos);
+      (*i)->tile_next(index);
   }
 
   const Vector3f StageTiling::computeCursorPos()
