@@ -410,13 +410,13 @@ static void zero_alpha(QImage &im)
     d[4*i]=0;                            // zero out the alpha component
 }
 
-bool fetch::ui::TilingController::translatePath(QPainterPath& path)
-{ device::StageTiling *tiling;
+bool fetch::ui::TilingController::translatePathSoTileCentersAreUsedForSelection(QPainterPath& path) //DGA: Definition of function to translate given path, passed by reference
+{ device::StageTiling *tiling; //DGA: Create StageTiling object pointer
   if(tiling=stage_->tilingLocked())
-  {
-    device::FieldOfViewGeometry fov(tiling->fov());
-	path.translate(fov.field_size_um_[0]/2.0, fov.field_size_um_[1]/2.0);
-	stage_->tilingUnlock();
+  { //DGA: If stage_->_tiling is not NULL, and has been locked
+    device::FieldOfViewGeometry fov(tiling->fov()); //DGA: Get fov values
+	path.translate(fov.field_size_um_[0]/2.0, fov.field_size_um_[1]/2.0); //DGA: Translate the path by half a tile in each dimension, ensuring that a tile will only be selected if its center is included in selection 
+	stage_->tilingUnlock(); //DGA: Unlock stage
     return true;
   }
   return false;
@@ -432,7 +432,6 @@ bool fetch::ui::TilingController::mark( const QPainterPath& path, int attr, QPai
   QTransform l2s, s2l;
   TRY(latticeTransform(&l2s));
   s2l = l2s.inverted();       
- // s2l=QTransform(s2l.m11(), s2l.m12(), s2l.m21(), s2l.m22(), 0.5,0.5);
   // 2. Get access to the attribute data  
   TRY(latticeAttrImage(&im)); // locks the stage's tiling mutex, need to unlock when done with im
   // 3. Fill in the path
@@ -466,7 +465,6 @@ bool fetch::ui::TilingController::mark_all_planes( const QPainterPath& path, int
   QTransform l2s, s2l;
   latticeTransform(&l2s);
   s2l = l2s.inverted();
- // s2l=QTransform(s2l.m11(), s2l.m12(), s2l.m21(), s2l.m22(), 0.5,0.5);
   QPainterPath lpath = s2l.map(path);
                                   
   // 2. Get access to the attribute data
