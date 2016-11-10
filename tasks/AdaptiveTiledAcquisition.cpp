@@ -103,10 +103,9 @@ Error:
         float tiling_offset_acc_mm=0.0f;
         float nsamp=0;
 		int numberImaged;
-        int adapt_count=0;
         int adapt_thresh=dc->get_config().adaptive_tiling().every();
         int adapt_mindist=dc->get_config().adaptive_tiling().mindist();
-		int minDistToOffsetMeasured;
+		int minDistToTileWithOffsetMeasured; //DGA: Stores the minimum distance measured to any tile whose offset was already measured
         TS_OPEN("timer-tiles.f32");
         CHKJMP(dc->__scan_agent.is_runnable());
 		
@@ -122,17 +121,16 @@ Error:
 		if (tiling->useTwoDimensionalTiling_) dc->stage()->set_tiling_z_offset_mm(0.0f); 
 
 		bool skipSurfaceFindOnImageResume = dc->getSkipSurfaceFindOnImageResume();//DGA: Is skipSurfaceFindOnImageResume true
-		bool didSkipSurfaceFind = true;
+		bool didSkipSurfaceFind = true; //DGA: Used to determine if surface find was skipped
 		if ( numberImaged==0 ? true : !skipSurfaceFindOnImageResume){ //DGA: If no tiles have been imaged, then will iterate over tiles as usual. If at least one has been imaged, then will skip this iteration if skipSurfaceFindOnImageResume is true; else will do the iteration (which will update z)
 			while (eflag == 0 && !dc->_agent->is_stopping() && tiling->nextInPlanePosition(tilepos))
 			{	
 				if (adapt_mindist <= tiling->minDistTo(0, 0,  // domain query   -- do not restrict to a particular tile type
 					device::StageTiling::Active, 0)) // boundary query -- this is defines what is "outside"
 				{	
-					minDistToOffsetMeasured = tiling->minDistTo(0,0, device::StageTiling::OffsetMeasured,device::StageTiling::OffsetMeasured);
-					if ( adapt_thresh <  minDistToOffsetMeasured || minDistToOffsetMeasured == 0)
-					{	adapt_count = 0;
-						// M O V E
+					minDistToTileWithOffsetMeasured = tiling->minDistTo(0,0, device::StageTiling::OffsetMeasured,device::StageTiling::OffsetMeasured); //DGA: Measure the minimum distance to a tile whose offset was already measured (0 if none were measured)
+					if ( adapt_thresh <  minDistToTileWithOffsetMeasured || minDistToTileWithOffsetMeasured == 0) //DGA: If the minimum distance to the next OffsetMeasured tile is greater the threshold or if no other tiles have yet had their offset measured (minDistToTileWithOffsetMeasured = 0);
+					{	// M O V E
 						Vector3f curpos = dc->stage()->getTarget(); // use current target z for tilepos z
 						debug("%s(%d)"ENDL "\t[Adaptive Tiling Task] curpos: %5.1f %5.1f %5.1f"ENDL, __FILE__, __LINE__, curpos[0] * 1000.0f, curpos[1] * 1000.0f, curpos[2] * 1000.0f);
 						if (tiling->useTwoDimensionalTiling_) tilepos[2] = curpos[2]*1000.0f; // DGA: Use current target z for tilepos z if using two dimensional tiling (rather than the lattice position)
@@ -150,12 +148,10 @@ Error:
 						//surface_find.config();  -- arms stack task as scan agent...redundant
 						eflag |= surface_find.run(dc);
 						if (surface_find.hit())
-						{	tiling->markOffsetMeasured(true);
+						{	tiling->markOffsetMeasured(true); //DGA: If a tile's surface was found, mark its offset as being measured
 							tiling_offset_acc_mm += dc->stage()->tiling_z_offset_mm();
 							++nsamp;
 						}
-
-
 					}
 				}
 			}
@@ -168,12 +164,12 @@ Error:
 				debug("%s(%d)"ENDL "\t[Adaptive Tiling Task] Average tile offset (samples: %5d) %f"ENDL, __FILE__, __LINE__, (int)nsamp, tiling_offset_acc_mm / nsamp);
 				dc->stage()->set_tiling_z_offset_mm(tiling_offset_acc_mm / nsamp);
 				startingZForImagingTilesForTwoDimensionalTiling_um += dc->stage()->tiling_z_offset_mm()*1000.0f; //DGA: If offset measurement has been performed, add the average tiling offset to the starting z position for two dimensional tiling imaging
-				tiling->markResetGivenAttributes(device::StageTiling::OffsetMeasured);
+				tiling->markResetGivenAttributeCombinationForTilesInCurrentPlane(device::StageTiling::OffsetMeasured); //DGA: After surface find has been completed, reset all the OffsetMeasured tiles
 			}
-			didSkipSurfaceFind = false;
+			didSkipSurfaceFind = false; //DGA: Surface find was not skipped
 		}
 
-		// retore connection between end of pipeline and disk 
+		// restore connection between end of pipeline and disk 
         IDevice::connect(&dc->disk,0,dc->_end_of_pipeline,0);
 
         // 2. iterate over tiles to image

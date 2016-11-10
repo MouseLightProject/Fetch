@@ -607,15 +607,15 @@ DoneOutlining:
   //  markOffsetMeasured  ////////////////////////////////////////////////////////
   //
   void StageTiling::markOffsetMeasured(bool tf)
-  { uint32_t *m=0;
+  { uint32_t *m=0; //DGA: pointer to tile address
     { AutoLock lock(lock_);
       m = AUINT32(attr_) + cursor_;
       if(tf)
-        *m |= OffsetMeasured;
+        *m |= OffsetMeasured; //DGA: Mark OffsetMeasured
       else
-        *m &= ~OffsetMeasured;
+        *m &= ~OffsetMeasured; //DGA: Unmark OffsetMeasured
     }
-    notifyDone(cursor_,computeCursorPos(),*m);
+    notifyDone(cursor_,*m); //DGA: Used to notify that the tile has been changed
   }
 
   //  markUserReset  /////////////////////////////////////////////////////
@@ -631,20 +631,20 @@ DoneOutlining:
 
     //  markResetGivenAttributes  /////////////////////////////////////////////////////
   //
-  void StageTiling::markResetGivenAttributes(uint32_t query_mask)
+  void StageTiling::markResetGivenAttributeCombinationForTilesInCurrentPlane(uint32_t query_mask)
   {  
 	{ 
 	  uint32_t *beg = AUINT32(attr_) + current_plane_offset_, // DGA: First tile in current plane
 			   *end = beg + sz_plane_nelem_; // DGA: Last tile in current plane, sz_plane_nelem_ is number of tiles in plane
-	  for (uint32_t *t = beg; t < end; ++t){
-		  if (((*t)&query_mask) == query_mask)
-		  {   AutoLock lock(lock_);
-			  // DGA: Can have more attributes than query_mask, but must at least have all of the ones in query_mask
-			  (*t)&=~query_mask;
-		      notifyDone(cursor_,computeCursorPos(),*t);
-		  }
-	    }
+	  for (uint32_t *t = beg; t < end; ++t)
+	  {
+	    if (((*t)&query_mask) == query_mask) //DGA: If the tile has the attributes of the query mask
+		{ AutoLock lock(lock_); //DGA: Scoped locking
+		  (*t)&=~query_mask; //DGA: Reset the 
+		   notifyDone(cursor_,*t); //DGA: Used to notify that the tile has been changed
+		}
 	  }
+	}
   }
 
   //  markAddressable  ///////////////////////////////////////////////////
@@ -963,6 +963,7 @@ DoneOutlining:
 
     for(uint32_t *t=(uint32_t*)beg;t<end;++t) // Reset Reserved
       *t = t[0]&~Reserved; // DGA: Mark all the tiles as not reserved (Reserved = 512, eg 1000000000, so ~Reserved = 0111111111, resets 10th bit to 0?)
+
     #define isvalid(p)    ((*(p)&(search_mask|Reserved)) == search_flags)
     #define isinbounds(p) (beg<=(p) && (p)<end)
     #define maybe(p)      ( (isvalid(p)&&isinbounds(p)) ?(p):NULL)
