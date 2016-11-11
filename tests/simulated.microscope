@@ -199,7 +199,6 @@ stage {
     z: 1
   }
   tilemode: PixelAligned
-  use_two_dimensional_tiling: false
   tile_z_offset_mm: 0
 }
 vibratome {
