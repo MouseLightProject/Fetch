@@ -34,6 +34,8 @@ using namespace Eigen;
 
 #define TRY(e) do{if(!(e)) { warning("%s(%d)"ENDL "\tExpression evaluated as false."ENDL "\t%s"ENDL,__FILE__,__LINE__,#e); goto Error;}}while(0)
 
+#define AUINT32(a)   ((uint32_t   *) (a)->data)
+
 //////////////////////////////////////////////////////////////////////////
 //  TilingController  ////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////
@@ -105,6 +107,7 @@ void
   fetch::ui::TilingController::
   saveToFile(const QString& filename)
 { device::StageTiling *t;
+
   if(t=stage_->tilingLocked())
   { 
     cfg::data::Tiling metadata;
@@ -119,7 +122,14 @@ void
     google::protobuf::TextFormat::PrintToString(metadata,&buf);
     if(!metafile.open(QFile::ReadWrite))                goto ErrorOpenMetafile;
     if( buf.length() != metafile.write(buf.c_str()) )   goto ErrorWriteMetafile;
-    if(mylib::Write_Image(arrayFileName.toLocal8Bit().data(),t->attributeArray(),mylib::DONT_PRESS))
+	
+	device::StageTiling *tilingUsedForSaving = new device::StageTiling(t->travel(), t->fov(), t->mode_, t->useTwoDimensionalTiling_); //DGA: Dynamically allocate a tiling for saving, which will allow resetting parameters (eg OffsetMeasured = 1024) so it is not outputted but is still stored in original tiling
+	for (int i=0; i<tilingUsedForSaving->attributeArray()->size; i++){ //DGA: Loop through tiling and set the tiling used for saving equal to the original tiling binary anded with 255 (resetting numbers higher than 255)
+		AUINT32(tilingUsedForSaving->attributeArray())[i] = AUINT32(t->attributeArray())[i]&255;
+	}
+	bool Write_Image_Output = mylib::Write_Image(arrayFileName.toLocal8Bit().data(),tilingUsedForSaving->attributeArray(),mylib::DONT_PRESS); //DGA: Attempt to write out the image
+	delete tilingUsedForSaving; //DGA: Delete the new tiling 
+    if(Write_Image_Output) //DGA: If tiling failed, go to error
       goto ErrorWriteAttrImage;
     debug("%s(%d)"ENDL "\tTiling saved to %s.",__FILE__,__LINE__,filename.toLocal8Bit().data());
     stage_->tilingUnlock();

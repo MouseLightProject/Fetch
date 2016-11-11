@@ -129,7 +129,7 @@ Error:
 					device::StageTiling::Active, 0)) // boundary query -- this is defines what is "outside"
 				{	
 					minDistToTileWithOffsetMeasured = tiling->minDistTo(0,0, device::StageTiling::OffsetMeasured,device::StageTiling::OffsetMeasured); //DGA: Measure the minimum distance to a tile whose offset was already measured (0 if none were measured)
-					if ( adapt_thresh <  minDistToTileWithOffsetMeasured || minDistToTileWithOffsetMeasured == 0) //DGA: If the minimum distance to the next OffsetMeasured tile is greater the threshold or if no other tiles have yet had their offset measured (minDistToTileWithOffsetMeasured = 0);
+					if ( adapt_thresh <  minDistToTileWithOffsetMeasured || tiling->numberOfTilesWithGivenAttributes(device::StageTiling::OffsetMeasured) == 0) //DGA: If the minimum distance to the next OffsetMeasured tile is greater than the threshold or if no other tiles have yet had their offset measured
 					{	// M O V E
 						Vector3f curpos = dc->stage()->getTarget(); // use current target z for tilepos z
 						debug("%s(%d)"ENDL "\t[Adaptive Tiling Task] curpos: %5.1f %5.1f %5.1f"ENDL, __FILE__, __LINE__, curpos[0] * 1000.0f, curpos[1] * 1000.0f, curpos[2] * 1000.0f);

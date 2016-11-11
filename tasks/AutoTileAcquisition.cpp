@@ -202,7 +202,7 @@ Error:
         device::StageTiling* tiling = dc->stage()->tiling();
         tiling->markAddressable(iplane); // make sure the current plane is marked addressable
         tiling->setCursorToPlane(iplane);
-
+		
 		device::Digitizer::Config digcfg = dc->scanner._scanner2d._digitizer.get_config(); //DGA: Get the configuration of the digitizer to know if it is simulated
         device::TileSearchContext *ctx=0;
         while(  !dc->_agent->is_stopping()
