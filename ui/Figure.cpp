@@ -106,27 +106,27 @@ Figure::Figure(PlanarStageController *stageController, QWidget *parent/*=0*/)
   _tv = new TilesView(stageController->tiling());
   _scene.addItem(_tv);
   checkGLError();
-  connect(&_scene,SIGNAL(   addSelectedArea(const QPainterPath&)),
-              _tv,SLOT(     addSelection(const QPainterPath&)));
-  connect(&_scene,SIGNAL(removeSelectedArea(const QPainterPath&)),
-              _tv,SLOT(  removeSelection(const QPainterPath&)));
+  connect(&_scene,SIGNAL(   addSelectedArea(QPainterPath&)),
+              _tv,SLOT(     addSelection(QPainterPath&)));
+  connect(&_scene,SIGNAL(removeSelectedArea(QPainterPath&)),
+              _tv,SLOT(  removeSelection(QPainterPath&)));
 
-  connect(&_scene,SIGNAL(   markSelectedAreaAsDone(const QPainterPath&)),
-              _tv,SLOT(     markSelectedAreaAsDone(const QPainterPath&)));
-  connect(&_scene,SIGNAL(markSelectedAreaAsNotDone(const QPainterPath&)),
-              _tv,SLOT(  markSelectedAreaAsNotDone(const QPainterPath&)));
+  connect(&_scene,SIGNAL(   markSelectedAreaAsDone(QPainterPath&)),
+              _tv,SLOT(     markSelectedAreaAsDone(QPainterPath&)));
+  connect(&_scene,SIGNAL(markSelectedAreaAsNotDone(QPainterPath&)),
+              _tv,SLOT(  markSelectedAreaAsNotDone(QPainterPath&)));
 
-  connect(&_scene,SIGNAL(   markSelectedAreaAsExplorable(const QPainterPath&)),
-              _tv,SLOT(     markSelectedAreaAsExplorable(const QPainterPath&)));
-  connect(&_scene,SIGNAL(markSelectedAreaAsNotExplorable(const QPainterPath&)),
-              _tv,SLOT(  markSelectedAreaAsNotExplorable(const QPainterPath&)));
+  connect(&_scene,SIGNAL(   markSelectedAreaAsExplorable(QPainterPath&)),
+              _tv,SLOT(     markSelectedAreaAsExplorable(QPainterPath&)));
+  connect(&_scene,SIGNAL(markSelectedAreaAsNotExplorable(QPainterPath&)),
+              _tv,SLOT(  markSelectedAreaAsNotExplorable(QPainterPath&)));
 
-  connect(&_scene,SIGNAL(   markSelectedAreaAsSafe   (const QPainterPath&)),
-              _tv,SLOT(     markSelectedAreaAsSafe   (const QPainterPath&)));
-  connect(&_scene,SIGNAL(   markSelectedAreaAsNotSafe (const QPainterPath&)),
-              _tv,SLOT(     markSelectedAreaAsNotSafe (const QPainterPath&)));
-  connect(&_scene,SIGNAL(   markSelectedAreaUserReset(const QPainterPath&)),
-              _tv,SLOT(     markSelectedAreaUserReset(const QPainterPath&)));
+  connect(&_scene,SIGNAL(   markSelectedAreaAsSafe   (QPainterPath&)),
+              _tv,SLOT(     markSelectedAreaAsSafe   (QPainterPath&)));
+  connect(&_scene,SIGNAL(   markSelectedAreaAsNotSafe (QPainterPath&)),
+              _tv,SLOT(     markSelectedAreaAsNotSafe (QPainterPath&)));
+  connect(&_scene,SIGNAL(   markSelectedAreaUserReset(QPainterPath&)),
+              _tv,SLOT(     markSelectedAreaUserReset(QPainterPath&)));
 
 
   QGridLayout *layout = new QGridLayout;

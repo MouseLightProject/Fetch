@@ -17,9 +17,9 @@ namespace ui {
   {      
     Q_OBJECT
   public:
-    void tile_done( size_t index, const Vector3f& pos,uint32_t sts )       {emit sig_tile_done(index,(unsigned int)sts);}
+    void tile_done( size_t index, uint32_t sts )						   {emit sig_tile_done(index,(unsigned int)sts);}
     void tiling_changed()                                                  {emit sig_tiling_changed();}
-    void tile_next( size_t index, const Vector3f& pos )                    {emit sig_tile_next((unsigned int)index);}
+    void tile_next( size_t index)										   {emit sig_tile_next((unsigned int)index);}
     void fov_changed(const device::FieldOfViewGeometry *fov)               {emit sig_fov_changed(fov->field_size_um_[0],fov->field_size_um_[1],fov->rotation_radians_);}      
     void moved(void)                                                       {emit sig_moved();}
 	
@@ -54,7 +54,8 @@ namespace ui {
     bool latticeAttrImage (QImage *out);                                   /// \returns false if tiling is invalid
     bool latticeAttrImageAtPlane(QImage *out, int iplane);
     bool stageAlignedBBox (QRectF *out);                                   /// \returns false if tiling is invalid
-
+	
+	bool translatePathSoTileCentersAreUsedForSelection(QPainterPath& path);/// \returns false if tiling is invalid (translates the given path)
     bool markAddressable();                                                /// \returns false if tiling is invalid
     bool markActive(const QPainterPath& path);                             /// \returns false if tiling is invalid
     bool markInactive(const QPainterPath& path);                           /// \returns false if tiling is invalid

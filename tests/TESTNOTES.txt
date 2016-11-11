@@ -21,4 +21,22 @@ produces an ellipsoidal simulated brain.
 			       minimum stage Z height of 8 mm. This should be checked in, eg., tasks/Vibratome.cpp.
 
 6. Search Region Can Shrink:   The simulated brain is ellipsoidal, meaning that the search region should grow up to the middle of the brain, beyond which it should shrink.
-			       The "done" tiles of one slice should be used as the "explorable" tiles in the next slice. 
+			       The "done" tiles of one slice should be used as the "explorable" tiles in the next slice.
+
+7. Scheduled Stop:	       Checking the "Schedule Stop After Next Cut" checkbox should stop auto tile acquisition once a cut has been performed and the stage has been
+			       moved back to its next starting location. Once stopped, the checkbox should automatically uncheck.
+
+8. Settable Z For Imaging:     If skip surface find is selected when using 3D tiling, then imaging should resume at the stage's current Z.
+
+9. Z Equals Cut Count:	       In the outputted .acquisition files, the "z" lattice position should be set equal to cut_count.
+
+10. Dilation After Completion: Active tiles should not be dilated when exploration is stopped, but rather should only occur when exploration finishes appropriately.
+
+11. Adaptive Tiling Offset:    "every" in adaptive_tiling in the .microscope file should be the gap between tiles used for surface find in two dimensions.
+
+12. Explored Tile Coloring:    Explored tiles should be pink.
+
+13. Improved Tile Selection:   When drawing a selection rectangle, the selected tiles should be those with their centers within the rectangle.
+
+14. 2D Tiling:		       By default, 2D tiling should be used. This can be checked by performing a short acquisition and then exploring in z to make sure each slice
+			       is the same. Make sure acquisition behave as normal (including autosaving) for both 2D and 3D.      

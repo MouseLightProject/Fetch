@@ -202,7 +202,7 @@ Error:
         device::StageTiling* tiling = dc->stage()->tiling();
         tiling->markAddressable(iplane); // make sure the current plane is marked addressable
         tiling->setCursorToPlane(iplane);
-
+		
 		device::Digitizer::Config digcfg = dc->scanner._scanner2d._digitizer.get_config(); //DGA: Get the configuration of the digitizer to know if it is simulated
         device::TileSearchContext *ctx=0;
         while(  !dc->_agent->is_stopping()
@@ -226,10 +226,10 @@ Error:
         { WARN("No tiles found to image.\n");
           goto Error;
         }
-        if(any_explorable)
+		if(!dc->_agent->is_stopping() && any_explorable) //DGA: Only dilate active tiles if it is not being stopped
           tiling->dilateActive(iplane);
-        tiling->fillHolesInActive(iplane);
-        if(ctx) delete ctx;
+		tiling->fillHolesInActive(iplane);
+		if(ctx) delete ctx;
         return 1;
       Error:
         if(ctx) delete ctx;
@@ -243,6 +243,7 @@ Error:
         AdaptiveTiledAcquisition adaptive_tiling;
         MicroscopeTask *tile=0;
         Cut cut;
+		device::StageTiling * tiling = dc->stage()->tiling(); //DGA: Pointer to tiling object
 
         tile=cfg.use_adaptive_tiling()?((MicroscopeTask*)&adaptive_tiling):((MicroscopeTask*)&nonadaptive_tiling);
 
@@ -258,9 +259,20 @@ Error:
            * we double check here as extra insurance against any extra cuts.
            */
           CHKJMP(dc->trip_detect.ok());
-
+		  
           CHKJMP(   cut.config(dc));
           CHKJMP(0==cut.run(dc));
+		  if(tiling->useTwoDimensionalTiling_) //DGA: If using two dimensional tiling
+		  {
+			if (PlaneInBounds(dc,cfg.maxz_mm())) tiling->useDoneTilesAsExplorableTilesForTwoDimensionalTiling(); //DGA: If the next position is in bounds (ie, not beyond the max z), then update the tiling, otherwise do nothing.
+		  }
+		  else tiling->useCurrentDoneTilesAsNextExplorableTiles(); //DGA: After imaging tiles, set the next explorable tiles equal to the current done tiles
+
+		  if(dc->getScheduleStopAfterNextCut()) //DGA: if a stop is scheduled
+		  {
+			dc->cutCompletedSoStop(); //DGA: Call function to stop autotile
+			dc->setScheduleStopAfterNextCut(false); //DGA: Uncheck stop after next cut checkbox
+		  }
         }
 
 Finalize:
