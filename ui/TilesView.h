@@ -32,15 +32,15 @@ public:
                         QWidget                        *widget = 0);
 
 public slots:
-  void addSelection(const QPainterPath& path);
-  void removeSelection(const QPainterPath& path);
-  void markSelectedAreaUserReset(const QPainterPath& path);
-  void markSelectedAreaAsDone(const QPainterPath& path);
-  void markSelectedAreaAsSafe(const QPainterPath& path);
-  void markSelectedAreaAsNotSafe(const QPainterPath& path);
-  void markSelectedAreaAsNotDone(const QPainterPath& path);
-  void markSelectedAreaAsExplorable(const QPainterPath& path);
-  void markSelectedAreaAsNotExplorable(const QPainterPath& path);
+  void addSelection(QPainterPath& path);
+  void removeSelection(QPainterPath& path);
+  void markSelectedAreaUserReset(QPainterPath& path);
+  void markSelectedAreaAsDone(QPainterPath& path);
+  void markSelectedAreaAsSafe(QPainterPath& path);
+  void markSelectedAreaAsNotSafe(QPainterPath& path);
+  void markSelectedAreaAsNotDone(QPainterPath& path);
+  void markSelectedAreaAsExplorable(QPainterPath& path);
+  void markSelectedAreaAsNotExplorable(QPainterPath& path);
 
   void update_tiling();
   void show(bool tf);

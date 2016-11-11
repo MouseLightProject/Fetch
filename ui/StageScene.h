@@ -27,15 +27,15 @@ public slots:
   void cancel();
 
 signals:
-  void addSelectedArea(const QPainterPath& path);
-  void removeSelectedArea(const QPainterPath& path);
-  void markSelectedAreaAsDone(const QPainterPath& path);
-  void markSelectedAreaAsNotDone(const QPainterPath& path);  
-  void markSelectedAreaAsExplorable(const QPainterPath& path);
-  void markSelectedAreaAsNotExplorable(const QPainterPath& path);  
-  void markSelectedAreaAsSafe(const QPainterPath& path);
-  void markSelectedAreaAsNotSafe(const QPainterPath& path);
-  void markSelectedAreaUserReset(const QPainterPath& path);
+  void addSelectedArea(QPainterPath& path);
+  void removeSelectedArea(QPainterPath& path);
+  void markSelectedAreaAsDone(QPainterPath& path);
+  void markSelectedAreaAsNotDone(QPainterPath& path);  
+  void markSelectedAreaAsExplorable(QPainterPath& path);
+  void markSelectedAreaAsNotExplorable(QPainterPath& path);  
+  void markSelectedAreaAsSafe(QPainterPath& path);
+  void markSelectedAreaAsNotSafe(QPainterPath& path);
+  void markSelectedAreaUserReset(QPainterPath& path);
 
 protected:
   virtual void contextMenuEvent(QGraphicsSceneContextMenuEvent *event);
@@ -71,15 +71,15 @@ public slots:
   void setMode(Mode mode);
 
 signals:    
-  void addSelectedArea(const QPainterPath& path);
-  void removeSelectedArea(const QPainterPath& path);  
-  void markSelectedAreaAsDone(const QPainterPath& path);
-  void markSelectedAreaAsNotDone(const QPainterPath& path);
-  void markSelectedAreaAsExplorable(const QPainterPath& path);
-  void markSelectedAreaAsNotExplorable(const QPainterPath& path);
-  void markSelectedAreaAsSafe(const QPainterPath& path);
-  void markSelectedAreaAsNotSafe(const QPainterPath& path);
-  void markSelectedAreaUserReset(const QPainterPath& path);
+  void addSelectedArea(QPainterPath& path);
+  void removeSelectedArea(QPainterPath& path);  
+  void markSelectedAreaAsDone(QPainterPath& path);
+  void markSelectedAreaAsNotDone(QPainterPath& path);
+  void markSelectedAreaAsExplorable(QPainterPath& path);
+  void markSelectedAreaAsNotExplorable(QPainterPath& path);
+  void markSelectedAreaAsSafe(QPainterPath& path);
+  void markSelectedAreaAsNotSafe(QPainterPath& path);
+  void markSelectedAreaUserReset(QPainterPath& path);
 
 private:
   QGraphicsWidget *current_item_;

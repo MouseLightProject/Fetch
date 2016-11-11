@@ -265,7 +265,7 @@ Error:
       Sleep(10);
       C843JMP2(C843_IsControllerReady(self->handle_,&ready));
       if(ready)
-      { C843JMP2(C843_qPOS(self->handle_,"123",r));
+      { C843JMP2(C843_qPOS(self->handle_,"123",r)); //DGA: Equivalent to POS? (p. 43 in manual): read real POSition
         C843JMP2(C843_qVEL(self->handle_,"123",v));
         dt = toc(&clock);
         if(!log_(r,v,dt))
@@ -435,7 +435,7 @@ Error:
 
   int C843Stage::getTarget( float *x, float *y, float *z )
   { double t[3];
-    C843JMPSILENT( C843_qMOV(handle_,"123",t) );
+    C843JMPSILENT( C843_qMOV(handle_,"123",t) ); //DGA: Equivalent to MOV?, (p.39 in manual): read target position
     *x = t[0];
     *y = t[1];
     *z = t[2];
@@ -874,6 +874,7 @@ Error:
   { StageTiling::TTransform l2s(_tiling->latticeToStageTransform());
     Vector3f r(getTarget()*1000.0); // convert to um
     Vector3z out=Vector3z((l2s.inverse() * r).unaryExpr(std::ptr_fun<float,float>(myroundf)).cast<size_t>());
+	if (getUseTwoDimensionalTiling()) out(2)=0; //DGA: When two dimensional tiling is used, there is only one lattice slice in z, so the z lattice position should be set to 0
     std::cout << __FILE__ << "(" << __LINE__ << ")\r\n\t" << out << std::endl;
     return out;
   }
@@ -913,7 +914,7 @@ Error:
       _destroyTiling();                                           // this call will invalidate the _fov pointer :(  bad design [??? 2011-11 this comment seems questionable]
 
       Mutex_Lock(_tiling_lock);
-      _tiling = new StageTiling(travel, fov, _config->tilemode());
+      _tiling = new StageTiling(travel, fov, _config->tilemode(), getUseTwoDimensionalTiling()); //DGA: Added getUseTwoDimensionalTiling() for constructor
       Mutex_Unlock(_tiling_lock);
       { TListeners::iterator i;
         for(i=_listeners.begin();i!=_listeners.end();++i)

@@ -69,3 +69,12 @@ _______________
 		      tiles in one slice are used as the "explorable" tiles in 
 		      the next slice. The color of the "detected" tiles is now 
 		      dark blue.
+
+1.1    Nov 11, 2016   2D tiling is now possible and can be chosen via a .microscope 
+		      setting. Surface find now skips tiles in two dimensions by 
+		      the requisite amount. A stop can be scheduled to occur after 
+	              the next cut. If imaging is stopped in 3D mode, it will 
+                      resume at the current stage's z coordinate. The lattice z 
+  		      position in the .acquisition file is replaced by the cut 
+		      count. Tile selection now corresponds to tile centers, and 
+		      explored tiles are colored purple.
