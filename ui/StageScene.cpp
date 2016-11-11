@@ -218,24 +218,24 @@ void StageScene::mousePressEvent( QGraphicsSceneMouseEvent *event )
         return;
       }          
       SelectionRectGraphicsWidget *w = new SelectionRectGraphicsWidget();
-      connect(w,SIGNAL(   addSelectedArea(const QPainterPath&)),
-           this,SIGNAL(   addSelectedArea(const QPainterPath&)));
-      connect(w,SIGNAL(removeSelectedArea(const QPainterPath&)),
-           this,SIGNAL(removeSelectedArea(const QPainterPath&)));  
-      connect(w,SIGNAL(   markSelectedAreaAsDone(const QPainterPath&)),
-           this,SIGNAL(   markSelectedAreaAsDone(const QPainterPath&)));
-      connect(w,SIGNAL(markSelectedAreaAsNotDone(const QPainterPath&)),
-           this,SIGNAL(markSelectedAreaAsNotDone(const QPainterPath&)));             
-      connect(w,SIGNAL(   markSelectedAreaAsExplorable(const QPainterPath&)),
-           this,SIGNAL(   markSelectedAreaAsExplorable(const QPainterPath&)));
-      connect(w,SIGNAL(markSelectedAreaAsNotExplorable(const QPainterPath&)),
-           this,SIGNAL(markSelectedAreaAsNotExplorable(const QPainterPath&)));      
-      connect(w,SIGNAL(markSelectedAreaAsSafe(const QPainterPath&)),
-           this,SIGNAL(markSelectedAreaAsSafe(const QPainterPath&)));
-      connect(w,SIGNAL(markSelectedAreaAsNotSafe(const QPainterPath&)),
-           this,SIGNAL(markSelectedAreaAsNotSafe(const QPainterPath&)));
-      connect(w,SIGNAL(markSelectedAreaUserReset(const QPainterPath&)),
-           this,SIGNAL(markSelectedAreaUserReset(const QPainterPath&)));
+      connect(w,SIGNAL(   addSelectedArea(QPainterPath&)),
+           this,SIGNAL(   addSelectedArea(QPainterPath&)));
+      connect(w,SIGNAL(removeSelectedArea(QPainterPath&)),
+           this,SIGNAL(removeSelectedArea(QPainterPath&)));  
+      connect(w,SIGNAL(   markSelectedAreaAsDone(QPainterPath&)),
+           this,SIGNAL(   markSelectedAreaAsDone(QPainterPath&)));
+      connect(w,SIGNAL(markSelectedAreaAsNotDone(QPainterPath&)),
+           this,SIGNAL(markSelectedAreaAsNotDone(QPainterPath&)));             
+      connect(w,SIGNAL(   markSelectedAreaAsExplorable(QPainterPath&)),
+           this,SIGNAL(   markSelectedAreaAsExplorable(QPainterPath&)));
+      connect(w,SIGNAL(markSelectedAreaAsNotExplorable(QPainterPath&)),
+           this,SIGNAL(markSelectedAreaAsNotExplorable(QPainterPath&)));      
+      connect(w,SIGNAL(markSelectedAreaAsSafe(QPainterPath&)),
+           this,SIGNAL(markSelectedAreaAsSafe(QPainterPath&)));
+      connect(w,SIGNAL(markSelectedAreaAsNotSafe(QPainterPath&)),
+           this,SIGNAL(markSelectedAreaAsNotSafe(QPainterPath&)));
+      connect(w,SIGNAL(markSelectedAreaUserReset(QPainterPath&)),
+           this,SIGNAL(markSelectedAreaUserReset(QPainterPath&)));
 
       w->setPos(event->scenePos());
       addItem(w);
