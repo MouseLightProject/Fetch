@@ -169,6 +169,10 @@ Error:
 			didSkipSurfaceFind = false; //DGA: Surface find was not skipped
 		}
 
+		size_t iplane=dc->stage()->getPosInLattice().z(); //DGA: Get the plane position
+		if(!dc->_agent->is_stopping()) //DGA: Only dilate active tiles if it is not being stopped and if some tiles are explorable
+          tiling->dilateActive(iplane);
+
 		// restore connection between end of pipeline and disk 
         IDevice::connect(&dc->disk,0,dc->_end_of_pipeline,0);
 
