@@ -154,7 +154,8 @@ TODO:
         while( eflag==0 
             && !dc->_agent->is_stopping()  // running?
             && !dc->surface_finder.any()   // search complete?   \/---search in bounds?
-            && ( ((dc->stage()->getTarget() - starting_pos).norm()*1000.0) < cfg.max_backup_um() )
+            && ( starting_pos.z() - dc->stage()->getTarget().z() )*1000.0 < cfg.max_backup_um() 
+			&& ( dc->stage()->getTarget().z() - starting_pos.z() )*1000.0 < cfg.max_raise_um()
             && (iters<maxiter)
             )
         {     
