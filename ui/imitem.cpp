@@ -281,7 +281,7 @@ void ImItem::push(mylib::Array *plane)
   }
   else
     _nchan = 1;
-
+  _autoscale_next = true;
   if(_autoscale_next)
   { _autoscale(plane,_selected_channel,0.01f);
     _autoscale_next = false;

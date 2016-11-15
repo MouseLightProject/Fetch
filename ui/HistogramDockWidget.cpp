@@ -150,6 +150,8 @@ namespace ui {
     plot_->yAxis2->setLabel("CDF");
     plot_->yAxis2->setLabelColor(Qt::red);
     layout->addWidget(plot_);
+	QSlider * testSlider = new QSlider(Qt::Horizontal);
+	layout->addWidget(testSlider);
   }
   
 // histogram utilities START  
