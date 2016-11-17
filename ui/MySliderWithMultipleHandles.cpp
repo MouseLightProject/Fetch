@@ -40,62 +40,12 @@ void MySliderWithMultipleHandles::paintEvent(QPaintEvent *ev)
 	style()->drawComplexControl(QStyle::CC_Slider, &opt, &p, this);
 }
 
-/*void MySliderWithMultipleHandles::moveMinimumAndOrMaximum(int newValue)
-{
-	switch (currentlySelected)
-	{
-	case 0:
-		if (newValue > (maxValue - 5)){
-			(newValue + 5)<maximum() ? maxValue = newValue+5 : maxValue = maximum();
-			minValue = maxValue - 5;
-		}
-		else minValue = newValue;
-	case 1:
-		if (newValue < (minValue + 5)){
-			(newValue - 5)>minimum() ? minValue = newValue-5 : minValue = minimum();
-			maxValue = minValue + 5;
-		}
-		else maxValue = newValue;
-	}
-}*/
 
-/*void MySliderWithMultipleHandles::sliderWidgetActionTaken(int actionEnum)
-{	QPoint p = mapFromGlobal(QCursor::pos());
-	int mousePositionInSliderCoordinates = minimum() + ((maximum() - minimum()) * p.x()) / width();
-	if ( abs(mousePositionInSliderCoordinates - minValue) < 2 && currentlySelected != 0){
-		setSliderPosition(minValue);
-		currentlySelected = 0;
-	}
-	else if ( abs(mousePositionInSliderCoordinates - maxValue) < 2 && currentlySelected != 1){
-		setSliderPosition(maxValue);
-		currentlySelected = 1;
-	}
-	currentlySelected = 1;
-	switch (currentlySelected)
-	{
-	case 1:
-		if (mousePositionInSliderCoordinates < (minValue + 5)){
-			(mousePositionInSliderCoordinates - 5)>minimum() ? minValue = mousePositionInSliderCoordinates-5 : minValue = minimum();
-			maxValue = minValue + 5;
-		}
-		else maxValue = mousePositionInSliderCoordinates;
-		setSliderPosition(maxValue);
-	}
-printf("%d \n", actionEnum);
-}*/
 
 void MySliderWithMultipleHandles::mouseMoveEvent(QMouseEvent *ev)
 { Q_UNUSED(ev);
 QPoint p = mapFromGlobal(QCursor::pos());
 	int mousePositionInSliderCoordinates = minimum() + ((maximum() - minimum()) * p.x()) / width();
-/*	if ( abs(mousePositionInSliderCoordinates - minValue) < sliderWidthInSliderCoordinates/2.0 && currentlySelected == -1){
-		setSliderPosition(minValue);
-		currentlySelected = 0;
-	}
-	else if ( abs(mousePositionInSliderCoordinates - maxValue) < sliderWidthInSliderCoordinates/2.0 && currentlySelected == -1){
-		setSliderPosition(maxValue);
-		currentlySelected = 1;
-	}*/
 	if ( minValue - sliderWidthInSliderCoordinates*minValue/maximum() < mousePositionInSliderCoordinates
 		&& minValue + sliderWidthInSliderCoordinates*(1-minValue/maximum()) > mousePositionInSliderCoordinates
 		&& currentlySelected == -1
@@ -134,17 +84,6 @@ QPoint p = mapFromGlobal(QCursor::pos());
 		setSliderPosition(maxValue);
 		break;
 	}
-
-/*	switch (currentlySelected)
-	{
-	case 1:
-		if (mousePositionInSliderCoordinates < (minValue + 5)){
-			(mousePositionInSliderCoordinates - 5)>minimum() ? minValue = mousePositionInSliderCoordinates-5 : minValue = minimum();
-			maxValue = minValue + 5;
-		}
-		else maxValue = mousePositionInSliderCoordinates;
-		setSliderPosition(maxValue);
-	}*/
 	justPushed = false;
 	printf("%d %d \n", minValue, maxValue);
 }

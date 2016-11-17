@@ -152,10 +152,6 @@ namespace ui {
     plot_->yAxis2->setLabelColor(Qt::red);
     layout->addWidget(plot_);
 	MySliderWithMultipleHandles * testMySlider = new MySliderWithMultipleHandles(parent);
-	QSlider * testSlider = new QSlider(Qt::Horizontal);
-//	PANIC(connect(testMySlider, SIGNAL(sliderMoved(int)), testMySlider, SLOT(moveMinimumAndOrMaximum(int))) );
-//		PANIC(connect(testMySlider, SIGNAL(actionTriggered(int)), testMySlider, SLOT(sliderWidgetActionTaken(int))) );
-	layout->addWidget(testSlider);
 	layout->addWidget(testMySlider);
   }
   

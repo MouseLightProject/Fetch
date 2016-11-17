@@ -16,7 +16,4 @@ protected:
 	int currentlySelected;
 	bool justPushed = true;
 	int minDistanceBetweenSliders;
-	public slots:
-//	void moveMinimumAndOrMaximum(int newValue);
-//	void sliderWidgetActionTaken(int actionEnum);
 };

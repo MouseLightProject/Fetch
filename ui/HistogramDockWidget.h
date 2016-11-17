@@ -3,6 +3,7 @@
 namespace mylib{
 #include "array.h"
 }
+#include "channelHistogramInformationStruct.h"
 
 class QCustomPlot;
 
@@ -18,8 +19,10 @@ class HistogramDockWidget: public QDockWidget
 	QVector<double>   x_,pdf_,cdf_;
 	double            minX_,maxX_,perct_;
 	QLineEdit         *leMin_, *leMax_, *lePerct_;
+
 	public:
 		HistogramDockWidget(QWidget *parent=NULL);
+		channelHistogramInformationStruct channelHistogramInformation[4];
 
 	signals:
 		void change_chan(int ichan);

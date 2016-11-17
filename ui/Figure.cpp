@@ -70,7 +70,7 @@ ZoomableView::drawForeground(QPainter* painter, const QRectF& rect)
 /* FIGURE                                                               */
 /************************************************************************/
 
-Figure::Figure(PlanarStageController *stageController, QWidget *parent/*=0*/)
+Figure::Figure(PlanarStageController *stageController, channelHistogramInformationStruct * channelHistogramInformation, QWidget *parent/*=0*/)
 :QWidget(parent)
 ,_sc(stageController)
 {
@@ -99,7 +99,7 @@ Figure::Figure(PlanarStageController *stageController, QWidget *parent/*=0*/)
   connect(stageController->tiling(),SIGNAL(fovGeometryChanged(float,float,float)),
           this,SLOT(fovGeometryChanged(float,float,float)));
 
-  _item = new ImItem;
+  _item = new ImItem(channelHistogramInformation);
   _scene.addItem(_item);
   checkGLError();
 

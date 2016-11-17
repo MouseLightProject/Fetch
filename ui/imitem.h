@@ -9,13 +9,15 @@ namespace mylib {
 #include <array.h>
 }
 
+#include "channelHistogramInformationStruct.h"
+
 namespace fetch {
 namespace ui {
 
 class ImItem: public QGraphicsItem, protected QOpenGLFunctions
 {
 public:
-  ImItem();
+  ImItem(channelHistogramInformationStruct*   _channelHistogramInformation);
   virtual ~ImItem();
 
   QRectF boundingRect  () const;                                           // in meters
@@ -35,6 +37,7 @@ public:
   void setGamma(float gamma)                                              {_gamma=gamma; update();}
 
   inline double rotationRadians()                                         {return _rotation_radians;}
+
 protected:
   void updateDisplayLists();
   void _common_setup();
@@ -77,6 +80,10 @@ protected:
   bool _resetscale_next;
   bool _autoscale_next;
   int  _selected_channel;
+
+private:
+	    channelHistogramInformationStruct*   _channelHistogramInformation;
+
 };
 
 

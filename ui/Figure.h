@@ -8,6 +8,7 @@ namespace mylib {
 #include "ScaleBar.h"
 #include "TilesView.h"
 #include "StageView.h"
+#include "channelHistogramInformationStruct.h"
 
 namespace fetch {
 namespace ui {
@@ -37,7 +38,7 @@ class Figure:public QWidget
 {
   Q_OBJECT
 public:
-  Figure(PlanarStageController *stageController, QWidget *parent=0);
+  Figure(PlanarStageController *stageController, channelHistogramInformationStruct * channelHistogramInformation, QWidget *parent=0);
   Figure(double unit2px, QWidget *parent=0);
   virtual ~Figure();
 
