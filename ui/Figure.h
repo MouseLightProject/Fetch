@@ -38,7 +38,7 @@ class Figure:public QWidget
 {
   Q_OBJECT
 public:
-  Figure(PlanarStageController *stageController, channelHistogramInformationStruct * channelHistogramInformation, QWidget *parent=0);
+  Figure(PlanarStageController *stageController, channelHistogramInformationStruct *channelHistogramInformation,size_t *channelIndex, QWidget *parent=0);
   Figure(double unit2px, QWidget *parent=0);
   virtual ~Figure();
 

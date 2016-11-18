@@ -33,7 +33,7 @@ namespace ui {
 using namespace units;
 
 
-ImItem::ImItem(channelHistogramInformationStruct*   channelHistogramInformation)
+ImItem::ImItem(channelHistogramInformationStruct *channelHistogramInformation, size_t *channelIndex)
 : _fill(1.0),
   _gain(1.0),
   _bias(0.0),
@@ -53,7 +53,8 @@ ImItem::ImItem(channelHistogramInformationStruct*   channelHistogramInformation)
   _cmap_ctrl_last_size(0),
   _cmap_ctrl_s(NULL),
   _cmap_ctrl_t(NULL),
-  _channelHistogramInformation(channelHistogramInformation)
+  _channelHistogramInformation(channelHistogramInformation),
+  _channelIndex(channelIndex)
 {
   _text.setBrush(Qt::yellow);
   //  m_context->makeCurrent(this);
@@ -283,7 +284,8 @@ void ImItem::push(mylib::Array *plane)
   else
     _nchan = 1;
 
-//  if(_autoscale_next)
+  _autoscale_next = true;
+  if(_autoscale_next)
   { _autoscale(plane,_selected_channel,0.01f);
     _autoscale_next = false;
   }
@@ -463,15 +465,15 @@ void ImItem::_autoscale(mylib::Array *data, GLuint ichannel, float percent)
 
   mylib::Array_Range(&range,&c); // min max of single channel
   mylib::Free_Array(t);
-  if(_channelHistogramInformation[ichannel].autoscale)
+  if(_channelHistogramInformation[*_channelIndex].autoscale)
   {
     max = _gain*range.maxval.fval+_bias; // adjust for gain and bias
     min = _gain*range.minval.fval+_bias;
   }
   else
   {
-    max = _gain*_channelHistogramInformation[ichannel].maxValue+_bias; // adjust for gain and bias
-    min = _gain*_channelHistogramInformation[ichannel].minValue+_bias;
+    max = _gain*_channelHistogramInformation[*_channelIndex].maxValue/65535+_bias; // adjust for gain and bias
+    min = _gain*_channelHistogramInformation[*_channelIndex].minValue/65535+_bias;
   }
   m = 1.0f/(max-min);
   b = min/(min-max);

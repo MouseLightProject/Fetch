@@ -415,7 +415,7 @@ void fetch::ui::MainWindow::createDockWidgets()
 
 void fetch::ui::MainWindow::createViews()
 {
-  _display = new Figure(_stageController, _histogramDockWidget->channelHistogramInformation);
+  _display = new Figure(_stageController, _histogramDockWidget->channelHistogramInformationArray, _histogramDockWidget->channelIndex);
 
   setCentralWidget(_display);
   TRY(connect(_videoAcquisitionDockWidget,SIGNAL(onRun()),

@@ -7,7 +7,6 @@
     \todo inspection by hover over cdf
 */
 #include "HistogramDockWidget.h"
-#include "MySliderWithMultipleHandles.h"
 #include "qcustomplot.h"
 #include "common.h"
 #include <cmath>  
@@ -47,7 +46,7 @@ namespace ui {
     , leMin_(0)
     , leMax_(0)
     , lePerct_(0)
-  {
+  { 
     QBoxLayout *layout = new QVBoxLayout;
     {
       QWidget *w = new QWidget(this);    
@@ -151,8 +150,10 @@ namespace ui {
     plot_->yAxis2->setLabel("CDF");
     plot_->yAxis2->setLabelColor(Qt::red);
     layout->addWidget(plot_);
-	MySliderWithMultipleHandles * testMySlider = new MySliderWithMultipleHandles(parent);
-	layout->addWidget(testMySlider);
+	intensitySlider_ = new MySliderWithMultipleHandles(channelHistogramInformationArray,&ichan_, parent);
+	layout->addWidget(intensitySlider_);
+	QSlider * temp = new QSlider;
+	layout->addWidget(temp);
   }
   
 // histogram utilities START  
@@ -326,6 +327,7 @@ void HistogramDockWidget::set_ichan(int ichan)
     { check_chan(last_);
       compute(last_);
     }
+	intensitySlider_->update();
   }
 
 void HistogramDockWidget::set_live(bool is_live)

@@ -17,7 +17,7 @@ namespace ui {
 class ImItem: public QGraphicsItem, protected QOpenGLFunctions
 {
 public:
-  ImItem(channelHistogramInformationStruct*   _channelHistogramInformation);
+  ImItem(channelHistogramInformationStruct *_channelHistogramInformation, size_t *channelIndex);
   virtual ~ImItem();
 
   QRectF boundingRect  () const;                                           // in meters
@@ -82,7 +82,8 @@ protected:
   int  _selected_channel;
 
 private:
-	    channelHistogramInformationStruct*   _channelHistogramInformation;
+	    channelHistogramInformationStruct *_channelHistogramInformation;
+		size_t *_channelIndex;
 
 };
 

@@ -4,6 +4,7 @@ namespace mylib{
 #include "array.h"
 }
 #include "channelHistogramInformationStruct.h"
+#include "MySliderWithMultipleHandles.h"
 
 class QCustomPlot;
 
@@ -13,6 +14,7 @@ namespace ui {
 class HistogramDockWidget: public QDockWidget
 { Q_OBJECT
 	QCustomPlot      *plot_;
+	MySliderWithMultipleHandles *intensitySlider_;
 	size_t            ichan_;
 	mylib::Array     *last_;
 	bool              is_live_;
@@ -22,7 +24,8 @@ class HistogramDockWidget: public QDockWidget
 
 	public:
 		HistogramDockWidget(QWidget *parent=NULL);
-		channelHistogramInformationStruct channelHistogramInformation[4];
+		channelHistogramInformationStruct channelHistogramInformationArray[4];
+		size_t * channelIndex = &ichan_;
 
 	signals:
 		void change_chan(int ichan);
