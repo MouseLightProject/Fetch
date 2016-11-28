@@ -140,7 +140,7 @@ namespace ui {
     plot_->setSizePolicy(QSizePolicy::Expanding,QSizePolicy::Expanding);
     plot_->addGraph();
     plot_->graph(0)->setPen(QPen(Qt::blue));
-    plot_->addGraph(plot_->xAxis,plot_->yAxis2);
+    plot_->addGraph(plot_->xAxis2,plot_->yAxis2);
     plot_->graph(1)->setPen(QPen(Qt::red));
     plot_->xAxis->setLabel("Intensity");
     plot_->xAxis2->setVisible(true);
@@ -150,10 +150,21 @@ namespace ui {
     plot_->yAxis2->setLabel("CDF");
     plot_->yAxis2->setLabelColor(Qt::red);
     layout->addWidget(plot_);
+	// slider
 	intensitySlider_ = new MySliderWithMultipleHandles(channelHistogramInformationArray,&ichan_, parent);
 	layout->addWidget(intensitySlider_);
-	QSlider * temp = new QSlider;
-	layout->addWidget(temp);
+	QGridLayout * row = new QGridLayout(); 
+	QLabel * minimumCutoff = new QLabel(QString("Minimum: %1").arg("0",6));
+	PANIC(connect(intensitySlider_,SIGNAL(minimumValueChanged(QString)),
+		  minimumCutoff,SLOT(setText(QString))));
+	QLabel * maximumCutoff = new QLabel(QString("Maximum: %1").arg("65535", 6));
+	PANIC(connect(intensitySlider_, SIGNAL(maximumValueChanged(QString)),
+		maximumCutoff, SLOT(setText(QString))));
+	row->addWidget(minimumCutoff,0,0,Qt::AlignLeft);
+	row->addWidget(maximumCutoff,0,1,Qt::AlignRight);
+	QFormLayout *sliderForm = new QFormLayout;
+	sliderForm->addRow(row);
+	layout->addLayout(sliderForm);
   }
   
 // histogram utilities START  

@@ -38,6 +38,12 @@ void MySliderWithMultipleHandles::paintEvent(QPaintEvent *ev)
 	opt.subControls = QStyle::SC_SliderHandle;
 	opt.rect = style()->subControlRect(QStyle::CC_Slider, &opt, QStyle::SC_SliderHandle, this);
 	style()->drawComplexControl(QStyle::CC_Slider, &opt, &p, this);
+	if (currentIndexPrevious!=*currentIndex)
+	{	
+		emit minimumValueChanged(QString("Minimum: %1").arg(channelHistogramInformation[*currentIndex].minValue,6));
+		emit maximumValueChanged(QString("Maximum: %1").arg(channelHistogramInformation[*currentIndex].maxValue,6));
+		currentIndexPrevious = *currentIndex;
+	}
 }
 
 
@@ -63,8 +69,9 @@ void MySliderWithMultipleHandles::mouseMoveEvent(QMouseEvent *ev)
 		currentlySelected = 1;
 	}
 
+	int minValuePrevious = minValue, maxValuePrevious = maxValue;
 	switch (currentlySelected)
-	{
+	{ 
 	case 0:
 		if (mousePositionInSliderCoordinates > (maxValue - minDistanceBetweenSliders)){
 			(mousePositionInSliderCoordinates + minDistanceBetweenSliders) < maximum() ? maxValue = mousePositionInSliderCoordinates + minDistanceBetweenSliders : maxValue = maximum();
@@ -75,6 +82,8 @@ void MySliderWithMultipleHandles::mouseMoveEvent(QMouseEvent *ev)
 		setSliderPosition(minValue);
 		channelHistogramInformation[*currentIndex].minValue = minValue;
 		channelHistogramInformation[*currentIndex].maxValue = maxValue;
+		if (minValuePrevious != minValue) emit minimumValueChanged(QString("Minimum: %1").arg(minValue,6));
+		if (maxValuePrevious != maxValue) emit maximumValueChanged(QString("Maximum: %1").arg(maxValue,6));
 		break;
 	case 1:
 		if (mousePositionInSliderCoordinates < (minValue + minDistanceBetweenSliders)){
@@ -86,10 +95,12 @@ void MySliderWithMultipleHandles::mouseMoveEvent(QMouseEvent *ev)
 		setSliderPosition(maxValue);
 		channelHistogramInformation[*currentIndex].minValue = minValue;
 		channelHistogramInformation[*currentIndex].maxValue = maxValue;
+		if (minValuePrevious != minValue) emit minimumValueChanged(QString("Minimum: %1").arg(minValue,6));
+		if (maxValuePrevious != maxValue) emit maximumValueChanged(QString("Maximum: %1").arg(maxValue,6));
 		break;
 	}
 	justPushed = false;
-	printf("%d %d %d %d \n", currentlySelected, mousePositionInSliderCoordinates, minValue, maxValue);
+//	printf("%d %d %d %d \n", currentlySelected, mousePositionInSliderCoordinates, minValue, maxValue);
 }
 
 void MySliderWithMultipleHandles::mouseReleaseEvent(QMouseEvent *ev)

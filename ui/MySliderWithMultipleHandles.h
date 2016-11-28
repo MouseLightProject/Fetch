@@ -23,5 +23,9 @@ public:
 	int mousePositionInSliderCoordinates, mousePositionInSliderCoordinatesForSliderSelection;
 	int minDistanceBetweenSliders;
 	channelHistogramInformationStruct *channelHistogramInformation;
-	size_t *currentIndex;
+	size_t *currentIndex, currentIndexPrevious=0;
+
+	signals:
+	void minimumValueChanged(QString);
+	void maximumValueChanged(QString);
 };
