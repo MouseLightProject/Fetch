@@ -8,8 +8,8 @@ class MySliderWithMultipleHandles : public QSlider
 {
 	Q_OBJECT
 protected:
+	void mousePressEvent(QMouseEvent *ev);
 	void mouseReleaseEvent(QMouseEvent * ev);
-	void focusInEvent(QFocusEvent * ev);
 public:
 	MySliderWithMultipleHandles(channelHistogramInformationStruct *channelHistogramInformationInput, size_t *currentIndexInput, QWidget *parent);
 	void paintEvent(QPaintEvent *ev);
@@ -20,7 +20,7 @@ public:
 	int currentlySelected;
 	bool justPushed = true;
 	bool justGotFocus = true;
-	int mousePositionInSliderCoordinates;
+	int mousePositionInSliderCoordinates, mousePositionInSliderCoordinatesForSliderSelection;
 	int minDistanceBetweenSliders;
 	channelHistogramInformationStruct *channelHistogramInformation;
 	size_t *currentIndex;

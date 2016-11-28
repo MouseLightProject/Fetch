@@ -43,20 +43,7 @@ void MySliderWithMultipleHandles::paintEvent(QPaintEvent *ev)
 
 
 void MySliderWithMultipleHandles::mouseMoveEvent(QMouseEvent *ev)
-{
-	Q_UNUSED(ev);
-	int mousePositionInSliderCoordinatesForSliderSelection;
-	if (justGotFocus)
-	{
-		mousePositionInSliderCoordinatesForSliderSelection = mousePositionInSliderCoordinates;
-		mousePositionInSliderCoordinates = minimum() + ((maximum() - minimum()) * mapFromGlobal(QCursor::pos()).x()) / width();
-		justGotFocus = false;
-	}
-	else{
-		mousePositionInSliderCoordinatesForSliderSelection = minimum() + ((maximum() - minimum()) * mapFromGlobal(QCursor::pos()).x()) / width();
-		mousePositionInSliderCoordinates = mousePositionInSliderCoordinatesForSliderSelection;
-	}
-		
+{	mousePositionInSliderCoordinates = minimum() + ((maximum() - minimum()) * ev->x() )/ width();
 	minValue = channelHistogramInformation[*currentIndex].minValue;
 	maxValue = channelHistogramInformation[*currentIndex].maxValue;
 	if ( minValue - sliderWidthInSliderCoordinates*minValue/maximum() < mousePositionInSliderCoordinatesForSliderSelection
@@ -111,10 +98,6 @@ void MySliderWithMultipleHandles::mouseReleaseEvent(QMouseEvent *ev)
 	justPushed = true;
 }
 
-void MySliderWithMultipleHandles::focusInEvent(QFocusEvent* ev)
-{
-	Q_UNUSED(ev);
-	mousePositionInSliderCoordinates = minimum() + ((maximum() - minimum()) * mapFromGlobal(QCursor::pos()).x()) / width();
-	justGotFocus = true;
-	mouseMoveEvent(NULL);
+void MySliderWithMultipleHandles::mousePressEvent(QMouseEvent *ev)
+{ mousePositionInSliderCoordinatesForSliderSelection = minimum() + ((maximum() - minimum()) * ev->x()) / width();
 }
