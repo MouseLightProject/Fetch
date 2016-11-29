@@ -21,7 +21,8 @@ class HistogramDockWidget: public QDockWidget
 	QVector<double>   x_,pdf_,cdf_;
 	double            minX_,maxX_,perct_;
 	QLineEdit         *leMin_, *leMax_, *lePerct_;
-
+	QCheckBox		  *autoContrastCheckBox_;
+	QLabel			  *minimumCutoffLabel_, *maximumCutoffLabel_;
 	public:
 		HistogramDockWidget(QWidget *parent=NULL);
 		channelHistogramInformationStruct channelHistogramInformationArray[4];
@@ -34,6 +35,7 @@ class HistogramDockWidget: public QDockWidget
 		void set(mylib::Array *im);
 		void set_ichan(int ichan);
 		void set_live(bool is_live);
+		void set_autoscale(int is_autoscale);
 		void rescale_axes();
 	void reset_minmax();
 	void set_percentile(QString);

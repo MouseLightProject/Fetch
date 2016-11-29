@@ -38,12 +38,6 @@ void MySliderWithMultipleHandles::paintEvent(QPaintEvent *ev)
 	opt.subControls = QStyle::SC_SliderHandle;
 	opt.rect = style()->subControlRect(QStyle::CC_Slider, &opt, QStyle::SC_SliderHandle, this);
 	style()->drawComplexControl(QStyle::CC_Slider, &opt, &p, this);
-	if (currentIndexPrevious!=*currentIndex)
-	{	
-		emit minimumValueChanged(QString("Minimum: %1").arg(channelHistogramInformation[*currentIndex].minValue,6));
-		emit maximumValueChanged(QString("Maximum: %1").arg(channelHistogramInformation[*currentIndex].maxValue,6));
-		currentIndexPrevious = *currentIndex;
-	}
 }
 
 

@@ -152,18 +152,26 @@ namespace ui {
     layout->addWidget(plot_);
 	// slider
 	intensitySlider_ = new MySliderWithMultipleHandles(channelHistogramInformationArray,&ichan_, parent);
-	layout->addWidget(intensitySlider_);
 	QGridLayout * row = new QGridLayout(); 
-	QLabel * minimumCutoff = new QLabel(QString("Minimum: %1").arg("0",6));
-	PANIC(connect(intensitySlider_,SIGNAL(minimumValueChanged(QString)),
-		  minimumCutoff,SLOT(setText(QString))));
-	QLabel * maximumCutoff = new QLabel(QString("Maximum: %1").arg("65535", 6));
+	minimumCutoffLabel_ = new QLabel(QString("Minimum: %1").arg("0", 6));
+	PANIC(connect(intensitySlider_, SIGNAL(minimumValueChanged(QString)),
+		minimumCutoffLabel_, SLOT(setText(QString))));
+	maximumCutoffLabel_ = new QLabel(QString("Maximum: %1").arg("65535", 6));
 	PANIC(connect(intensitySlider_, SIGNAL(maximumValueChanged(QString)),
-		maximumCutoff, SLOT(setText(QString))));
-	row->addWidget(minimumCutoff,0,0,Qt::AlignLeft);
-	row->addWidget(maximumCutoff,0,1,Qt::AlignRight);
+		maximumCutoffLabel_, SLOT(setText(QString))));
+	row->addWidget(minimumCutoffLabel_, 0, 0, Qt::AlignLeft);
+	row->addWidget(maximumCutoffLabel_, 0, 1, Qt::AlignRight);
 	QFormLayout *sliderForm = new QFormLayout;
 	sliderForm->addRow(row);
+	
+	autoContrastCheckBox_ = new QCheckBox();
+	autoContrastCheckBox_->setText("Auto Contrast");
+	PANIC(connect(autoContrastCheckBox_, SIGNAL(stateChanged(int)),
+		this, SLOT(set_autoscale(int))));
+	autoContrastCheckBox_->setChecked(true);
+	intensitySlider_->setEnabled(false);
+	layout->addWidget(autoContrastCheckBox_);
+	layout->addWidget(intensitySlider_);
 	layout->addLayout(sliderForm);
   }
   
@@ -338,11 +346,20 @@ void HistogramDockWidget::set_ichan(int ichan)
     { check_chan(last_);
       compute(last_);
     }
+	autoContrastCheckBox_->setChecked(channelHistogramInformationArray[ichan_].autoscale);
+	minimumCutoffLabel_->setText(QString("Minimum: %1").arg(channelHistogramInformationArray[ichan_].minValue,6));
+	maximumCutoffLabel_->setText(QString("Maximum: %1").arg(channelHistogramInformationArray[ichan_].maxValue,6));
 	intensitySlider_->update();
   }
 
 void HistogramDockWidget::set_live(bool is_live)
   { is_live_=is_live;
+  }
+
+void HistogramDockWidget::set_autoscale(int is_autoscale)
+  { 
+    channelHistogramInformationArray[ichan_].autoscale = is_autoscale;
+	is_autoscale ? intensitySlider_->setEnabled(false) : intensitySlider_->setEnabled(true);
   }
 
 void HistogramDockWidget::reset_minmax()
