@@ -184,6 +184,8 @@ namespace ui {
 	intensitySlider_->setEnabled(false);
 	layout->addWidget(autoscaleCheckBox_);
 	layout->addWidget(intensitySlider_);
+	QSlider* temp = new QSlider();
+	layout->addWidget(temp);
 	layout->addLayout(sliderForm);
   }
   
@@ -304,9 +306,9 @@ namespace ui {
  // histogram utilities END
 
  void HistogramDockWidget::set(mylib::Array *im)
-  { if(!is_live_) return;
-    TRY(check_chan(im));
+  { TRY(check_chan(im));
     swap(im);
+	if(!is_live_) return;
     compute(im);
  Error:
     ; // bad input, ignore 

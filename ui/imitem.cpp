@@ -287,11 +287,11 @@ void ImItem::push(mylib::Array *plane)
   //_channelHistogramInformation[*_channelIndex].autoscale
   //if(_autoscale_next)
   //{
-	  _scaleImage(plane,_selected_channel,0.2f);
+	  _scaleImage(plane,*_channelIndex,0.2f);
    // _autoscale_next = false;
   //}
   if(_resetscale_next)
-  { _resetscale(_selected_channel);
+  { _resetscale(*_channelIndex);
     _resetscale_next = false;
   }
 
@@ -483,7 +483,9 @@ void ImItem::_scaleImage(mylib::Array *data, GLuint ichannel, float percent)
 
   for(GLuint i=0;i<_cmap_ctrl_count;++i)
   { float x = i/(_cmap_ctrl_count-1.0f);
+  //for (int temp=0; temp<3; temp++){
     _cmap_ctrl_t[ichannel*_cmap_ctrl_count+i] = m*x+b; // upload to gpu will clamp to [0,1]
+  //}
   }
 
   _updateCmapCtrlPoints();
@@ -517,7 +519,7 @@ void ImItem::_common_setup()
 
 void ImItem::rescaleAndReplot(mylib::Array *plane)
 {
-	_scaleImage(plane, _selected_channel, 0.2f);
+	_scaleImage(plane, *_channelIndex, 0.2f);
 	_loadTex(plane);
 	checkGLError();
 }
