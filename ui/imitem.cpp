@@ -284,11 +284,12 @@ void ImItem::push(mylib::Array *plane)
   else
     _nchan = 1;
 
-  _autoscale_next = true;
-  if(_autoscale_next)
-  { _autoscale(plane,_selected_channel,0.01f);
-    _autoscale_next = false;
-  }
+  //_channelHistogramInformation[*_channelIndex].autoscale
+  //if(_autoscale_next)
+  //{
+	  _scaleImage(plane,_selected_channel,0.2f);
+   // _autoscale_next = false;
+  //}
   if(_resetscale_next)
   { _resetscale(_selected_channel);
     _resetscale_next = false;
@@ -433,7 +434,7 @@ MemoryError:
   error("(%s:%d) Memory (re)allocation failed."ENDL,__FILE__,__LINE__);
 }
 
-void ImItem::_autoscale(mylib::Array *data, GLuint ichannel, float percent)
+void ImItem::_scaleImage(mylib::Array *data, GLuint ichannel, float percent)
 { mylib::Array c;
   if(ichannel>=data->dims[2] || (ichannel>=_nchan))
   { warning("(%s:%d) Autoscale: selected channel out of bounds."ENDL,__FILE__,__LINE__);
@@ -469,6 +470,8 @@ void ImItem::_autoscale(mylib::Array *data, GLuint ichannel, float percent)
   {
     max = _gain*range.maxval.fval+_bias; // adjust for gain and bias
     min = _gain*range.minval.fval+_bias;
+	_channelHistogramInformation[*_channelIndex].minValue = (int) (range.minval.fval*65535);
+	_channelHistogramInformation[*_channelIndex].maxValue = (int) (range.maxval.fval*65535);
   }
   else
   {
@@ -510,6 +513,13 @@ void ImItem::_common_setup()
   glGenTextures(1, &_hTexCmapCtrlT);
   _updateCmapCtrlPoints();
   checkGLError();
+}
+
+void ImItem::rescaleAndReplot(mylib::Array *plane)
+{
+	_scaleImage(plane, _selected_channel, 0.2f);
+	_loadTex(plane);
+	checkGLError();
 }
 
 }} // end fetch::ui

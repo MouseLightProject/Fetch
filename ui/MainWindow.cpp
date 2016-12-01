@@ -415,7 +415,7 @@ void fetch::ui::MainWindow::createDockWidgets()
 
 void fetch::ui::MainWindow::createViews()
 {
-  _display = new Figure(_stageController, _histogramDockWidget->channelHistogramInformationArray, _histogramDockWidget->channelIndex);
+  _display = new Figure(_stageController, _histogramDockWidget->channelHistogramInformation, _histogramDockWidget->channelIndex);
 
   setCentralWidget(_display);
   TRY(connect(_videoAcquisitionDockWidget,SIGNAL(onRun()),
@@ -427,6 +427,9 @@ void fetch::ui::MainWindow::createViews()
               _display,       SLOT(setColormap(const QString&))));
   TRY(connect(_cmapDockWidget,SIGNAL(gammaChanged(float)),
               _display,       SLOT(setGamma(float))));
+  TRY(connect(
+      _histogramDockWidget,SIGNAL(scalingChanged(mylib::Array*)),
+      _display		      ,SLOT  (imshow(mylib::Array*))));
   _display->setColormap(_cmapDockWidget->cmap());
   //_player->start();
 }
@@ -681,6 +684,7 @@ void
   _player->disconnect();
   _display->disconnect();
   _histogramDockWidget->disconnect(_player,SIGNAL(imageReady(mylib::Array*)));
+  //_histogramDockWidget->disconnect(_player,SIGNAL(rescaleAndReplot(mylib::Array*)));
   connect(_player,SIGNAL(finished()),this,SLOT(clearDeadPlayers()));//,Qt::DirectConnection);
   //connect(_player,SIGNAL(terminated()),this,SLOT(clearDeadPlayers())); //,Qt::DirectConnection);
   _player->stop();

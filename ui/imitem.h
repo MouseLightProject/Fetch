@@ -29,6 +29,7 @@ public:
 
   void autoscale(int chan)                                                {_selected_channel=chan; _autoscale_next=true;}
   void resetscale(int chan)                                               {_selected_channel=chan; _resetscale_next=true;}
+  void rescaleAndReplot(mylib::Array *plane);
 
   void setRotation(double radians);
   void setFOVGeometry(float w_um, float h_um, float rotation_radians);
@@ -44,7 +45,7 @@ protected:
   void _loadTex(mylib::Array *im);
   void _setupShader();
   void _updateCmapCtrlPoints();
-  void _autoscale(mylib::Array *data, unsigned int ichannel, float percent);
+  void _scaleImage(mylib::Array *data, unsigned int ichannel, float percent);
   void _resetscale(unsigned int ichannel);
 
   void mouseDoubleClickEvent(QGraphicsSceneMouseEvent *e);

@@ -1,10 +1,10 @@
 #include "MySliderWithMultipleHandles.h"
 
+namespace fetch{ namespace ui{
 //https://forum.qt.io/topic/73019/slider-with-two-handles-styles-support/2
 MySliderWithMultipleHandles::MySliderWithMultipleHandles(channelHistogramInformationStruct * channelHistogramInformationInput, size_t *currentIndexInput, QWidget * parent)
 	: QSlider(Qt::Horizontal, parent),
 	  currentlySelected(-1),
-	  minDistanceBetweenSliders(1000),
 	  channelHistogramInformation(channelHistogramInformationInput),
 	  currentIndex(currentIndexInput)
 {// installEventFilter(this);
@@ -27,14 +27,14 @@ void MySliderWithMultipleHandles::paintEvent(QPaintEvent *ev)
 
 	//First handle.
 	initStyleOption(&opt);
-					opt.sliderPosition = channelHistogramInformation[*currentIndex].minValue;
+	opt.sliderPosition = channelHistogramInformation[*currentIndex].minValue;
 	opt.subControls = QStyle::SC_SliderHandle;
 	opt.rect = style()->subControlRect(QStyle::CC_Slider, &opt, QStyle::SC_SliderHandle, this);
 	sliderWidthInSliderCoordinates = ((maximum() - minimum()) * 1.0*opt.rect.width()) / width();
 	style()->drawComplexControl(QStyle::CC_Slider, &opt, &p, this);
 		//Second handle
 	initStyleOption(&opt);
-		opt.sliderPosition = channelHistogramInformation[*currentIndex].maxValue;
+	opt.sliderPosition = channelHistogramInformation[*currentIndex].maxValue;
 	opt.subControls = QStyle::SC_SliderHandle;
 	opt.rect = style()->subControlRect(QStyle::CC_Slider, &opt, QStyle::SC_SliderHandle, this);
 	style()->drawComplexControl(QStyle::CC_Slider, &opt, &p, this);
@@ -46,23 +46,24 @@ void MySliderWithMultipleHandles::mouseMoveEvent(QMouseEvent *ev)
 {	mousePositionInSliderCoordinates = minimum() + ((maximum() - minimum()) * ev->x() )/ width();
 	minValue = channelHistogramInformation[*currentIndex].minValue;
 	maxValue = channelHistogramInformation[*currentIndex].maxValue;
-	if ( minValue - sliderWidthInSliderCoordinates*minValue/maximum() < mousePositionInSliderCoordinatesForSliderSelection
-		&& minValue + sliderWidthInSliderCoordinates*(1-minValue/maximum()) > mousePositionInSliderCoordinatesForSliderSelection
-		&& currentlySelected == -1
-		&& justPushed)
-	{
-		setSliderPosition(minValue);
-		currentlySelected = 0;
-	}
-	else if ( maxValue - sliderWidthInSliderCoordinates*maxValue/maximum() < mousePositionInSliderCoordinatesForSliderSelection
-		&& maxValue + sliderWidthInSliderCoordinates*(1-maxValue/maximum()) > mousePositionInSliderCoordinatesForSliderSelection
+	if (maxValue - sliderWidthInSliderCoordinates*maxValue / maximum() < mousePositionInSliderCoordinatesForSliderSelection
+		&& maxValue + sliderWidthInSliderCoordinates*(1 - (float)maxValue / maximum()) > mousePositionInSliderCoordinatesForSliderSelection
 		&& currentlySelected == -1
 		&& justPushed)
 	{
 		setSliderPosition(maxValue);
 		currentlySelected = 1;
 	}
+	else if (minValue - sliderWidthInSliderCoordinates*minValue / maximum() < mousePositionInSliderCoordinatesForSliderSelection
+		&& minValue + sliderWidthInSliderCoordinates*(1 - (float)minValue / maximum()) > mousePositionInSliderCoordinatesForSliderSelection
+		&& currentlySelected == -1
+		&& justPushed)
+	{
+		setSliderPosition(minValue);
+		currentlySelected = 0;
+	}
 
+	minDistanceBetweenSliders = sliderWidthInSliderCoordinates/2.0;
 	int minValuePrevious = minValue, maxValuePrevious = maxValue;
 	switch (currentlySelected)
 	{ 
@@ -76,8 +77,6 @@ void MySliderWithMultipleHandles::mouseMoveEvent(QMouseEvent *ev)
 		setSliderPosition(minValue);
 		channelHistogramInformation[*currentIndex].minValue = minValue;
 		channelHistogramInformation[*currentIndex].maxValue = maxValue;
-		if (minValuePrevious != minValue) emit minimumValueChanged(QString("Minimum: %1").arg(minValue,6));
-		if (maxValuePrevious != maxValue) emit maximumValueChanged(QString("Maximum: %1").arg(maxValue,6));
 		break;
 	case 1:
 		if (mousePositionInSliderCoordinates < (minValue + minDistanceBetweenSliders)){
@@ -89,12 +88,10 @@ void MySliderWithMultipleHandles::mouseMoveEvent(QMouseEvent *ev)
 		setSliderPosition(maxValue);
 		channelHistogramInformation[*currentIndex].minValue = minValue;
 		channelHistogramInformation[*currentIndex].maxValue = maxValue;
-		if (minValuePrevious != minValue) emit minimumValueChanged(QString("Minimum: %1").arg(minValue,6));
-		if (maxValuePrevious != maxValue) emit maximumValueChanged(QString("Maximum: %1").arg(maxValue,6));
 		break;
 	}
+	emit minimumMaximumCutoffValuesChanged();
 	justPushed = false;
-//	printf("%d %d %d %d \n", currentlySelected, mousePositionInSliderCoordinates, minValue, maxValue);
 }
 
 void MySliderWithMultipleHandles::mouseReleaseEvent(QMouseEvent *ev)
@@ -105,4 +102,6 @@ void MySliderWithMultipleHandles::mouseReleaseEvent(QMouseEvent *ev)
 
 void MySliderWithMultipleHandles::mousePressEvent(QMouseEvent *ev)
 { mousePositionInSliderCoordinatesForSliderSelection = minimum() + ((maximum() - minimum()) * ev->x()) / width();
+}
+}
 }
