@@ -517,11 +517,4 @@ void ImItem::_common_setup()
   checkGLError();
 }
 
-void ImItem::rescaleAndReplot(mylib::Array *plane)
-{
-	_scaleImage(plane, *_channelIndex, 0.2f);
-	_loadTex(plane);
-	checkGLError();
-}
-
 }} // end fetch::ui

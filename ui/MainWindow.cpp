@@ -428,8 +428,8 @@ void fetch::ui::MainWindow::createViews()
   TRY(connect(_cmapDockWidget,SIGNAL(gammaChanged(float)),
               _display,       SLOT(setGamma(float))));
   TRY(connect(
-      _histogramDockWidget,SIGNAL(scalingChanged(mylib::Array*)),
-      _display		      ,SLOT  (imshow(mylib::Array*))));
+      _histogramDockWidget,SIGNAL(scalingChanged(mylib::Array*,bool)),
+      _display		      ,SLOT  (imshow(mylib::Array*,bool))));
   _display->setColormap(_cmapDockWidget->cmap());
   //_player->start();
 }

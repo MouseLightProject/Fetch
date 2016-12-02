@@ -29,7 +29,6 @@ public:
 
   void autoscale(int chan)                                                {_selected_channel=chan; _autoscale_next=true;}
   void resetscale(int chan)                                               {_selected_channel=chan; _resetscale_next=true;}
-  void rescaleAndReplot(mylib::Array *plane);
 
   void setRotation(double radians);
   void setFOVGeometry(float w_um, float h_um, float rotation_radians);

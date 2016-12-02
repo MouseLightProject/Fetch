@@ -73,6 +73,7 @@ ZoomableView::drawForeground(QPainter* painter, const QRectF& rect)
 Figure::Figure(PlanarStageController *stageController, channelHistogramInformationStruct *channelHistogramInformation, size_t *channelIndex, QWidget *parent/*=0*/)
 :QWidget(parent)
 ,_sc(stageController)
+,_previous_im(0)
 {
   _view = new ZoomableView(&_scene);
   QGLWidget *viewport;

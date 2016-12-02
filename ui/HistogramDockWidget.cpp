@@ -38,6 +38,7 @@ namespace ui {
     , plot_(0)
     , ichan_(0)
     , last_(0)
+	, lastPointer_(0)
     , x_(HINT_NBINS)
     , pdf_(HINT_NBINS)
     , cdf_(HINT_NBINS)
@@ -377,26 +378,30 @@ void HistogramDockWidget::set_autoscale(int is_autoscale)
   { 
     channelHistogramInformation[ichan_].autoscale = is_autoscale;
 	is_autoscale ? intensitySlider_->setEnabled(false) : intensitySlider_->setEnabled(true);
+	//DGA do junk to calculate actual min max
+	emit scalingChanged(lastPointer_,false);
+	updateMinimumMaximumCutoffValues();
   }
 
 void HistogramDockWidget::updateMinimumMaximumCutoffValues()
-  {	if (channelHistogramInformation[ichan_].minValue != minimumCutoffPrevious_)
+  {	bool didScalingChange=false;
+	if (channelHistogramInformation[ichan_].minValue != minimumCutoffPrevious_)
 	{ minimumCutoffLabel_->setText(QString("Minimum: %1").arg(channelHistogramInformation[ichan_].minValue, 6));
 	  minimumCutoffVector_ = { (double)channelHistogramInformation[ichan_].minValue, (double)channelHistogramInformation[ichan_].minValue };
 	  plot_->graph(2)->setData(minimumCutoffVector_, yForPlottingCutoffsVector_);
 	  minimumCutoffPrevious_ = channelHistogramInformation[ichan_].minValue;
+	  didScalingChange=true;
 	}
 	if (channelHistogramInformation[ichan_].maxValue != maximumCutoffPrevious_)
 	{ maximumCutoffLabel_->setText(QString("Maximum: %1").arg(channelHistogramInformation[ichan_].maxValue, 6));
 	  maximumCutoffVector_ = { (double)channelHistogramInformation[ichan_].maxValue, (double)channelHistogramInformation[ichan_].maxValue };
 	  plot_->graph(3)->setData(maximumCutoffVector_, yForPlottingCutoffsVector_);
 	  maximumCutoffPrevious_ = channelHistogramInformation[ichan_].maxValue;
+	  didScalingChange=true;
 	}
 	intensitySlider_->update();
 	plot_->replot();
-	if (!is_live_ && last_){
-		emit scalingChanged(last_);
-	}
+	if (didScalingChange && !channelHistogramInformation[ichan_].autoscale) emit scalingChanged(lastPointer_, true);
   }
 void HistogramDockWidget::reset_minmax()
   {
@@ -415,6 +420,7 @@ void HistogramDockWidget::swap(mylib::Array *im)
   { 
     mylib::Array *t=last_;
     TRY(last_=mylib::Copy_Array(im));
+	lastPointer_ = im;
     if(t) mylib::Free_Array(t);
   Error:
     ; // presumably a memory error...not sure what to do, should be rare    

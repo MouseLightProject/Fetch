@@ -16,7 +16,7 @@ class HistogramDockWidget: public QDockWidget
 	QCustomPlot      *plot_;
 	MySliderWithMultipleHandles *intensitySlider_;
 	size_t            ichan_;
-	mylib::Array     *last_;
+	mylib::Array     *last_, *lastPointer_;
 	bool              is_live_;
 	QVector<double>   x_,pdf_,cdf_,minimumCutoffVector_, maximumCutoffVector_, yForPlottingCutoffsVector_;
 	double            minX_,maxX_,perct_,minimumCutoffPrevious_,maximumCutoffPrevious_;
@@ -31,7 +31,7 @@ class HistogramDockWidget: public QDockWidget
 
 	signals:
 		void change_chan(int ichan);
-		void scalingChanged(mylib::Array*);
+		void scalingChanged(mylib::Array*, bool fromSlider);
 
 	public slots:
 		void set(mylib::Array *im);
