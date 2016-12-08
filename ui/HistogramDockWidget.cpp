@@ -152,11 +152,11 @@ namespace ui {
 	plot_->addGraph(plot_->xAxis2,plot_->yAxis2);
 	plot_->graph(3)->setPen(QPen(Qt::black));
     plot_->xAxis->setLabel("Intensity");
-	plot_->xAxis->setRange(0, 65535);
+	//plot_->xAxis->setRange(0, 65535);
     plot_->xAxis2->setVisible(true);
-	plot_->xAxis2->setRange(0, 65535);
+//	plot_->xAxis2->setRange(0, 65535);
     plot_->yAxis->setLabel("PDF");
-	plot_->yAxis->setRange(0, 1);
+	//plot_->yAxis->setRange(0, 1);
     plot_->yAxis2->setLabelColor(Qt::blue);
     plot_->yAxis2->setVisible(true);
     plot_->yAxis2->setLabel("CDF");
@@ -185,8 +185,6 @@ namespace ui {
 	intensitySlider_->setEnabled(false);
 	layout->addWidget(autoscaleCheckBox_);
 	layout->addWidget(intensitySlider_);
-	QSlider* temp = new QSlider();
-	layout->addWidget(temp);
 	layout->addLayout(sliderForm);
   }
   
@@ -327,10 +325,9 @@ static int g_inited=0;
     plot_->graph(0)->setData(x_,pdf_);
     plot_->graph(1)->setData(x_,cdf_);
     if(!g_inited)
-    { plot_->graph(0)->rescaleValueAxis();
-	plot_->graph(1)->rescaleValueAxis();
-		//plot_->graph(0)->rescaleAxes(); plot_->graph(0)->valueAxis.rescaleAxes();
-      //plot_->graph(1)->rescaleAxes();
+    { plot_->graph(0)->rescaleAxes();
+	plot_->xAxis2->setRange(plot_->xAxis->range().lower, plot_->xAxis->range().upper);
+	//plot_->graph(1)->rescaleAxes();
       g_inited=1;
     }
 	updateMinimumMaximumCutoffValues();
@@ -354,8 +351,14 @@ static int g_inited=0;
   }
 
  void HistogramDockWidget::rescale_axes()
-  { plot_->graph(0)->rescaleValueAxis();
-	plot_->graph(1)->rescaleValueAxis();
+ {
+	 plot_->graph(0)->rescaleAxes();
+	 plot_->xAxis2->setRange(plot_->xAxis->range().lower, plot_->xAxis->range().upper);
+	 //intensitySlider_->setMinimum(plot_->xAxis->range().lower);
+	 //intensitySlider_->setMaximum(plot_->xAxis->range().upper);
+	 updateMinimumMaximumCutoffValues();
+	  // plot_->graph(0)->rescaleValueAxis();
+//	plot_->graph(1)->rescaleValueAxis();
 	  //plot_->graph(0)->rescaleAxes();
     //plot_->graph(1)->rescaleAxes();
   }
@@ -378,8 +381,8 @@ void HistogramDockWidget::set_autoscale(int is_autoscale)
   { 
     channelHistogramInformation[ichan_].autoscale = is_autoscale;
 	is_autoscale ? intensitySlider_->setEnabled(false) : intensitySlider_->setEnabled(true);
-	//DGA do junk to calculate actual min max
-	emit scalingChanged(lastPointer_,false);
+	//DGA do junk to calculate actual min max and to see if minmax changed
+	if (lastPointer_) emit scalingChanged(lastPointer_,false);
 	updateMinimumMaximumCutoffValues();
   }
 
@@ -388,20 +391,29 @@ void HistogramDockWidget::updateMinimumMaximumCutoffValues()
 	if (channelHistogramInformation[ichan_].minValue != minimumCutoffPrevious_)
 	{ minimumCutoffLabel_->setText(QString("Minimum: %1").arg(channelHistogramInformation[ichan_].minValue, 6));
 	  minimumCutoffVector_ = { (double)channelHistogramInformation[ichan_].minValue, (double)channelHistogramInformation[ichan_].minValue };
-	  plot_->graph(2)->setData(minimumCutoffVector_, yForPlottingCutoffsVector_);
+	  plot_->graph(2)->setVisible(false);
+	  if (plot_->xAxis2->range().lower <= channelHistogramInformation[ichan_].minValue && plot_->xAxis2->range().upper >= channelHistogramInformation[ichan_].minValue){
+		  plot_->graph(2)->setData(minimumCutoffVector_, yForPlottingCutoffsVector_);
+		  plot_->graph(2)->setVisible(true);
+	  }
 	  minimumCutoffPrevious_ = channelHistogramInformation[ichan_].minValue;
 	  didScalingChange=true;
 	}
 	if (channelHistogramInformation[ichan_].maxValue != maximumCutoffPrevious_)
 	{ maximumCutoffLabel_->setText(QString("Maximum: %1").arg(channelHistogramInformation[ichan_].maxValue, 6));
 	  maximumCutoffVector_ = { (double)channelHistogramInformation[ichan_].maxValue, (double)channelHistogramInformation[ichan_].maxValue };
-	  plot_->graph(3)->setData(maximumCutoffVector_, yForPlottingCutoffsVector_);
+	  plot_->graph(3)->setVisible(false);
+	  if (plot_->xAxis2->range().lower <= channelHistogramInformation[ichan_].maxValue && plot_->xAxis2->range().upper >= channelHistogramInformation[ichan_].maxValue)
+	  {
+		  plot_->graph(3)->setData(maximumCutoffVector_, yForPlottingCutoffsVector_);
+		  plot_->graph(3)->setVisible(true);
+	  }
 	  maximumCutoffPrevious_ = channelHistogramInformation[ichan_].maxValue;
-	  didScalingChange=true;
+	  didScalingChange = true;
 	}
 	intensitySlider_->update();
 	plot_->replot();
-	if (didScalingChange && !channelHistogramInformation[ichan_].autoscale) emit scalingChanged(lastPointer_, true);
+	if (didScalingChange && !channelHistogramInformation[ichan_].autoscale && lastPointer_) emit scalingChanged(lastPointer_, true);
   }
 void HistogramDockWidget::reset_minmax()
   {

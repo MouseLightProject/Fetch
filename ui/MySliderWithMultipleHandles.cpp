@@ -52,24 +52,26 @@ void MySliderWithMultipleHandles::mouseMoveEvent(QMouseEvent *ev)
 	switch (currentlySelected)
 	{ 
 	case 0:
+		minValue = newSliderPosition(distanceToCurrentlySelectedSlidersLeftEdge);
 		if (mousePositionInSliderCoordinates > (maxValue - minDistanceBetweenSliders)){
 			(mousePositionInSliderCoordinates + minDistanceBetweenSliders) < maximum() ? maxValue = mousePositionInSliderCoordinates + minDistanceBetweenSliders : maxValue = maximum();
 			minValue = maxValue - minDistanceBetweenSliders;
 		}
-		else minValue = mousePositionInSliderCoordinates;
 		if (minValue < minimum()) minValue = minimum();
 		setSliderPosition(minValue);
+		//printf("%d %f %f \n", minValue, distanceToCurrentlySelectedSlidersLeftEdge, newCursorPosition(distanceToCurrentlySelectedSlidersLeftEdge));
 		channelHistogramInformation[*currentIndex].minValue = minValue;
 		channelHistogramInformation[*currentIndex].maxValue = maxValue;
 		break;
 	case 1:
+		maxValue = newSliderPosition(distanceToCurrentlySelectedSlidersLeftEdge);
 		if (mousePositionInSliderCoordinates < (minValue + minDistanceBetweenSliders)){
 			(mousePositionInSliderCoordinates - minDistanceBetweenSliders)>minimum() ? minValue = mousePositionInSliderCoordinates - minDistanceBetweenSliders : minValue = minimum();
 			maxValue = minValue + minDistanceBetweenSliders;
 		}
-		else maxValue = mousePositionInSliderCoordinates;
 		if (maxValue > maximum()) maxValue = maximum();
 		setSliderPosition(maxValue);
+		//setSliderPosition(newSliderPosition(distanceToCurrentlySelectedSlidersLeftEdge));
 		channelHistogramInformation[*currentIndex].minValue = minValue;
 		channelHistogramInformation[*currentIndex].maxValue = maxValue;
 		break;
@@ -96,6 +98,7 @@ void MySliderWithMultipleHandles::mousePressEvent(QMouseEvent *ev)
 		setSliderPosition(maxValue);
 		currentlySelected = 1;
 		mostRecentlySelected = 1;
+		distanceToCurrentlySelectedSlidersLeftEdge = mousePositionInSliderCoordinatesForSliderSelection-(maxValue-sliderWidthInSliderCoordinates*maxValue / maximum());
 	}
 	else if (minValue - sliderWidthInSliderCoordinates*minValue / maximum() < mousePositionInSliderCoordinatesForSliderSelection
 		&& minValue + sliderWidthInSliderCoordinates*(1 - (float)minValue / maximum()) > mousePositionInSliderCoordinatesForSliderSelection
@@ -105,7 +108,15 @@ void MySliderWithMultipleHandles::mousePressEvent(QMouseEvent *ev)
 		setSliderPosition(minValue);
 		currentlySelected = 0;
 		mostRecentlySelected = 0;
+		distanceToCurrentlySelectedSlidersLeftEdge = mousePositionInSliderCoordinatesForSliderSelection - (minValue - sliderWidthInSliderCoordinates*minValue / maximum());
 	}
+}
+float MySliderWithMultipleHandles::newSliderPosition(float distanceFromLeftEdge){
+	return (mousePositionInSliderCoordinates-distanceFromLeftEdge)/(1.0-sliderWidthInSliderCoordinates/maximum());
+}
+
+int MySliderWithMultipleHandles::slidersLeftEdge(int position){
+	return 0;
 }
 }
 }

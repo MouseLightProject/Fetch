@@ -266,7 +266,7 @@ surface_find {
 }
 adaptive_tiling {
   every: 2
-  mindist: 1
+  mindist: 3
 }
 trip_detect {
 }

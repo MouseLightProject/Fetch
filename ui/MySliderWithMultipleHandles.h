@@ -15,6 +15,8 @@ public:
 	MySliderWithMultipleHandles(channelHistogramInformationStruct *channelHistogramInformationInput, size_t *currentIndexInput, QWidget *parent);
 	void paintEvent(QPaintEvent *ev);
 	void mouseMoveEvent(QMouseEvent *ev);
+	float newSliderPosition(float distanceFromLeftEdge);
+	int slidersLeftEdge(int position);
 	int maxValue = 100;
 	int minValue = 0;
 	float sliderWidthInSliderCoordinates;
@@ -25,6 +27,7 @@ public:
 	int minDistanceBetweenSliders;
 	channelHistogramInformationStruct *channelHistogramInformation;
 	size_t *currentIndex, currentIndexPrevious=0;
+	float distanceToCurrentlySelectedSlidersLeftEdge;
 
 	signals:
 	void minimumMaximumCutoffValuesChanged(void);
