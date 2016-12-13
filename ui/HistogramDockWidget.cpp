@@ -38,7 +38,7 @@ namespace ui {
     , plot_(0)
     , ichan_(0)
     , last_(0)
-	, lastPointer_(0)
+	, currentImagePointerAccordingToUI_(0)
     , x_(HINT_NBINS)
     , pdf_(HINT_NBINS)
     , cdf_(HINT_NBINS)
@@ -183,6 +183,8 @@ namespace ui {
 		this, SLOT(set_autoscale(int))));
 	autoscaleCheckBox_->setChecked(true);
 	intensitySlider_->setEnabled(false);
+	intensitySlider_->setMinimum(0);
+	intensitySlider_->setMaximum(65535);
 	layout->addWidget(autoscaleCheckBox_);
 	layout->addWidget(intensitySlider_);
 	layout->addLayout(sliderForm);
@@ -354,12 +356,16 @@ static int g_inited=0;
  {
 	 plot_->graph(0)->rescaleAxes();
 	 plot_->xAxis2->setRange(plot_->xAxis->range().lower, plot_->xAxis->range().upper);
-	 //intensitySlider_->setMinimum(plot_->xAxis->range().lower);
-	 //intensitySlider_->setMaximum(plot_->xAxis->range().upper);
+	 if (channelHistogramInformation[ichan_].minValue < plot_->xAxis->range().lower) channelHistogramInformation[ichan_].minValue = plot_->xAxis->range().lower;
+	 if (channelHistogramInformation[ichan_].minValue > plot_->xAxis->range().upper) channelHistogramInformation[ichan_].minValue = plot_->xAxis->range().upper;
+	 if (channelHistogramInformation[ichan_].maxValue < plot_->xAxis->range().lower) channelHistogramInformation[ichan_].maxValue = plot_->xAxis->range().lower;
+	 if (channelHistogramInformation[ichan_].maxValue > plot_->xAxis->range().upper) channelHistogramInformation[ichan_].maxValue = plot_->xAxis->range().upper;
+	 intensitySlider_->setMinimum(plot_->xAxis->range().lower);
+	 intensitySlider_->setMaximum(plot_->xAxis->range().upper);
 	 updateMinimumMaximumCutoffValues();
-	  // plot_->graph(0)->rescaleValueAxis();
-//	plot_->graph(1)->rescaleValueAxis();
-	  //plot_->graph(0)->rescaleAxes();
+	 // plot_->graph(0)->rescaleValueAxis();
+	 //	plot_->graph(1)->rescaleValueAxis();
+	 //plot_->graph(0)->rescaleAxes();
     //plot_->graph(1)->rescaleAxes();
   }
 
@@ -382,7 +388,7 @@ void HistogramDockWidget::set_autoscale(int is_autoscale)
     channelHistogramInformation[ichan_].autoscale = is_autoscale;
 	is_autoscale ? intensitySlider_->setEnabled(false) : intensitySlider_->setEnabled(true);
 	//DGA do junk to calculate actual min max and to see if minmax changed
-	if (lastPointer_) emit scalingChanged(lastPointer_,false);
+	if (last_ && is_autoscale) emit scalingChanged(last_,currentImagePointerAccordingToUI_, true);
 	updateMinimumMaximumCutoffValues();
   }
 
@@ -413,7 +419,7 @@ void HistogramDockWidget::updateMinimumMaximumCutoffValues()
 	}
 	intensitySlider_->update();
 	plot_->replot();
-	if (didScalingChange && !channelHistogramInformation[ichan_].autoscale && lastPointer_) emit scalingChanged(lastPointer_, true);
+	if (didScalingChange && !channelHistogramInformation[ichan_].autoscale && last_) emit scalingChanged(last_,currentImagePointerAccordingToUI_, true);
   }
 void HistogramDockWidget::reset_minmax()
   {
@@ -432,7 +438,7 @@ void HistogramDockWidget::swap(mylib::Array *im)
   { 
     mylib::Array *t=last_;
     TRY(last_=mylib::Copy_Array(im));
-	lastPointer_ = im;
+	currentImagePointerAccordingToUI_ = im;
     if(t) mylib::Free_Array(t);
   Error:
     ; // presumably a memory error...not sure what to do, should be rare    

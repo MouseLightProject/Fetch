@@ -11,12 +11,10 @@ MySliderWithMultipleHandles::MySliderWithMultipleHandles(channelHistogramInforma
 }
 
 void MySliderWithMultipleHandles::paintEvent(QPaintEvent *ev)
-{
+{ 
 	Q_UNUSED(ev);
 	QPainter p(this);
 	QStyleOptionSlider opt;
-	setMaximum(65535);
-	setMinimum(0);
 	setSingleStep(1);
 	setPageStep(0);
 	//Groove
@@ -24,6 +22,7 @@ void MySliderWithMultipleHandles::paintEvent(QPaintEvent *ev)
 	opt.subControls = QStyle::SC_SliderGroove;
 	opt.rect = style()->subControlRect(QStyle::CC_Slider, &opt, QStyle::SC_SliderGroove, this);
 	style()->drawComplexControl(QStyle::CC_Slider, &opt, &p, this);
+
 
 	//First handle.
 	initStyleOption(&opt);
@@ -47,31 +46,29 @@ void MySliderWithMultipleHandles::mouseMoveEvent(QMouseEvent *ev)
 {	mousePositionInSliderCoordinates = minimum() + ((maximum() - minimum()) * ev->x() )/ width();
 	minValue = channelHistogramInformation[*currentIndex].minValue;
 	maxValue = channelHistogramInformation[*currentIndex].maxValue;
-	minDistanceBetweenSliders = sliderWidthInSliderCoordinates/2.0;
-	int minValuePrevious = minValue, maxValuePrevious = maxValue;
+	minDistanceBetweenSliders = 0;//sliderWidthInSliderCoordinates/2.0;
 	switch (currentlySelected)
 	{ 
 	case 0:
-		minValue = newSliderPosition(distanceToCurrentlySelectedSlidersLeftEdge);
-		if (mousePositionInSliderCoordinates > (maxValue - minDistanceBetweenSliders)){
-			(mousePositionInSliderCoordinates + minDistanceBetweenSliders) < maximum() ? maxValue = mousePositionInSliderCoordinates + minDistanceBetweenSliders : maxValue = maximum();
-			minValue = maxValue - minDistanceBetweenSliders;
+		minValue = newSliderValue(distanceToCurrentlySelectedSlidersLeftEdge);
+		if (minValue > maxValue - minDistanceBetweenSliders)
+		{
+		 minValue + minDistanceBetweenSliders < maximum() ? maxValue = minValue + minDistanceBetweenSliders : maxValue = maximum();
+		  minValue = maxValue - minDistanceBetweenSliders;
 		}
 		if (minValue < minimum()) minValue = minimum();
 		setSliderPosition(minValue);
-		//printf("%d %f %f \n", minValue, distanceToCurrentlySelectedSlidersLeftEdge, newCursorPosition(distanceToCurrentlySelectedSlidersLeftEdge));
 		channelHistogramInformation[*currentIndex].minValue = minValue;
 		channelHistogramInformation[*currentIndex].maxValue = maxValue;
 		break;
 	case 1:
-		maxValue = newSliderPosition(distanceToCurrentlySelectedSlidersLeftEdge);
-		if (mousePositionInSliderCoordinates < (minValue + minDistanceBetweenSliders)){
-			(mousePositionInSliderCoordinates - minDistanceBetweenSliders)>minimum() ? minValue = mousePositionInSliderCoordinates - minDistanceBetweenSliders : minValue = minimum();
+		maxValue = newSliderValue(distanceToCurrentlySelectedSlidersLeftEdge);
+		if (maxValue < minValue + minDistanceBetweenSliders){
+			maxValue - minDistanceBetweenSliders > minimum()  ? minValue = maxValue - minDistanceBetweenSliders : minValue = minimum();
 			maxValue = minValue + minDistanceBetweenSliders;
 		}
 		if (maxValue > maximum()) maxValue = maximum();
 		setSliderPosition(maxValue);
-		//setSliderPosition(newSliderPosition(distanceToCurrentlySelectedSlidersLeftEdge));
 		channelHistogramInformation[*currentIndex].minValue = minValue;
 		channelHistogramInformation[*currentIndex].maxValue = maxValue;
 		break;
@@ -88,35 +85,39 @@ void MySliderWithMultipleHandles::mouseReleaseEvent(QMouseEvent *ev)
 
 void MySliderWithMultipleHandles::mousePressEvent(QMouseEvent *ev)
 { mousePositionInSliderCoordinatesForSliderSelection = minimum() + ((maximum() - minimum()) * ev->x()) / width();
-	minValue = channelHistogramInformation[*currentIndex].minValue;
-	maxValue = channelHistogramInformation[*currentIndex].maxValue;
-	if (maxValue - sliderWidthInSliderCoordinates*maxValue / maximum() < mousePositionInSliderCoordinatesForSliderSelection
-		&& maxValue + sliderWidthInSliderCoordinates*(1 - (float)maxValue / maximum()) > mousePositionInSliderCoordinatesForSliderSelection
+  minValue = channelHistogramInformation[*currentIndex].minValue;
+  maxValue = channelHistogramInformation[*currentIndex].maxValue;
+  int topSliderValue, bottomSliderValue;
+  if (mostRecentlySelected == 0) {topSliderValue = minValue; bottomSliderValue = maxValue;}
+  else { topSliderValue = maxValue; bottomSliderValue = minValue;}
+  if (topSliderValue - sliderWidthInSliderCoordinates*topSliderValue / maximum() < mousePositionInSliderCoordinatesForSliderSelection
+		&& topSliderValue + sliderWidthInSliderCoordinates*(1 - (float)topSliderValue / maximum()) > mousePositionInSliderCoordinatesForSliderSelection
 		&& currentlySelected == -1
 		&& justPushed)
-	{
-		setSliderPosition(maxValue);
-		currentlySelected = 1;
-		mostRecentlySelected = 1;
-		distanceToCurrentlySelectedSlidersLeftEdge = mousePositionInSliderCoordinatesForSliderSelection-(maxValue-sliderWidthInSliderCoordinates*maxValue / maximum());
-	}
-	else if (minValue - sliderWidthInSliderCoordinates*minValue / maximum() < mousePositionInSliderCoordinatesForSliderSelection
-		&& minValue + sliderWidthInSliderCoordinates*(1 - (float)minValue / maximum()) > mousePositionInSliderCoordinatesForSliderSelection
+  {
+	setSliderPosition(topSliderValue);
+	currentlySelected = (minValue == maxValue ? mostRecentlySelected: (topSliderValue == maxValue) );
+	mostRecentlySelected = currentlySelected;
+	distanceToCurrentlySelectedSlidersLeftEdge = mousePositionInSliderCoordinatesForSliderSelection-(topSliderValue-sliderWidthInSliderCoordinates*topSliderValue / maximum());
+  }
+  else if (bottomSliderValue - sliderWidthInSliderCoordinates*bottomSliderValue / maximum() < mousePositionInSliderCoordinatesForSliderSelection
+		&& bottomSliderValue + sliderWidthInSliderCoordinates*(1 - (float)bottomSliderValue / maximum()) > mousePositionInSliderCoordinatesForSliderSelection
 		&& currentlySelected == -1
 		&& justPushed)
-	{
-		setSliderPosition(minValue);
-		currentlySelected = 0;
-		mostRecentlySelected = 0;
-		distanceToCurrentlySelectedSlidersLeftEdge = mousePositionInSliderCoordinatesForSliderSelection - (minValue - sliderWidthInSliderCoordinates*minValue / maximum());
-	}
+  {
+	setSliderPosition(bottomSliderValue);
+	currentlySelected = (minValue == maxValue ? mostRecentlySelected: (bottomSliderValue == maxValue) );
+	mostRecentlySelected = currentlySelected;
+	distanceToCurrentlySelectedSlidersLeftEdge = mousePositionInSliderCoordinatesForSliderSelection - (bottomSliderValue - sliderWidthInSliderCoordinates*bottomSliderValue / maximum());
+  }
 }
-float MySliderWithMultipleHandles::newSliderPosition(float distanceFromLeftEdge){
+float MySliderWithMultipleHandles::newSliderValue(float distanceFromLeftEdge){
 	return (mousePositionInSliderCoordinates-distanceFromLeftEdge)/(1.0-sliderWidthInSliderCoordinates/maximum());
 }
 
-int MySliderWithMultipleHandles::slidersLeftEdge(int position){
-	return 0;
+float MySliderWithMultipleHandles::slidersLeftEdge(int sliderPosition){
+	return (sliderPosition - sliderWidthInSliderCoordinates*sliderPosition/maximum());
 }
+
 }
 }

@@ -44,10 +44,11 @@ public:
 
 public slots:
   inline void push(mylib::Array *im)                                       {_item->push(im); updatePos(); emit pushed(); maybeFit();}
-  inline void imshow(mylib::Array *im, bool fromSlider=false)              {if (!fromSlider || (fromSlider && _previous_im == im)){
-	  _item->push(im); updatePos(); _item->flip(); maybeFit(); 
-	  if(!fromSlider) 
-		  _previous_im = im;} 
+  inline void imshow(mylib::Array *im, mylib::Array *currentImagePointerAccordingToUI = NULL, bool fromUI=false)              {//if (!fromSlider || (fromSlider && _previous_im == im)){
+	  if (!fromUI) _previous_im = im;
+	  if (!fromUI || (fromUI && currentImagePointerAccordingToUI == _previous_im) ) _item->push(im); updatePos(); _item->flip(); maybeFit(); 
+	  /*if(!fromSlider) 
+		  _previous_im = im;}*/ 
   }
   inline void fit(void)                                                    {_view->fitInView(_item->mapRectToScene(_item->boundingRect()),Qt::KeepAspectRatio);_view->notifyZoomChanged();}
   inline void fitNext(void)                                                {/*_isFitOnNext=true;*/}
