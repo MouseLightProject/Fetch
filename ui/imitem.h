@@ -59,6 +59,7 @@ protected:
   unsigned int _hTexture;
   unsigned int _nchan;                   // updated when an image is pushed
   unsigned int _show_mode;
+  unsigned int _pixelValueCounts[65535]; //DGA: To store counts of pixels to determine cutoffs
 
   QGLShaderProgram _shader;
   unsigned int _hShaderPlane;

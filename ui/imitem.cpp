@@ -450,7 +450,7 @@ void ImItem::_scaleImage(mylib::Array *data, GLuint ichannel, float percent)
   //mylib::Write_Image("ImItem_autoscale_input.tif",data,mylib::DONT_PRESS);
   //mylib::Write_Image("ImItem_autoscale_channel_float.tif",&c,mylib::DONT_PRESS);
 
-
+  
   float max,min,m,b;
   mylib::Range_Bundle range;
 #if 0
@@ -466,12 +466,25 @@ void ImItem::_scaleImage(mylib::Array *data, GLuint ichannel, float percent)
 
   mylib::Array_Range(&range,&c); // min max of single channel
   mylib::Free_Array(t);
+  u16 * imageData = (u16 *) (data->data);
   if(_channelHistogramInformation[*_channelIndex].autoscale)
-  {
-    max = _gain*range.maxval.fval+_bias; // adjust for gain and bias
-    min = _gain*range.minval.fval+_bias;
-	_channelHistogramInformation[*_channelIndex].minValue = (int) (range.minval.fval*65535);
-	_channelHistogramInformation[*_channelIndex].maxValue = (int) (range.maxval.fval*65535);
+  { memset(_pixelValueCounts,0,sizeof(_pixelValueCounts));
+	for(int i=0; i<data->size; i++){
+		u16 temp = imageData[i];
+		_pixelValueCounts[u16(imageData[i])]++;
+	}
+	int totalCount = 0, minValue=-1, maxValue=-1, currentValue = 0;
+	while (totalCount < 0.9 * data->size){
+		totalCount+=_pixelValueCounts[currentValue];
+		if (minValue == -1 && totalCount> 0.1 * data->size) minValue = currentValue;
+		currentValue++;
+	}
+	maxValue = currentValue;
+	//multiply gain and bias by 65535?
+    max = _gain*maxValue/65535.0+_bias;//_gain*range.maxval.fval+_bias; // adjust for gain and bias
+    min = _gain*minValue/65535.0+_bias;//_gain*range.minval.fval+_bias;
+	_channelHistogramInformation[*_channelIndex].minValue = minValue; //(int) (range.minval.fval*65535);
+	_channelHistogramInformation[*_channelIndex].maxValue = maxValue; //(int) (range.maxval.fval*65535);
   }
   else
   {

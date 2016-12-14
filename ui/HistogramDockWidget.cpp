@@ -356,12 +356,12 @@ static int g_inited=0;
  {
 	 plot_->graph(0)->rescaleAxes();
 	 plot_->xAxis2->setRange(plot_->xAxis->range().lower, plot_->xAxis->range().upper);
-	 if (channelHistogramInformation[ichan_].minValue < plot_->xAxis->range().lower) channelHistogramInformation[ichan_].minValue = plot_->xAxis->range().lower;
+	/* if (channelHistogramInformation[ichan_].minValue < plot_->xAxis->range().lower) channelHistogramInformation[ichan_].minValue = plot_->xAxis->range().lower;
 	 if (channelHistogramInformation[ichan_].minValue > plot_->xAxis->range().upper) channelHistogramInformation[ichan_].minValue = plot_->xAxis->range().upper;
 	 if (channelHistogramInformation[ichan_].maxValue < plot_->xAxis->range().lower) channelHistogramInformation[ichan_].maxValue = plot_->xAxis->range().lower;
 	 if (channelHistogramInformation[ichan_].maxValue > plot_->xAxis->range().upper) channelHistogramInformation[ichan_].maxValue = plot_->xAxis->range().upper;
 	 intensitySlider_->setMinimum(plot_->xAxis->range().lower);
-	 intensitySlider_->setMaximum(plot_->xAxis->range().upper);
+	 intensitySlider_->setMaximum(plot_->xAxis->range().upper);*/
 	 updateMinimumMaximumCutoffValues();
 	 // plot_->graph(0)->rescaleValueAxis();
 	 //	plot_->graph(1)->rescaleValueAxis();
@@ -397,25 +397,25 @@ void HistogramDockWidget::updateMinimumMaximumCutoffValues()
 	if (channelHistogramInformation[ichan_].minValue != minimumCutoffPrevious_)
 	{ minimumCutoffLabel_->setText(QString("Minimum: %1").arg(channelHistogramInformation[ichan_].minValue, 6));
 	  minimumCutoffVector_ = { (double)channelHistogramInformation[ichan_].minValue, (double)channelHistogramInformation[ichan_].minValue };
-	  plot_->graph(2)->setVisible(false);
-	  if (plot_->xAxis2->range().lower <= channelHistogramInformation[ichan_].minValue && plot_->xAxis2->range().upper >= channelHistogramInformation[ichan_].minValue){
-		  plot_->graph(2)->setData(minimumCutoffVector_, yForPlottingCutoffsVector_);
-		  plot_->graph(2)->setVisible(true);
-	  }
 	  minimumCutoffPrevious_ = channelHistogramInformation[ichan_].minValue;
 	  didScalingChange=true;
+	}
+	plot_->graph(2)->setVisible(false);
+	if (plot_->xAxis2->range().lower <= channelHistogramInformation[ichan_].minValue && plot_->xAxis2->range().upper >= channelHistogramInformation[ichan_].minValue){
+		plot_->graph(2)->setData(minimumCutoffVector_, yForPlottingCutoffsVector_);
+		plot_->graph(2)->setVisible(true);
 	}
 	if (channelHistogramInformation[ichan_].maxValue != maximumCutoffPrevious_)
 	{ maximumCutoffLabel_->setText(QString("Maximum: %1").arg(channelHistogramInformation[ichan_].maxValue, 6));
 	  maximumCutoffVector_ = { (double)channelHistogramInformation[ichan_].maxValue, (double)channelHistogramInformation[ichan_].maxValue };
-	  plot_->graph(3)->setVisible(false);
-	  if (plot_->xAxis2->range().lower <= channelHistogramInformation[ichan_].maxValue && plot_->xAxis2->range().upper >= channelHistogramInformation[ichan_].maxValue)
-	  {
-		  plot_->graph(3)->setData(maximumCutoffVector_, yForPlottingCutoffsVector_);
-		  plot_->graph(3)->setVisible(true);
-	  }
 	  maximumCutoffPrevious_ = channelHistogramInformation[ichan_].maxValue;
 	  didScalingChange = true;
+	}
+	plot_->graph(3)->setVisible(false);
+	if (plot_->xAxis2->range().lower <= channelHistogramInformation[ichan_].maxValue && plot_->xAxis2->range().upper >= channelHistogramInformation[ichan_].maxValue)
+	{
+		plot_->graph(3)->setData(maximumCutoffVector_, yForPlottingCutoffsVector_);
+		plot_->graph(3)->setVisible(true);
 	}
 	intensitySlider_->update();
 	plot_->replot();
