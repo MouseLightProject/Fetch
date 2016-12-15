@@ -468,7 +468,8 @@ void ImItem::_scaleImage(mylib::Array *data, GLuint ichannel, float percent)
   mylib::Free_Array(t);
   u16 * imageData = (u16 *) (data->data);
   if(_channelHistogramInformation[*_channelIndex].autoscale)
-  { memset(_pixelValueCounts,0,sizeof(_pixelValueCounts));
+  { /*memset(_pixelValueCounts,0,sizeof(_pixelValueCounts));
+	
 	for(int i=0; i<data->size; i++){
 		u16 temp = imageData[i];
 		_pixelValueCounts[u16(imageData[i])]++;
@@ -479,7 +480,9 @@ void ImItem::_scaleImage(mylib::Array *data, GLuint ichannel, float percent)
 		if (minValue == -1 && totalCount> 0.1 * data->size) minValue = currentValue;
 		currentValue++;
 	}
-	maxValue = currentValue;
+	maxValue = currentValue;*/
+	  double maxValue=0, minValue=0;
+	 percentiles(data,_pixelValueCounts,0.1,0.9,minValue,maxValue);
 	//multiply gain and bias by 65535?
     max = _gain*maxValue/65535.0+_bias;//_gain*range.maxval.fval+_bias; // adjust for gain and bias
     min = _gain*minValue/65535.0+_bias;//_gain*range.minval.fval+_bias;

@@ -16,15 +16,17 @@ namespace mylib {
 #include "image.h"
 }
 
-#ifdef _MSC_VER
+#include "HistogramUtilities.h"
+
+/* #ifdef _MSC_VER
 #define restrict __restrict
 #else
 #define restrict __restrict__ 
-#endif
+#endif */
 
 #define ENDL "\r\n"
 #define PANIC(e) do{if(!(e)){qFatal("%s(%d)"ENDL "\tExpression evalatuated as false."ENDL "\t%s"ENDL,__FILE__,__LINE__,#e);           }}while(0)
-#define FAIL     do{         qFatal("%s(%d)"ENDL "\tExecution should not reach here."ENDL,__FILE__,__LINE__);                                 }while(0)
+//#define FAIL     do{         qFatal("%s(%d)"ENDL "\tExecution should not reach here."ENDL,__FILE__,__LINE__);                                 }while(0)
 #define TRY(e)   do{if(!(e)){qDebug("%s(%d)"ENDL "\tExpression evalatuated as false."ENDL "\t%s"ENDL,__FILE__,__LINE__,#e);goto Error;}}while(0)
 #define HERE     qDebug("%s(%d). HERE."ENDL,__FILE__,__LINE__)
 
@@ -152,11 +154,8 @@ namespace ui {
 	plot_->addGraph(plot_->xAxis2,plot_->yAxis2);
 	plot_->graph(3)->setPen(QPen(Qt::black));
     plot_->xAxis->setLabel("Intensity");
-	//plot_->xAxis->setRange(0, 65535);
     plot_->xAxis2->setVisible(true);
-//	plot_->xAxis2->setRange(0, 65535);
     plot_->yAxis->setLabel("PDF");
-	//plot_->yAxis->setRange(0, 1);
     plot_->yAxis2->setLabelColor(Qt::blue);
     plot_->yAxis2->setVisible(true);
     plot_->yAxis2->setLabel("CDF");
@@ -191,7 +190,7 @@ namespace ui {
   }
   
 // histogram utilities START  
-#define TYPECASES(ARRAYARG) do {\
+/* #define TYPECASES(ARRAYARG) do {\
     switch(ARRAYARG->type)  \
     { CASE( UINT8_TYPE ,u8); \
       CASE( UINT16_TYPE,u16);\
@@ -208,7 +207,7 @@ namespace ui {
     }}while(0)
 
   static double amin(mylib::Array *a)
-  { double out;
+  { double out; 
 #define CASE(ID,T) case mylib::ID: {const T *d=(T*)a->data; T m=d[0]; for(size_t i=1;i<a->size;++i) m=(d[i]<m)?d[i]:m; out=(double)m;} break;
     TYPECASES(a);
 #undef CASE
@@ -303,7 +302,7 @@ namespace ui {
 #undef CASE
     scan(cdf.data(),pdf.data(),n);
     setbins(x.data(),n,min,dy);
-  }
+  } */
  // histogram utilities END
 
  void HistogramDockWidget::set(mylib::Array *im)
