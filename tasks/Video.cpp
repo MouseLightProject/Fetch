@@ -350,8 +350,12 @@ Error:
                       rmx = RAND_MAX;
             c=e=(TPixel*)frm->data;
             e+=pitch[0]/pitch[3];
-            for(;c<e;++c)
-              *c = (TPixel) ((ptp*rand()/(float)RAND_MAX) + low);
+			int tempcount=0;
+            for(;c<e;++c){
+			 *c = (TPixel) (ptp*(tempcount%(1024*256))/(1024*256)); //: *c=0;//(TPixel) ((ptp*rand()/(float)RAND_MAX) + low);
+			  tempcount++;
+			}
+			tempcount=0;
           }
 #endif
 

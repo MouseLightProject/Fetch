@@ -65,7 +65,7 @@ namespace mylib {
 							       totalCount+=_pixelValueCounts[currentValue];\
 		                           if (minValueOut == -1 && totalCount> a->size*minPercent) minValueOut = currentValue;\
 		                           currentValue++;}\
-				            maxValueOut = currentValue;printf("%d %f\n", totalCount,maxPercent*a->size);}while(0) 
+				            maxValueOut = currentValue;}while(0) 
 #define SORTMETHOD(T) do{T * dataArray = new T [a->size];  memcpy(dataArray, a->data, a->size*sizeof(T)); std::sort(dataArray,dataArray+a->size); minValueOut = dataArray[int(a->size*minPercent)]; maxValueOut = dataArray[int(a->size*maxPercent)];}while(0)
  /*u16 * dataArray = new u16 [a->size];  
  memcpy(dataArray, a->data, a->size*sizeof(u16));

@@ -19,6 +19,7 @@ namespace mylib {
 #include <assert.h>
 #include "config.h"
 
+#include <algorithm>
 
 #undef HERE
 #define HERE printf("[ImItem] At %s(%d)\n",__FILE__,__LINE__)
@@ -215,7 +216,7 @@ void ImItem::_loadTex(mylib::Array *im)
     GLuint gltype = typeMapMylibToGLType(&im);
     //glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
     glTexImage3D(GL_TEXTURE_3D, 0, GL_LUMINANCE,
-                 im->dims[0], im->dims[1], _nchan, 0,
+                 im->dims[0], im->dims[1], 3,0,//_nchan, 0,
                  GL_LUMINANCE,
                  gltype,
                  im->data);
@@ -283,11 +284,11 @@ void ImItem::push(mylib::Array *plane)
   }
   else
     _nchan = 1;
-
+  
   //_channelHistogramInformation[*_channelIndex].autoscale
   //if(_autoscale_next)
   //{
-	  _scaleImage(plane,*_channelIndex,0.2f);
+	_scaleImage(plane,*_channelIndex,0.2f); //dga: only do it if channel changed?
    // _autoscale_next = false;
   //}
   if(_resetscale_next)
@@ -305,7 +306,13 @@ void ImItem::push(mylib::Array *plane)
   _fill = 10.0/_nchan;
   _fill = (_fill>1.0)?1.0:_fill;
 
-  _loadTex(plane);
+  _nchan = 1;
+mylib::Array c;
+  c = *plane;
+  mylib::Get_Array_Plane(&c,(mylib::Dimn_Type)0);//ichannel);
+  _loadTex(&c);
+
+//  _loadTex(plane);
   checkGLError();
 }
 
@@ -342,7 +349,7 @@ void ImItem::_setupShader()
         ":/shaders/vert/trivial") );
   SHADERASSERT( _shader.addShaderFromSourceFile(
         QGLShader::Fragment,
-        ":/shaders/frag/cmap") );
+        ":/shaders/frag/cmapDavid") );
   SHADERASSERT( _shader.link() );
   SHADERASSERT( _shader.bind() );
   _hShaderPlane = _shader.uniformLocation("plane");
@@ -377,27 +384,28 @@ Error:
 
 // Control points for colormapping
 // - support different lookup on each channel
-// - lookup is into a 2d colormap indexed by s and t (each go 0 to 1).
+// - lookup is into a 2d colormap indexed by s and t (each go 0 to 1). DGA: s is color (column), t is intensity (row)?
 void ImItem::_updateCmapCtrlPoints()
-{
+{ 
   //if(_nchan<=1) return;
   assert(_cmap_ctrl_count>=2);
 
   // adjust size if necessary
-  { size_t nelem = _cmap_ctrl_count*_nchan;
+  int _nchanOriginal = 3;
+  { size_t nelem = _cmap_ctrl_count*_nchanOriginal;
     CHKJMP(_cmap_ctrl_s = (float*)realloc(_cmap_ctrl_s,sizeof(float)*nelem),MemoryError); // if NULL, realloc mallocs
     CHKJMP(_cmap_ctrl_t = (float*)realloc(_cmap_ctrl_t,sizeof(float)*nelem),MemoryError);
 
     // fill in uninitizalized data (if any)
     if(nelem>_cmap_ctrl_last_size)
-    { int ir,ic;
+    { int ir,ic; //DGA: index of row, index of column?
 
       // convention here is that channels are evenly spaced along s and intensity on t
       for(GLuint i=_cmap_ctrl_last_size;i<nelem;++i)
       {
-        ir = i/_cmap_ctrl_count;
+        ir = i/_cmap_ctrl_count; //DGA: channel?
         ic = i%_cmap_ctrl_count;
-        _cmap_ctrl_s[i] = (ir+1)/(_nchan+1.0);
+        _cmap_ctrl_s[i] = (ir+1)/(_nchanOriginal+1.0);
         _cmap_ctrl_t[i] = ic/(_cmap_ctrl_count-1.0f);
       }
     }
@@ -407,12 +415,12 @@ void ImItem::_updateCmapCtrlPoints()
   // upload to the gpu
   glActiveTexture(GL_TEXTURE2);
   glBindTexture(GL_TEXTURE_2D,_hTexCmapCtrlS);
-  glTexImage2D(GL_TEXTURE_2D,
-    0,
-    GL_LUMINANCE,
-    _cmap_ctrl_count, _nchan, 0,
-    GL_LUMINANCE, GL_FLOAT,
-    _cmap_ctrl_s);
+  glTexImage2D(GL_TEXTURE_2D, //DGA: Target texture
+    0, //DGA: Level of detail (0 is base image)
+    GL_LUMINANCE, //DGA: Internal format (number of color components in texture)
+    _cmap_ctrl_count, _nchanOriginal, 0, //DGA: width of texture image, height of texture image, border
+    GL_LUMINANCE, GL_FLOAT, //DGA: Format of pixel data, data type of pixel data, _cmap_ctrl_s
+    _cmap_ctrl_s); //DGA: Pointer to image data in memory
   glBindTexture(GL_TEXTURE_2D,0);
   checkGLError();
 
@@ -421,7 +429,7 @@ void ImItem::_updateCmapCtrlPoints()
   glTexImage2D(GL_TEXTURE_2D,
     0,
     GL_LUMINANCE,
-    _cmap_ctrl_count, _nchan, 0,
+    _cmap_ctrl_count, _nchanOriginal, 0,
     GL_LUMINANCE, GL_FLOAT,
     _cmap_ctrl_t);
   glBindTexture(GL_TEXTURE_2D,0);
@@ -435,17 +443,20 @@ MemoryError:
 }
 
 void ImItem::_scaleImage(mylib::Array *data, GLuint ichannel, float percent)
-{ mylib::Array c;
+{ mylib::Array c; int w = data->dims[0]; int h = data->dims[1]; int t=data->dims[2];
   if(ichannel>=data->dims[2] || (ichannel>=_nchan))
   { warning("(%s:%d) Autoscale: selected channel out of bounds."ENDL,__FILE__,__LINE__);
     return;
   }
-  mylib::Array *t = Convert_Image(data,mylib::PLAIN_KIND,mylib::FLOAT32_TYPE,32);
+ /* mylib::Array *t = Convert_Image(data,mylib::PLAIN_KIND,mylib::FLOAT32_TYPE,32);
   c = *t;    // For Get_Array_Plane
   if(mylib::UINT64_TYPE<data->type && data->type<=mylib::INT64_TYPE)  // if signed integer type
     mylib::Scale_Array(&c,0.5,1.0);                                   //    x = 0.5*(x+1.0)
   mylib::Get_Array_Plane(&c,(mylib::Dimn_Type)ichannel);
-
+  */
+  for(GLuint tempchannel=0; tempchannel<_nchan; tempchannel++){
+  c = *data;
+  mylib::Get_Array_Plane(&c,(mylib::Dimn_Type)tempchannel);//ichannel);
 
   //mylib::Write_Image("ImItem_autoscale_input.tif",data,mylib::DONT_PRESS);
   //mylib::Write_Image("ImItem_autoscale_channel_float.tif",&c,mylib::DONT_PRESS);
@@ -464,35 +475,24 @@ void ImItem::_scaleImage(mylib::Array *data, GLuint ichannel, float percent)
   _bias = min/(min-max);
 #endif
 
-  mylib::Array_Range(&range,&c); // min max of single channel
-  mylib::Free_Array(t);
-  u16 * imageData = (u16 *) (data->data);
-  if(_channelHistogramInformation[*_channelIndex].autoscale)
-  { /*memset(_pixelValueCounts,0,sizeof(_pixelValueCounts));
-	
-	for(int i=0; i<data->size; i++){
-		u16 temp = imageData[i];
-		_pixelValueCounts[u16(imageData[i])]++;
-	}
-	int totalCount = 0, minValue=-1, maxValue=-1, currentValue = 0;
-	while (totalCount < 0.9 * data->size){
-		totalCount+=_pixelValueCounts[currentValue];
-		if (minValue == -1 && totalCount> 0.1 * data->size) minValue = currentValue;
-		currentValue++;
-	}
-	maxValue = currentValue;*/
+  //mylib::Array_Range(&range,&c); // min max of single channel
+
+  //mylib::Free_Array(t);
+
+  if(_channelHistogramInformation[tempchannel].autoscale)
+  { 
 	  double maxValue=0, minValue=0;
-	 percentiles(data,_pixelValueCounts,0.1,0.9,minValue,maxValue);
+	 percentiles(&c,_pixelValueCounts, 0.1,0.9,minValue,maxValue);
 	//multiply gain and bias by 65535?
     max = _gain*maxValue/65535.0+_bias;//_gain*range.maxval.fval+_bias; // adjust for gain and bias
     min = _gain*minValue/65535.0+_bias;//_gain*range.minval.fval+_bias;
-	_channelHistogramInformation[*_channelIndex].minValue = minValue; //(int) (range.minval.fval*65535);
-	_channelHistogramInformation[*_channelIndex].maxValue = maxValue; //(int) (range.maxval.fval*65535);
+	_channelHistogramInformation[tempchannel].minValue = minValue; //(int) (range.minval.fval*65535);
+	_channelHistogramInformation[tempchannel].maxValue = maxValue; //(int) (range.maxval.fval*65535);
   }
   else
   {
-    max = _gain*_channelHistogramInformation[*_channelIndex].maxValue/65535+_bias; // adjust for gain and bias
-    min = _gain*_channelHistogramInformation[*_channelIndex].minValue/65535+_bias;
+    max = _gain*_channelHistogramInformation[tempchannel].maxValue/65535+_bias; // adjust for gain and bias
+    min = _gain*_channelHistogramInformation[tempchannel].minValue/65535+_bias;
   }
   m = 1.0f/(max-min);
   b = min/(min-max);
@@ -500,11 +500,14 @@ void ImItem::_scaleImage(mylib::Array *data, GLuint ichannel, float percent)
   for(GLuint i=0;i<_cmap_ctrl_count;++i)
   { float x = i/(_cmap_ctrl_count-1.0f);
   //for (int temp=0; temp<3; temp++){
-    _cmap_ctrl_t[ichannel*_cmap_ctrl_count+i] = m*x+b; // upload to gpu will clamp to [0,1]
+//	_cmap_ctrl_s[tempchannel*_cmap_ctrl_count+i] = 0.0;
+    _cmap_ctrl_t[tempchannel*_cmap_ctrl_count+i] = m*x+b; // upload to gpu will clamp to [0,1]
+	//  if(tempchannel!=ichannel) _cmap_ctrl_t[tempchannel*_cmap_ctrl_count+i]=0;
   //}
   }
+  }
+    _updateCmapCtrlPoints();
 
-  _updateCmapCtrlPoints();
 }
 
 void ImItem::_resetscale(GLuint ichannel)

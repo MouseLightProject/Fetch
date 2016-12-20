@@ -323,8 +323,16 @@ static int g_inited=0;
     QString tempStr;
     TRY(ch=mylib::Get_Array_Plane(&(t=*im),ichan_)); //select channel    
     histogram(x_,pdf_,cdf_,ch);
-    plot_->graph(0)->setData(x_,pdf_);
+	    plot_->graph(0)->setData(x_,pdf_);
     plot_->graph(1)->setData(x_,cdf_);
+	if ((x_.first() >= plot_->xAxis->range().lower && x_.first() <= plot_->xAxis->range().upper) || (x_.last() >= plot_->xAxis->range().lower && x_.last() <= plot_->xAxis->range().upper)){
+		plot_->graph(0)->setVisible(true);
+		plot_->graph(0)->setVisible(true);
+	}
+	else{
+		plot_->graph(0)->setVisible(false);
+		plot_->graph(1)->setVisible(false);
+	}
     if(!g_inited)
     { plot_->graph(0)->rescaleAxes();
 	plot_->xAxis2->setRange(plot_->xAxis->range().lower, plot_->xAxis->range().upper);
@@ -355,6 +363,8 @@ static int g_inited=0;
  {
 	 plot_->graph(0)->rescaleAxes();
 	 plot_->xAxis2->setRange(plot_->xAxis->range().lower, plot_->xAxis->range().upper);
+	 plot_->graph(0)->setVisible(true);
+		plot_->graph(1)->setVisible(true);
 	/* if (channelHistogramInformation[ichan_].minValue < plot_->xAxis->range().lower) channelHistogramInformation[ichan_].minValue = plot_->xAxis->range().lower;
 	 if (channelHistogramInformation[ichan_].minValue > plot_->xAxis->range().upper) channelHistogramInformation[ichan_].minValue = plot_->xAxis->range().upper;
 	 if (channelHistogramInformation[ichan_].maxValue < plot_->xAxis->range().lower) channelHistogramInformation[ichan_].maxValue = plot_->xAxis->range().lower;
