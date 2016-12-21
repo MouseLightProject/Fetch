@@ -352,7 +352,7 @@ Error:
             e+=pitch[0]/pitch[3];
 			int tempcount=0;
             for(;c<e;++c){
-			 *c = (TPixel) (ptp*(tempcount%(1024*256))/(1024*256)); //: *c=0;//(TPixel) ((ptp*rand()/(float)RAND_MAX) + low);
+			 *c = (TPixel) ((ptp*rand()/(float)RAND_MAX) + low);//(ptp*(tempcount%(1024*256))/(1024*256)); //: *c=0;//(TPixel) ((ptp*rand()/(float)RAND_MAX) + low);
 			  tempcount++;
 			}
 			tempcount=0;

@@ -36,7 +36,7 @@ namespace fetch{
 namespace ui {
 
   HistogramDockWidget::HistogramDockWidget(QWidget *parent)
-    : QDockWidget("Histogram",parent)
+    : QDockWidget("Image Display and Histogram",parent)
     , plot_(0)
     , ichan_(0)
     , last_(0)
@@ -163,32 +163,52 @@ namespace ui {
 	plot_->yAxis2->setRange(0, 1);
     layout->addWidget(plot_);
 
-	// slider
-	intensitySlider_ = new MySliderWithMultipleHandles(channelHistogramInformation,&ichan_, parent);
-	QGridLayout * row = new QGridLayout(); 
-	minimumCutoffLabel_ = new QLabel(QString("Minimum: %1").arg("0", 6));
-	maximumCutoffLabel_ = new QLabel(QString("Maximum: %1").arg("65535", 6));
-	PANIC(connect(intensitySlider_, SIGNAL(minimumMaximumCutoffValuesChanged(void)),
-				  this, SLOT(updateMinimumMaximumCutoffValues(void))));
-	row->addWidget(minimumCutoffLabel_, 0, 0, Qt::AlignLeft);
-	row->addWidget(maximumCutoffLabel_, 0, 1, Qt::AlignRight);
-	QFormLayout *sliderForm = new QFormLayout;
-	sliderForm->addRow(row);
 
-	//autoscale checkbox
-	autoscaleCheckBox_ = new QCheckBox();
-	autoscaleCheckBox_->setText("Autoscale");
-	PANIC(connect(autoscaleCheckBox_, SIGNAL(stateChanged(int)),
-		this, SLOT(set_autoscale(int))));
-	autoscaleCheckBox_->setChecked(true);
-	intensitySlider_->setEnabled(false);
-	intensitySlider_->setMinimum(0);
-	intensitySlider_->setMaximum(65535);
-	layout->addWidget(autoscaleCheckBox_);
-	layout->addWidget(intensitySlider_);
-	layout->addLayout(sliderForm);
+	// slider
+	  { QFormLayout *contrastAndDisplayForm = new QFormLayout;
+	    intensitySlider_ = new MySliderWithMultipleHandles(channelHistogramInformation, &ichan_, parent);
+
+		//autoscale and display checkboxes
+		QGridLayout* row = new QGridLayout();
+		//autoscale checkbox
+		autoscaleCheckBox_ = new QCheckBox();
+		autoscaleCheckBox_->setText("Autoscale");
+		autoscaleCheckBox_->setChecked(true);
+		row->addWidget(autoscaleCheckBox_, 0, 0, Qt::AlignLeft);
+		PANIC(connect(autoscaleCheckBox_, SIGNAL(stateChanged(int)),
+			this, SLOT(set_autoscale(int))));
+		//channel display checkbox
+		displayChannelCheckBox_ = new QCheckBox();
+		displayChannelCheckBox_->setText("Display Channel");
+		displayChannelCheckBox_->setChecked(true);
+		row->addWidget(displayChannelCheckBox_, 0, 1, Qt::AlignRight);
+		PANIC(connect(displayChannelCheckBox_, SIGNAL(stateChanged(int)),
+			this, SLOT(set_displayChannel(int))));
+
+		contrastAndDisplayForm->addRow(row);
+		contrastAndDisplayForm->addRow(intensitySlider_);
+
+		row = new QGridLayout();
+		minimumCutoffLabel_ = new QLabel(QString("Minimum: %1").arg("0", 6));
+		maximumCutoffLabel_ = new QLabel(QString("Maximum: %1").arg("65535", 6));
+		PANIC(connect(intensitySlider_, SIGNAL(minimumMaximumCutoffValuesChanged(void)),
+			this, SLOT(updateMinimumMaximumCutoffValues(void))));
+		row->addWidget(minimumCutoffLabel_, 0, 0, Qt::AlignLeft);
+		row->addWidget(maximumCutoffLabel_, 0, 1, Qt::AlignRight);
+		contrastAndDisplayForm->addRow(row);
+		intensitySlider_->setEnabled(false);
+		intensitySlider_->setMinimum(0);
+		intensitySlider_->setMaximum(65535);
+
+		layout->addLayout(contrastAndDisplayForm);
+	  }
   }
   
+void HistogramDockWidget::showEvent( QShowEvent* event ) {
+    QWidget::showEvent( event );
+	rescale_axes();
+} 
+
 // histogram utilities START  
 /* #define TYPECASES(ARRAYARG) do {\
     switch(ARRAYARG->type)  \
@@ -325,9 +345,9 @@ static int g_inited=0;
     histogram(x_,pdf_,cdf_,ch);
 	    plot_->graph(0)->setData(x_,pdf_);
     plot_->graph(1)->setData(x_,cdf_);
-	if ((x_.first() >= plot_->xAxis->range().lower && x_.first() <= plot_->xAxis->range().upper) || (x_.last() >= plot_->xAxis->range().lower && x_.last() <= plot_->xAxis->range().upper)){
+	if (x_.first() <= plot_->xAxis->range().upper && x_.last() >= plot_->xAxis->range().lower){
 		plot_->graph(0)->setVisible(true);
-		plot_->graph(0)->setVisible(true);
+		plot_->graph(1)->setVisible(true);
 	}
 	else{
 		plot_->graph(0)->setVisible(false);
@@ -336,6 +356,8 @@ static int g_inited=0;
     if(!g_inited)
     { plot_->graph(0)->rescaleAxes();
 	plot_->xAxis2->setRange(plot_->xAxis->range().lower, plot_->xAxis->range().upper);
+	plot_->graph(0)->setVisible(true);
+	plot_->graph(1)->setVisible(true);
 	//plot_->graph(1)->rescaleAxes();
       g_inited=1;
     }
@@ -385,6 +407,7 @@ void HistogramDockWidget::set_ichan(int ichan)
       compute(last_);
     }
 	autoscaleCheckBox_->setChecked(channelHistogramInformation[ichan_].autoscale);
+	displayChannelCheckBox_->setChecked(channelHistogramInformation[ichan_].displayChannel);
 	updateMinimumMaximumCutoffValues();
   }
 
@@ -397,8 +420,15 @@ void HistogramDockWidget::set_autoscale(int is_autoscale)
     channelHistogramInformation[ichan_].autoscale = is_autoscale;
 	is_autoscale ? intensitySlider_->setEnabled(false) : intensitySlider_->setEnabled(true);
 	//DGA do junk to calculate actual min max and to see if minmax changed
-	if (last_ && is_autoscale) emit scalingChanged(last_,currentImagePointerAccordingToUI_, true);
+	if (last_ && is_autoscale) emit redisplayImage(last_,currentImagePointerAccordingToUI_, true);
 	updateMinimumMaximumCutoffValues();
+  }
+
+void HistogramDockWidget::set_displayChannel(int is_displayChannel)
+  { 
+    channelHistogramInformation[ichan_].displayChannel = is_displayChannel;
+	//DGA do junk to calculate actual min max and to see if minmax changed
+	if (last_) emit redisplayImage(last_,currentImagePointerAccordingToUI_, true);
   }
 
 void HistogramDockWidget::updateMinimumMaximumCutoffValues()
@@ -428,7 +458,7 @@ void HistogramDockWidget::updateMinimumMaximumCutoffValues()
 	}
 	intensitySlider_->update();
 	plot_->replot();
-	if (didScalingChange && !channelHistogramInformation[ichan_].autoscale && last_) emit scalingChanged(last_,currentImagePointerAccordingToUI_, true);
+	if (didScalingChange && !channelHistogramInformation[ichan_].autoscale && last_) emit redisplayImage(last_,currentImagePointerAccordingToUI_, true);
   }
 void HistogramDockWidget::reset_minmax()
   {

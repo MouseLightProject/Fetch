@@ -88,7 +88,7 @@ protected:
 private:
 	    channelHistogramInformationStruct *_channelHistogramInformation;
 		size_t *_channelIndex;
-
+		GLint _displayChannelsArray[4];
 };
 
 

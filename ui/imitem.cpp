@@ -136,6 +136,7 @@ void ImItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QW
     _shader.setUniformValue("bias" ,(GLfloat)_bias);
     _shader.setUniformValue("gamma",(GLfloat)_gamma);
     _shader.setUniformValue("show_mode",(GLint)(_show_mode%4));
+	_shader.setUniformValueArray("displayChannel",_displayChannelsArray,4);
     checkGLError();
     //glPushMatrix();
     //glRotatef(_rotation_radians*180.0/M_PI,0.0,0.0,1.0);
@@ -216,7 +217,7 @@ void ImItem::_loadTex(mylib::Array *im)
     GLuint gltype = typeMapMylibToGLType(&im);
     //glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
     glTexImage3D(GL_TEXTURE_3D, 0, GL_LUMINANCE,
-                 im->dims[0], im->dims[1], 3,0,//_nchan, 0,
+                 im->dims[0], im->dims[1], _nchan, 0,
                  GL_LUMINANCE,
                  gltype,
                  im->data);
@@ -284,7 +285,8 @@ void ImItem::push(mylib::Array *plane)
   }
   else
     _nchan = 1;
-  
+
+
   //_channelHistogramInformation[*_channelIndex].autoscale
   //if(_autoscale_next)
   //{
@@ -306,13 +308,7 @@ void ImItem::push(mylib::Array *plane)
   _fill = 10.0/_nchan;
   _fill = (_fill>1.0)?1.0:_fill;
 
-  _nchan = 1;
-mylib::Array c;
-  c = *plane;
-  mylib::Get_Array_Plane(&c,(mylib::Dimn_Type)0);//ichannel);
-  _loadTex(&c);
-
-//  _loadTex(plane);
+  _loadTex(plane);
   checkGLError();
 }
 
@@ -355,6 +351,7 @@ void ImItem::_setupShader()
   _hShaderPlane = _shader.uniformLocation("plane");
   _hShaderCmap  = _shader.uniformLocation("cmap");
   _shader.setUniformValue("nchan",(GLfloat)_nchan);
+  //_shader.setUniformValue("shouldPlot",(GL_BOOL_VEC3){true,true,true});
   _shader.release();
 
   loadColormap(":/cmap/2");
@@ -391,8 +388,7 @@ void ImItem::_updateCmapCtrlPoints()
   assert(_cmap_ctrl_count>=2);
 
   // adjust size if necessary
-  int _nchanOriginal = 3;
-  { size_t nelem = _cmap_ctrl_count*_nchanOriginal;
+  { size_t nelem = _cmap_ctrl_count*_nchan;
     CHKJMP(_cmap_ctrl_s = (float*)realloc(_cmap_ctrl_s,sizeof(float)*nelem),MemoryError); // if NULL, realloc mallocs
     CHKJMP(_cmap_ctrl_t = (float*)realloc(_cmap_ctrl_t,sizeof(float)*nelem),MemoryError);
 
@@ -405,7 +401,7 @@ void ImItem::_updateCmapCtrlPoints()
       {
         ir = i/_cmap_ctrl_count; //DGA: channel?
         ic = i%_cmap_ctrl_count;
-        _cmap_ctrl_s[i] = (ir+1)/(_nchanOriginal+1.0);
+        _cmap_ctrl_s[i] = (ir+1)/(_nchan+1.0);
         _cmap_ctrl_t[i] = ic/(_cmap_ctrl_count-1.0f);
       }
     }
@@ -418,7 +414,7 @@ void ImItem::_updateCmapCtrlPoints()
   glTexImage2D(GL_TEXTURE_2D, //DGA: Target texture
     0, //DGA: Level of detail (0 is base image)
     GL_LUMINANCE, //DGA: Internal format (number of color components in texture)
-    _cmap_ctrl_count, _nchanOriginal, 0, //DGA: width of texture image, height of texture image, border
+    _cmap_ctrl_count, _nchan, 0, //DGA: width of texture image, height of texture image, border
     GL_LUMINANCE, GL_FLOAT, //DGA: Format of pixel data, data type of pixel data, _cmap_ctrl_s
     _cmap_ctrl_s); //DGA: Pointer to image data in memory
   glBindTexture(GL_TEXTURE_2D,0);
@@ -429,7 +425,7 @@ void ImItem::_updateCmapCtrlPoints()
   glTexImage2D(GL_TEXTURE_2D,
     0,
     GL_LUMINANCE,
-    _cmap_ctrl_count, _nchanOriginal, 0,
+    _cmap_ctrl_count, _nchan, 0,
     GL_LUMINANCE, GL_FLOAT,
     _cmap_ctrl_t);
   glBindTexture(GL_TEXTURE_2D,0);
@@ -455,6 +451,7 @@ void ImItem::_scaleImage(mylib::Array *data, GLuint ichannel, float percent)
   mylib::Get_Array_Plane(&c,(mylib::Dimn_Type)ichannel);
   */
   for(GLuint tempchannel=0; tempchannel<_nchan; tempchannel++){
+	  _displayChannelsArray[tempchannel] = _channelHistogramInformation[tempchannel].displayChannel;
   c = *data;
   mylib::Get_Array_Plane(&c,(mylib::Dimn_Type)tempchannel);//ichannel);
 
@@ -499,11 +496,7 @@ void ImItem::_scaleImage(mylib::Array *data, GLuint ichannel, float percent)
 
   for(GLuint i=0;i<_cmap_ctrl_count;++i)
   { float x = i/(_cmap_ctrl_count-1.0f);
-  //for (int temp=0; temp<3; temp++){
-//	_cmap_ctrl_s[tempchannel*_cmap_ctrl_count+i] = 0.0;
     _cmap_ctrl_t[tempchannel*_cmap_ctrl_count+i] = m*x+b; // upload to gpu will clamp to [0,1]
-	//  if(tempchannel!=ichannel) _cmap_ctrl_t[tempchannel*_cmap_ctrl_count+i]=0;
-  //}
   }
   }
     _updateCmapCtrlPoints();

@@ -21,7 +21,7 @@ class HistogramDockWidget: public QDockWidget
 	QVector<double>   x_,pdf_,cdf_,minimumCutoffVector_, maximumCutoffVector_, yForPlottingCutoffsVector_;
 	double            minX_,maxX_,perct_,minimumCutoffPrevious_,maximumCutoffPrevious_;
 	QLineEdit         *leMin_, *leMax_, *lePerct_;
-	QCheckBox		  *autoscaleCheckBox_;
+	QCheckBox		  *autoscaleCheckBox_, *displayChannelCheckBox_;
 	QLabel			  *minimumCutoffLabel_, *maximumCutoffLabel_;
 
 	public:
@@ -31,13 +31,14 @@ class HistogramDockWidget: public QDockWidget
 
 	signals:
 		void change_chan(int ichan);
-		void scalingChanged(mylib::Array*, mylib::Array*, bool fromSlider);
+		void redisplayImage(mylib::Array*, mylib::Array*, bool fromSlider);
 
 	public slots:
 		void set(mylib::Array *im);
 		void set_ichan(int ichan);
 		void set_live(bool is_live);
 		void set_autoscale(int is_autoscale);
+		void set_displayChannel(int is_displayChannel);
 		void rescale_axes();
 		void updateMinimumMaximumCutoffValues();
 	void reset_minmax();
@@ -46,6 +47,9 @@ class HistogramDockWidget: public QDockWidget
 		void swap(mylib::Array *im);
 		int  check_chan(mylib::Array *im);
 		void compute(mylib::Array *im);
+
+	protected:
+      void showEvent(QShowEvent *ev);
 
 };
 
