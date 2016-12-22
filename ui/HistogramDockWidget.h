@@ -24,6 +24,7 @@ class HistogramDockWidget: public QDockWidget
 	QCheckBox		  *autoscaleCheckBox_, *displayChannelCheckBox_;
 	QGroupBox		  *autoscaleGroupCheckBox_;
 	QLabel			  *minimumCutoffLabel_, *maximumCutoffLabel_;
+	QSignalMapper	  *signalMapper_;
 
 	public:
 		HistogramDockWidget(QWidget *parent=NULL);
@@ -42,6 +43,7 @@ class HistogramDockWidget: public QDockWidget
 		void set_displayChannel(int is_displayChannel);
 		void rescale_axes();
 		void updateMinimumMaximumCutoffValues();
+		void percentileValuesEntered(QString);
 	void reset_minmax();
 	void set_percentile(QString);
 	private:

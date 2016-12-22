@@ -479,7 +479,7 @@ void ImItem::_scaleImage(mylib::Array *data, GLuint ichannel, float percent)
   if(_channelHistogramInformation[tempchannel].autoscale)
   { 
 	  double maxValue=0, minValue=0;
-	 percentiles(&c,_pixelValueCounts, 0.1,0.9,minValue,maxValue);
+	 percentiles(&c,_pixelValueCounts, _channelHistogramInformation[tempchannel].undersaturatedPercentile,_channelHistogramInformation[tempchannel].oversaturatedPercentile,minValue,maxValue);
 	//multiply gain and bias by 65535?
     max = _gain*maxValue/65535.0+_bias;//_gain*range.maxval.fval+_bias; // adjust for gain and bias
     min = _gain*minValue/65535.0+_bias;//_gain*range.minval.fval+_bias;

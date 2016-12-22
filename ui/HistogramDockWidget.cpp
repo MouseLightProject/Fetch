@@ -171,7 +171,7 @@ namespace ui {
     plot_->yAxis2->setLabelColor(Qt::red);
 	plot_->yAxis2->setRange(0, 1);
     layout->addWidget(plot_);
-	
+
 	// slider
 	  { QFormLayout *contrastAndDisplayForm = new QFormLayout;
 	    intensitySlider_ = new MySliderWithMultipleHandles(channelHistogramInformation, &ichan_, parent);
@@ -193,13 +193,24 @@ namespace ui {
 		PANIC(connect(autoscaleGroupCheckBox_, SIGNAL(clicked(bool)),
 			this, SLOT(set_autoscale(bool))));
 
+		signalMapper_ = new QSignalMapper(this);
 		QHBoxLayout* percentileRow = new QHBoxLayout();
 		//percentileRow->addWidget(autoscaleCheckBox_);
 		QLabel * undersaturatedPercentileLabel = new QLabel("Undersaturated %:");
 		undersaturatedPercentile_ = new QLineEdit("10");
+		//undersaturatedPercentile_->setValidator(new QDoubleValidator(0, 100, 2, this));
 		//undersaturatedPercentile_->setFixedWidth(20);
 		QLabel * oversaturatedPercentileLabel = new QLabel("Oversaturated %:");
 		oversaturatedPercentile_ = new QLineEdit("90");
+		//oversaturatedPercentile_->setValidator(new QDoubleValidator(0, 100, 2, this));
+		PANIC(connect(undersaturatedPercentile_, SIGNAL(editingFinished()),
+			signalMapper_, SLOT(map())));
+		signalMapper_->setMapping(undersaturatedPercentile_, "undersaturatedPercentile");
+		PANIC(connect(oversaturatedPercentile_, SIGNAL(editingFinished()),
+			signalMapper_, SLOT(map())));
+		signalMapper_->setMapping(oversaturatedPercentile_, "oversaturatedPercentile");
+		PANIC(connect(signalMapper_, SIGNAL(mapped(QString)), this, SLOT(percentileValuesEntered(QString))));
+
 		//oversaturatedPercentile_->setFixedWidth(20);
 		percentileRow->addWidget(undersaturatedPercentileLabel);//,0, Qt::AlignLeft);
 		percentileRow->addWidget(undersaturatedPercentile_);//,0, Qt::AlignLeft);
@@ -434,6 +445,8 @@ void HistogramDockWidget::set_ichan(int ichan)
 	autoscaleGroupCheckBox_->clicked(channelHistogramInformation[ichan_].autoscale);
 	autoscaleGroupCheckBox_->setChecked(channelHistogramInformation[ichan_].autoscale);
 	displayChannelCheckBox_->setChecked(channelHistogramInformation[ichan_].displayChannel);
+	undersaturatedPercentile_->setText(QString("%1").arg(channelHistogramInformation[ichan_].undersaturatedPercentile*100.0));
+	oversaturatedPercentile_->setText(QString("%1").arg(channelHistogramInformation[ichan_].oversaturatedPercentile*100.0));
 	updateMinimumMaximumCutoffValues();
   }
 
@@ -449,6 +462,33 @@ void HistogramDockWidget::set_autoscale(bool is_autoscale)
 	if (last_ && is_autoscale) emit redisplayImage(last_,currentImagePointerAccordingToUI_, true);
 	updateMinimumMaximumCutoffValues();
   }
+
+void HistogramDockWidget::percentileValuesEntered(QString whichPercentile)
+{ bool conversionWorked; bool didScalingChange=false;
+	if (QString::compare(whichPercentile,"undersaturatedPercentile")==0)
+    {
+		//then the newly entered value was for the undersaturated percentile
+		double possibleNewUndersaturatedPercentile = undersaturatedPercentile_->text().toDouble(&conversionWorked);
+		if (possibleNewUndersaturatedPercentile >= 0 && possibleNewUndersaturatedPercentile <= oversaturatedPercentile_->text().toDouble() && conversionWorked)
+		{
+			channelHistogramInformation[ichan_].undersaturatedPercentile = possibleNewUndersaturatedPercentile/100.0;
+			didScalingChange=true;
+		}
+		else undersaturatedPercentile_->setText(QString("%1").arg(channelHistogramInformation[ichan_].undersaturatedPercentile*100.0));
+}
+else{
+		//then the newly entered value was for the undersaturated percentile
+		double possibleNewOversaturatedPercentile = oversaturatedPercentile_->text().toDouble(&conversionWorked);
+		if (possibleNewOversaturatedPercentile <=100 && possibleNewOversaturatedPercentile >= undersaturatedPercentile_->text().toDouble() && conversionWorked)
+		{
+			channelHistogramInformation[ichan_].oversaturatedPercentile = possibleNewOversaturatedPercentile/100.0;
+			didScalingChange = true;
+		}
+		else oversaturatedPercentile_->setText(QString("%1").arg(channelHistogramInformation[ichan_].oversaturatedPercentile*100.0));
+		if (didScalingChange && last_) emit redisplayImage(last_, currentImagePointerAccordingToUI_, true);
+}
+
+}
 
 void HistogramDockWidget::set_displayChannel(int is_displayChannel)
   { 
