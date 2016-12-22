@@ -20,8 +20,9 @@ class HistogramDockWidget: public QDockWidget
 	bool              is_live_;
 	QVector<double>   x_,pdf_,cdf_,minimumCutoffVector_, maximumCutoffVector_, yForPlottingCutoffsVector_;
 	double            minX_,maxX_,perct_,minimumCutoffPrevious_,maximumCutoffPrevious_;
-	QLineEdit         *leMin_, *leMax_, *lePerct_;
+	QLineEdit         *leMin_, *leMax_, *lePerct_, *undersaturatedPercentile_, *oversaturatedPercentile_;
 	QCheckBox		  *autoscaleCheckBox_, *displayChannelCheckBox_;
+	QGroupBox		  *autoscaleGroupCheckBox_;
 	QLabel			  *minimumCutoffLabel_, *maximumCutoffLabel_;
 
 	public:
@@ -37,7 +38,7 @@ class HistogramDockWidget: public QDockWidget
 		void set(mylib::Array *im);
 		void set_ichan(int ichan);
 		void set_live(bool is_live);
-		void set_autoscale(int is_autoscale);
+		void set_autoscale(bool is_autoscale);
 		void set_displayChannel(int is_displayChannel);
 		void rescale_axes();
 		void updateMinimumMaximumCutoffValues();

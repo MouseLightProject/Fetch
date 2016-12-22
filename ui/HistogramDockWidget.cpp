@@ -137,6 +137,15 @@ namespace ui {
       leMax_->setReadOnly(true);;
       row->addWidget(leMax_);
       form->addRow(row);
+
+	  		//channel display checkbox
+	displayChannelCheckBox_ = new QCheckBox();
+	displayChannelCheckBox_->setText("Display Channel");
+	displayChannelCheckBox_->setChecked(true);
+	//	checkBoxRow->addWidget(displayChannelCheckBox_, 0, 1, Qt::AlignRight);
+	PANIC(connect(displayChannelCheckBox_, SIGNAL(stateChanged(int)),
+		this, SLOT(set_displayChannel(int))));
+	form->addRow(displayChannelCheckBox_);
     }
 
     layout->addLayout(form);
@@ -162,45 +171,60 @@ namespace ui {
     plot_->yAxis2->setLabelColor(Qt::red);
 	plot_->yAxis2->setRange(0, 1);
     layout->addWidget(plot_);
-
-
+	
 	// slider
 	  { QFormLayout *contrastAndDisplayForm = new QFormLayout;
 	    intensitySlider_ = new MySliderWithMultipleHandles(channelHistogramInformation, &ichan_, parent);
 
 		//autoscale and display checkboxes
-		QGridLayout* row = new QGridLayout();
+		QGridLayout* checkBoxRow = new QGridLayout();
 		//autoscale checkbox
-		autoscaleCheckBox_ = new QCheckBox();
-		autoscaleCheckBox_->setText("Autoscale");
+		/*autoscaleCheckBox_ = new QCheckBox();
+		autoscaleCheckBox_->setText(QString("Autoscale%1").arg(" ",6));
 		autoscaleCheckBox_->setChecked(true);
-		row->addWidget(autoscaleCheckBox_, 0, 0, Qt::AlignLeft);
+		checkBoxRow->addWidget(autoscaleCheckBox_, 0, 0, Qt::AlignLeft);
 		PANIC(connect(autoscaleCheckBox_, SIGNAL(stateChanged(int)),
-			this, SLOT(set_autoscale(int))));
-		//channel display checkbox
-		displayChannelCheckBox_ = new QCheckBox();
-		displayChannelCheckBox_->setText("Display Channel");
-		displayChannelCheckBox_->setChecked(true);
-		row->addWidget(displayChannelCheckBox_, 0, 1, Qt::AlignRight);
-		PANIC(connect(displayChannelCheckBox_, SIGNAL(stateChanged(int)),
-			this, SLOT(set_displayChannel(int))));
+			this, SLOT(set_autoscale(int))));*/
 
-		contrastAndDisplayForm->addRow(row);
-		contrastAndDisplayForm->addRow(intensitySlider_);
+		autoscaleGroupCheckBox_ = new QGroupBox("Autoscale");
+		//autoscaleGroupCheckBox_->setStyleSheet("QGroupBox{border:1px solid gray}");//border-radius:0px;margin-top: 1ex;} QGroupBox::title{subcontrol-origin: margin;subcontrol-position:top left;padding:0px 15px;}");
+		autoscaleGroupCheckBox_->setCheckable(true);
+		autoscaleGroupCheckBox_->setChecked(true);
+		PANIC(connect(autoscaleGroupCheckBox_, SIGNAL(clicked(bool)),
+			this, SLOT(set_autoscale(bool))));
 
-		row = new QGridLayout();
+		QHBoxLayout* percentileRow = new QHBoxLayout();
+		//percentileRow->addWidget(autoscaleCheckBox_);
+		QLabel * undersaturatedPercentileLabel = new QLabel("Undersaturated %:");
+		undersaturatedPercentile_ = new QLineEdit("10");
+		//undersaturatedPercentile_->setFixedWidth(20);
+		QLabel * oversaturatedPercentileLabel = new QLabel("Oversaturated %:");
+		oversaturatedPercentile_ = new QLineEdit("90");
+		//oversaturatedPercentile_->setFixedWidth(20);
+		percentileRow->addWidget(undersaturatedPercentileLabel);//,0, Qt::AlignLeft);
+		percentileRow->addWidget(undersaturatedPercentile_);//,0, Qt::AlignLeft);
+		percentileRow->addWidget(oversaturatedPercentileLabel);
+		percentileRow->addWidget(oversaturatedPercentile_);
+		autoscaleGroupCheckBox_->setLayout(percentileRow);
+
+		QGridLayout* cutoffRow = new QGridLayout();
 		minimumCutoffLabel_ = new QLabel(QString("Minimum: %1").arg("0", 6));
 		maximumCutoffLabel_ = new QLabel(QString("Maximum: %1").arg("65535", 6));
 		PANIC(connect(intensitySlider_, SIGNAL(minimumMaximumCutoffValuesChanged(void)),
 			this, SLOT(updateMinimumMaximumCutoffValues(void))));
-		row->addWidget(minimumCutoffLabel_, 0, 0, Qt::AlignLeft);
-		row->addWidget(maximumCutoffLabel_, 0, 1, Qt::AlignRight);
-		contrastAndDisplayForm->addRow(row);
+		cutoffRow->addWidget(minimumCutoffLabel_, 0, 0,  Qt::AlignLeft);
+		cutoffRow->addWidget(maximumCutoffLabel_, 0, 1, Qt::AlignRight);
 		intensitySlider_->setEnabled(false);
 		intensitySlider_->setMinimum(0);
 		intensitySlider_->setMaximum(65535);
 
+		contrastAndDisplayForm->addRow(intensitySlider_);
+		contrastAndDisplayForm->addRow(cutoffRow);
+		contrastAndDisplayForm->addRow(checkBoxRow);
+		//contrastAndDisplayForm->addRow(percentileRow);
 		layout->addLayout(contrastAndDisplayForm);
+				layout->addWidget(autoscaleGroupCheckBox_);
+
 	  }
   }
   
@@ -406,7 +430,9 @@ void HistogramDockWidget::set_ichan(int ichan)
     { check_chan(last_);
       compute(last_);
     }
-	autoscaleCheckBox_->setChecked(channelHistogramInformation[ichan_].autoscale);
+	//autoscaleCheckBox_->setChecked(channelHistogramInformation[ichan_].autoscale);
+	autoscaleGroupCheckBox_->clicked(channelHistogramInformation[ichan_].autoscale);
+	autoscaleGroupCheckBox_->setChecked(channelHistogramInformation[ichan_].autoscale);
 	displayChannelCheckBox_->setChecked(channelHistogramInformation[ichan_].displayChannel);
 	updateMinimumMaximumCutoffValues();
   }
@@ -415,10 +441,10 @@ void HistogramDockWidget::set_live(bool is_live)
   { is_live_=is_live;
   }
 
-void HistogramDockWidget::set_autoscale(int is_autoscale)
+void HistogramDockWidget::set_autoscale(bool is_autoscale)
   { 
     channelHistogramInformation[ichan_].autoscale = is_autoscale;
-	is_autoscale ? intensitySlider_->setEnabled(false) : intensitySlider_->setEnabled(true);
+	intensitySlider_->setEnabled(!is_autoscale);//is_autoscale ? intensitySlider_->setEnabled(false) : intensitySlider_->setEnabled(true);
 	//DGA do junk to calculate actual min max and to see if minmax changed
 	if (last_ && is_autoscale) emit redisplayImage(last_,currentImagePointerAccordingToUI_, true);
 	updateMinimumMaximumCutoffValues();
