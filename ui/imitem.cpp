@@ -269,7 +269,7 @@ void ImItem::flip(int isupdate/*=0*/)
 
 // double-buffers, so you might not see your image right away.
 void ImItem::push(mylib::Array *plane)
-{
+{ if(!_determinedMaximumValueForDataType) determineMaximumValueForDataType(plane->type, _maximumValueForImageDataType); _determinedMaximumValueForDataType=true;
   checkGLError();
 
   float w,h;
@@ -454,7 +454,7 @@ void ImItem::_scaleImage(mylib::Array *data, GLuint ichannel, float percent)
 	  _displayChannelsArray[tempchannel] = _channelHistogramInformation[tempchannel].displayChannel;
   c = *data;
   mylib::Get_Array_Plane(&c,(mylib::Dimn_Type)tempchannel);//ichannel);
-
+  
   //mylib::Write_Image("ImItem_autoscale_input.tif",data,mylib::DONT_PRESS);
   //mylib::Write_Image("ImItem_autoscale_channel_float.tif",&c,mylib::DONT_PRESS);
 
@@ -481,15 +481,15 @@ void ImItem::_scaleImage(mylib::Array *data, GLuint ichannel, float percent)
 	  double maxValue=0, minValue=0;
 	 percentiles(&c,_pixelValueCounts, _channelHistogramInformation[tempchannel].undersaturatedPercentile,_channelHistogramInformation[tempchannel].oversaturatedPercentile,minValue,maxValue);
 	//multiply gain and bias by 65535?
-    max = _gain*maxValue/65535.0+_bias;//_gain*range.maxval.fval+_bias; // adjust for gain and bias
-    min = _gain*minValue/65535.0+_bias;//_gain*range.minval.fval+_bias;
-	_channelHistogramInformation[tempchannel].minValue = minValue; //(int) (range.minval.fval*65535);
-	_channelHistogramInformation[tempchannel].maxValue = maxValue; //(int) (range.maxval.fval*65535);
+    max = _gain*maxValue/_maximumValueForImageDataType+_bias;//_gain*range.maxval.fval+_bias; // adjust for gain and bias
+    min = _gain*minValue/_maximumValueForImageDataType+_bias;//_gain*range.minval.fval+_bias;
+	_channelHistogramInformation[tempchannel].minValue = minValue;
+	_channelHistogramInformation[tempchannel].maxValue = maxValue;
   }
   else
   {
-    max = _gain*_channelHistogramInformation[tempchannel].maxValue/65535+_bias; // adjust for gain and bias
-    min = _gain*_channelHistogramInformation[tempchannel].minValue/65535+_bias;
+    max = _gain*_channelHistogramInformation[tempchannel].maxValue/_maximumValueForImageDataType+_bias; // adjust for gain and bias
+    min = _gain*_channelHistogramInformation[tempchannel].minValue/_maximumValueForImageDataType+_bias;
   }
   m = 1.0f/(max-min);
   b = min/(min-max);

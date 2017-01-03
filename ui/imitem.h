@@ -60,9 +60,9 @@ protected:
   unsigned int _hTexture;
   unsigned int _nchan;                   // updated when an image is pushed
   unsigned int _show_mode;
-  unsigned int numberOfBins = 1<<16;
   unsigned int _pixelValueCounts[65536];
-  //unsigned int * _pixelValueCounts = new unsigned int[numberOfBins]; //DGA: To store counts of pixels to determine cutoffs
+  bool _determinedMaximumValueForDataType=false;
+  double _maximumValueForImageDataType;
 
   QGLShaderProgram _shader;
   unsigned int _hShaderPlane;

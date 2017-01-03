@@ -70,10 +70,10 @@ ZoomableView::drawForeground(QPainter* painter, const QRectF& rect)
 /* FIGURE                                                               */
 /************************************************************************/
 
-Figure::Figure(PlanarStageController *stageController, channelHistogramInformationStruct *channelHistogramInformation, size_t *channelIndex, QWidget *parent/*=0*/)
+Figure::Figure(PlanarStageController *stageController, channelHistogramInformationStruct *channelHistogramInformation, size_t *channelIndex, QWidget *parent/*=0*/) //DGA: added channelHistogramInformation and channelIndex pointers
 :QWidget(parent)
 ,_sc(stageController)
-,_previous_im(0)
+,_previous_im(0) //DGA: initialize previous image pointer to 0
 {
   _view = new ZoomableView(&_scene);
   QGLWidget *viewport;
@@ -100,7 +100,7 @@ Figure::Figure(PlanarStageController *stageController, channelHistogramInformati
   connect(stageController->tiling(),SIGNAL(fovGeometryChanged(float,float,float)),
           this,SLOT(fovGeometryChanged(float,float,float)));
 
-  _item = new ImItem(channelHistogramInformation, channelIndex);
+  _item = new ImItem(channelHistogramInformation, channelIndex); //DGA: Create new image item, which now takes in channelHistogramInformation pointer and channelIndex pointer
   _scene.addItem(_item);
   checkGLError();
 

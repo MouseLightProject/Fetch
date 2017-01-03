@@ -38,18 +38,16 @@ class Figure:public QWidget
 {
   Q_OBJECT
 public:
-  Figure(PlanarStageController *stageController, channelHistogramInformationStruct *channelHistogramInformation,size_t *channelIndex, QWidget *parent=0);
+  Figure(PlanarStageController *stageController, channelHistogramInformationStruct *channelHistogramInformation,size_t *channelIndex, QWidget *parent=0);//DGA: Added channel histogram information struct pointer and channelIndex pointer arguments
   Figure(double unit2px, QWidget *parent=0);
   virtual ~Figure();
 
 public slots:
   inline void push(mylib::Array *im)                                       {_item->push(im); updatePos(); emit pushed(); maybeFit();}
-  inline void imshow(mylib::Array *im, mylib::Array *currentImagePointerAccordingToUI = NULL, bool fromUI=false)              {//if (!fromSlider || (fromSlider && _previous_im == im)){
-	  if (!fromUI) _previous_im = im;
-	  if (!fromUI || (fromUI && currentImagePointerAccordingToUI == _previous_im) ) {_item->push(im); updatePos(); _item->flip(); maybeFit();} 
-	  /*if(!fromSlider) 
-		  _previous_im = im;}*/ 
-  }
+  inline void imshow(mylib::Array *im, mylib::Array *currentImagePointerAccordingToUI = NULL, bool fromHistogramWidgetUI = false){//DGA: Added currentImagePointerAccordingToUI and fromHistogramWidgetUI boolean as input arguments, respectively set to NULL and false respectively
+	  if (!fromHistogramWidgetUI) _previous_im = im; //DGA: If imshow is not being called from histogram widget UI, then the previous image pointer is set to the current image pointer (a new image has been collected)
+	  if (!fromHistogramWidgetUI || (fromHistogramWidgetUI && currentImagePointerAccordingToUI == _previous_im) ) {_item->push(im); updatePos(); _item->flip(); maybeFit();} //DGA: If imshow is not being called because of the histogram widget ui (then a new image has been collected), 
+  }																																											 //or if it is being called from the UI but the current pointer according to UI equals the previous pointer (then the UI is updating the current image), then the new image should be shown
   inline void fit(void)                                                    {_view->fitInView(_item->mapRectToScene(_item->boundingRect()),Qt::KeepAspectRatio);_view->notifyZoomChanged();}
   inline void fitNext(void)                                                {/*_isFitOnNext=true;*/}
   inline void updatePos(void)                                              {_item->setPos(units::cvt<units::PIXEL_SCALE,PlanarStageController::Unit>(_sc->pos())); _stage->update();}
@@ -107,7 +105,7 @@ private:
   //QAction           *_delTilesModeAct;
   QAction           *_rubberBandModeAct;
 
-  mylib::Array      *_previous_im;
+  mylib::Array      *_previous_im; //DGA: The previous image pointer, used to decide whether to update the current figure
 };
 
 

@@ -7,7 +7,6 @@
     \todo inspection by hover over cdf
 */
 #include "HistogramDockWidget.h"
-#include "imitem.h"
 #include "qcustomplot.h"
 #include "common.h"
 #include <cmath>  
@@ -18,17 +17,9 @@ namespace mylib {
 
 #include "HistogramUtilities.h"
 
-/* #ifdef _MSC_VER
-#define restrict __restrict
-#else
-#define restrict __restrict__ 
-#endif */
-
 #define ENDL "\r\n"
 #define PANIC(e) do{if(!(e)){qFatal("%s(%d)"ENDL "\tExpression evalatuated as false."ENDL "\t%s"ENDL,__FILE__,__LINE__,#e);           }}while(0)
-//#define FAIL     do{         qFatal("%s(%d)"ENDL "\tExecution should not reach here."ENDL,__FILE__,__LINE__);                                 }while(0)
 #define TRY(e)   do{if(!(e)){qDebug("%s(%d)"ENDL "\tExpression evalatuated as false."ENDL "\t%s"ENDL,__FILE__,__LINE__,#e);goto Error;}}while(0)
-#define HERE     qDebug("%s(%d). HERE."ENDL,__FILE__,__LINE__)
 
 #define HINT_NBINS (1<<12)
 
@@ -36,19 +27,20 @@ namespace fetch{
 namespace ui {
 
   HistogramDockWidget::HistogramDockWidget(QWidget *parent)
-    : QDockWidget("Image Display and Histogram",parent)
+    : QDockWidget("Image Display and Histogram",parent) //DGA: Changed widget name
+	, didScalingChange_(false)
     , plot_(0)
     , ichan_(0)
     , last_(0)
-	, currentImagePointerAccordingToUI_(0)
+	, currentImagePointerAccordingToUI_(0) //DGA: Initialize currentImagePointerAccordingToUI_ to 0
     , x_(HINT_NBINS)
     , pdf_(HINT_NBINS)
     , cdf_(HINT_NBINS)
-	, yForPlottingCutoffsVector_({0,1})
+	, yForPlottingCutoffsVector_({0,1}) //DGA: Initialize yForPlottingCutoffsVector_ to {0,1}
     , minX_(DBL_MAX)
     , maxX_(0)
     , perct_(0.5)
-	, minimumCutoffPrevious_(-1)
+	, minimumCutoffPrevious_(-1) //DGA: Initialize minimum and maximum previous cutoffs to -1
 	, maximumCutoffPrevious_(-1)
     , leMin_(0)
     , leMax_(0)
@@ -136,16 +128,15 @@ namespace ui {
       leMax_= new QLineEdit("0");
       leMax_->setReadOnly(true);;
       row->addWidget(leMax_);
-      form->addRow(row);
+	  form->addRow(row);
 
-	  		//channel display checkbox
-	displayChannelCheckBox_ = new QCheckBox();
-	displayChannelCheckBox_->setText("Display Channel");
-	displayChannelCheckBox_->setChecked(true);
-	//	checkBoxRow->addWidget(displayChannelCheckBox_, 0, 1, Qt::AlignRight);
-	PANIC(connect(displayChannelCheckBox_, SIGNAL(stateChanged(int)),
-		this, SLOT(set_displayChannel(int))));
-	form->addRow(displayChannelCheckBox_);
+	  //DGA: channel display checkbox
+	  displayChannelCheckBox_ = new QCheckBox(); //DGA: Initialize display channel checkbox, by default set to true
+	  displayChannelCheckBox_->setText("Display Channel");
+	  displayChannelCheckBox_->setChecked(true);
+	  PANIC(connect(displayChannelCheckBox_, SIGNAL(stateChanged(int)), //DGA: Connect displayChannelCheckBox_ stateChanged signal to set_displayChannel slot
+		  this, SLOT(set_displayChannel(int))));
+	  form->addRow(displayChannelCheckBox_); //DGA: Add the checkbox as a row
     }
 
     layout->addLayout(form);
@@ -156,11 +147,11 @@ namespace ui {
     plot_->setSizePolicy(QSizePolicy::Expanding,QSizePolicy::Expanding);
     plot_->addGraph();
     plot_->graph(0)->setPen(QPen(Qt::blue));
-    plot_->addGraph(plot_->xAxis2,plot_->yAxis2);
-    plot_->graph(1)->setPen(QPen(Qt::red));
-	plot_->addGraph(plot_->xAxis2,plot_->yAxis2);
+    plot_->addGraph(plot_->xAxis2,plot_->yAxis2); //DGA: Made CDF on second x axis
+    plot_->graph(1)->setPen(QPen(Qt::red)); 
+	plot_->addGraph(plot_->xAxis2,plot_->yAxis2); //DGA: Minimum cutoff line
 	plot_->graph(2)->setPen(QPen(Qt::black));
-	plot_->addGraph(plot_->xAxis2,plot_->yAxis2);
+	plot_->addGraph(plot_->xAxis2,plot_->yAxis2); //DGA: Maximum cutoff line
 	plot_->graph(3)->setPen(QPen(Qt::black));
     plot_->xAxis->setLabel("Intensity");
     plot_->xAxis2->setVisible(true);
@@ -169,200 +160,87 @@ namespace ui {
     plot_->yAxis2->setVisible(true);
     plot_->yAxis2->setLabel("CDF");
     plot_->yAxis2->setLabelColor(Qt::red);
-	plot_->yAxis2->setRange(0, 1);
+	plot_->yAxis2->setRange(0, 1); //DGA: CDF range set to 0-1
+
     layout->addWidget(plot_);
 
-	// slider
-	  { QFormLayout *contrastAndDisplayForm = new QFormLayout;
-	    intensitySlider_ = new MySliderWithMultipleHandles(channelHistogramInformation, &ichan_, parent);
+	// DGA: Contrast controls
+	{ QFormLayout *contrastForm = new QFormLayout; //DGA: Form layout for contrast and display
+	  intensitySlider_ = new MySliderWithMultipleHandles(channelHistogramInformation, &ichan_, parent); //DGA: Create intensity slider
+	  
+	  //DGA: Intensity slider
+	  QGridLayout* cutoffRow = new QGridLayout();
+	  //DGA: Add the minimum and maximum cutoff labels, by default assuming max is 65535
+	  minimumCutoffLabel_ = new QLabel(QString("Minimum: %1").arg("0", 6));
+	  maximumCutoffLabel_ = new QLabel(QString("Maximum: %1").arg(QString::number(USHRT_MAX), 6));
+	  PANIC(connect(intensitySlider_, SIGNAL(minimumMaximumCutoffValuesChanged(void)), //DGA: connect the minimumMaximumCutoffValuesChanged signal of the intensity slider to the updateMinimumMaximumCuotffValues slot
+		    this, SLOT(updateMinimumMaximumCutoffValues(void))));
+	  //DGA: Add the cutoff labels on the left/right ends, and disable the slider by default and add the slider and cutoff labels to the form
+	  cutoffRow->addWidget(minimumCutoffLabel_, 0, 0, Qt::AlignLeft);
+	  cutoffRow->addWidget(maximumCutoffLabel_, 0, 1, Qt::AlignRight);
+	  intensitySlider_->setEnabled(false);
+	  intensitySlider_->setMinimum(0);
+	  intensitySlider_->setMaximum(USHRT_MAX);
+	  contrastForm->addRow(intensitySlider_);
+	  contrastForm->addRow(cutoffRow);
 
-		//autoscale and display checkboxes
-		QGridLayout* checkBoxRow = new QGridLayout();
-		//autoscale checkbox
-		/*autoscaleCheckBox_ = new QCheckBox();
-		autoscaleCheckBox_->setText(QString("Autoscale%1").arg(" ",6));
-		autoscaleCheckBox_->setChecked(true);
-		checkBoxRow->addWidget(autoscaleCheckBox_, 0, 0, Qt::AlignLeft);
-		PANIC(connect(autoscaleCheckBox_, SIGNAL(stateChanged(int)),
-			this, SLOT(set_autoscale(int))));*/
+	  //DGA: Create autoscale group, which is checked by default
+	  autoscaleGroupCheckBox_ = new QGroupBox("Autoscale"); 
+	  autoscaleGroupCheckBox_->setCheckable(true);
+	  autoscaleGroupCheckBox_->setChecked(true);
+	  PANIC(connect(autoscaleGroupCheckBox_, SIGNAL(clicked(bool)), //DGA: Connect the group checkbox clicked signal to the autoscale slot
+		    this, SLOT(set_autoscale(bool))));
 
-		autoscaleGroupCheckBox_ = new QGroupBox("Autoscale");
-		//autoscaleGroupCheckBox_->setStyleSheet("QGroupBox{border:1px solid gray}");//border-radius:0px;margin-top: 1ex;} QGroupBox::title{subcontrol-origin: margin;subcontrol-position:top left;padding:0px 15px;}");
-		autoscaleGroupCheckBox_->setCheckable(true);
-		autoscaleGroupCheckBox_->setChecked(true);
-		PANIC(connect(autoscaleGroupCheckBox_, SIGNAL(clicked(bool)),
-			this, SLOT(set_autoscale(bool))));
+	  signalMapper_ = new QSignalMapper(this); //DGA: Create signal mapper
+	  QHBoxLayout* percentileRow = new QHBoxLayout(); //DGA: Percentile row for changing cutoffs
+	  //DGA: Labels and default values for under/oversaturated percentages (10/90 respectively)
+	  QLabel * undersaturatedPercentileLabel = new QLabel("Undersaturated %:"); 
+	  undersaturatedPercentile_ = new QLineEdit("10");
+	  QLabel * oversaturatedPercentileLabel = new QLabel("Oversaturated %:");
+	  oversaturatedPercentile_ = new QLineEdit("90");
+	   //DGA: connect the editing finished signals of the under/oversaturated percentiles to the signal mapper's map slot, mapping the signals respectively
+	  PANIC(connect(undersaturatedPercentile_, SIGNAL(editingFinished()),
+		    signalMapper_, SLOT(map())));
+	  signalMapper_->setMapping(undersaturatedPercentile_, "undersaturatedPercentile");
+	  PANIC(connect(oversaturatedPercentile_, SIGNAL(editingFinished()),
+		    signalMapper_, SLOT(map())));
+	  signalMapper_->setMapping(oversaturatedPercentile_, "oversaturatedPercentile");
+	  PANIC(connect(signalMapper_, SIGNAL(mapped(QString)), this, SLOT(percentileValuesEntered(QString)))); //DGA: Connect signal mapper's mapped signal to the percentileValuesEntered slot so that when either percentile is changed, this signal is called with the appropriate string identifier
 
-		signalMapper_ = new QSignalMapper(this);
-		QHBoxLayout* percentileRow = new QHBoxLayout();
-		//percentileRow->addWidget(autoscaleCheckBox_);
-		QLabel * undersaturatedPercentileLabel = new QLabel("Undersaturated %:");
-		undersaturatedPercentile_ = new QLineEdit("10");
-		//undersaturatedPercentile_->setValidator(new QDoubleValidator(0, 100, 2, this));
-		//undersaturatedPercentile_->setFixedWidth(20);
-		QLabel * oversaturatedPercentileLabel = new QLabel("Oversaturated %:");
-		oversaturatedPercentile_ = new QLineEdit("90");
-		//oversaturatedPercentile_->setValidator(new QDoubleValidator(0, 100, 2, this));
-		PANIC(connect(undersaturatedPercentile_, SIGNAL(editingFinished()),
-			signalMapper_, SLOT(map())));
-		signalMapper_->setMapping(undersaturatedPercentile_, "undersaturatedPercentile");
-		PANIC(connect(oversaturatedPercentile_, SIGNAL(editingFinished()),
-			signalMapper_, SLOT(map())));
-		signalMapper_->setMapping(oversaturatedPercentile_, "oversaturatedPercentile");
-		PANIC(connect(signalMapper_, SIGNAL(mapped(QString)), this, SLOT(percentileValuesEntered(QString))));
+	  //DGA: Add the percentile labels and edit boxes to the autoscale group
+	  percentileRow->addWidget(undersaturatedPercentileLabel);
+	  percentileRow->addWidget(undersaturatedPercentile_);
+	  percentileRow->addWidget(oversaturatedPercentileLabel);
+	  percentileRow->addWidget(oversaturatedPercentile_);
+	  autoscaleGroupCheckBox_->setLayout(percentileRow);
+	  contrastForm->addWidget(autoscaleGroupCheckBox_);
 
-		//oversaturatedPercentile_->setFixedWidth(20);
-		percentileRow->addWidget(undersaturatedPercentileLabel);//,0, Qt::AlignLeft);
-		percentileRow->addWidget(undersaturatedPercentile_);//,0, Qt::AlignLeft);
-		percentileRow->addWidget(oversaturatedPercentileLabel);
-		percentileRow->addWidget(oversaturatedPercentile_);
-		autoscaleGroupCheckBox_->setLayout(percentileRow);
-
-		QGridLayout* cutoffRow = new QGridLayout();
-		minimumCutoffLabel_ = new QLabel(QString("Minimum: %1").arg("0", 6));
-		maximumCutoffLabel_ = new QLabel(QString("Maximum: %1").arg("65535", 6));
-		PANIC(connect(intensitySlider_, SIGNAL(minimumMaximumCutoffValuesChanged(void)),
-			this, SLOT(updateMinimumMaximumCutoffValues(void))));
-		cutoffRow->addWidget(minimumCutoffLabel_, 0, 0,  Qt::AlignLeft);
-		cutoffRow->addWidget(maximumCutoffLabel_, 0, 1, Qt::AlignRight);
-		intensitySlider_->setEnabled(false);
-		intensitySlider_->setMinimum(0);
-		intensitySlider_->setMaximum(65535);
-
-		contrastAndDisplayForm->addRow(intensitySlider_);
-		contrastAndDisplayForm->addRow(cutoffRow);
-		contrastAndDisplayForm->addRow(checkBoxRow);
-		//contrastAndDisplayForm->addRow(percentileRow);
-		layout->addLayout(contrastAndDisplayForm);
-				layout->addWidget(autoscaleGroupCheckBox_);
-
-	  }
+	  layout->addLayout(contrastForm);
+	}
   }
   
-void HistogramDockWidget::showEvent( QShowEvent* event ) {
+void HistogramDockWidget::showEvent( QShowEvent* event ) { //DGA: Rescale axes when the widget is shown
     QWidget::showEvent( event );
 	rescale_axes();
 } 
 
-// histogram utilities START  
-/* #define TYPECASES(ARRAYARG) do {\
-    switch(ARRAYARG->type)  \
-    { CASE( UINT8_TYPE ,u8); \
-      CASE( UINT16_TYPE,u16);\
-      CASE( UINT32_TYPE,u32);\
-      CASE( UINT64_TYPE,u64);\
-      CASE(  INT8_TYPE ,i8); \
-      CASE(  INT16_TYPE,i16);\
-      CASE(  INT32_TYPE,i32);\
-      CASE(  INT64_TYPE,i64);\
-      CASE(FLOAT32_TYPE,f32);\
-      CASE(FLOAT64_TYPE,f64);\
-      default: \
-        FAIL;  \
-    }}while(0)
-
-  static double amin(mylib::Array *a)
-  { double out; 
-#define CASE(ID,T) case mylib::ID: {const T *d=(T*)a->data; T m=d[0]; for(size_t i=1;i<a->size;++i) m=(d[i]<m)?d[i]:m; out=(double)m;} break;
-    TYPECASES(a);
-#undef CASE
-    return out;
-  }
-
-  static double amax(mylib::Array *a)
-  { double out;
-#define CASE(ID,T) case mylib::ID: {const T *d=(T*)a->data; T m=d[0]; for(size_t i=1;i<a->size;++i) m=(d[i]>m)?d[i]:m; out=(double)m;} break;    
-    TYPECASES(a);
-#undef CASE
-    return out;    
-  }
-  
-  static unsigned nbins(mylib::Array *a,double min, double max)
-  { unsigned n,lim = 1<<12; // max number of bins
-    switch(a->type)
-    { case mylib::UINT8_TYPE:
-      case mylib::INT8_TYPE:
-        lim=1<<8;
-      case mylib::UINT16_TYPE:
-      case mylib::UINT32_TYPE:
-      case mylib::UINT64_TYPE:
-      case mylib::INT16_TYPE:
-      case mylib::INT32_TYPE:
-      case mylib::INT64_TYPE:
-        n=max-min+1;
-        return (n<lim)?n:lim;      
-      case mylib::FLOAT32_TYPE:
-      case mylib::FLOAT64_TYPE:
-        return lim;
-      default:
-        FAIL;
-    }
-  }
-  
-  static double binsize(unsigned n, double min, double max)
-  { return (n==0)?0:(((double)n)-1)/(max-min);
-  }
-  
-  template<class T>
-  static void count(double *restrict pdf, size_t nbins, T *restrict data, size_t nelem, T min, double dy)
-  { for(size_t i=0;i<nelem;++i) pdf[ (size_t)((data[i]-min)*dy) ]++;      
-    for(size_t i=0;i<nbins;++i) pdf[i]/=(double)nelem;
-  }
-  static void scan(double *restrict cdf, double *restrict pdf, size_t n)
-  { memcpy(cdf,pdf,n*sizeof(double));
-    for(size_t i=1;i<n;++i) cdf[i]+=cdf[i-1];
-  }
-  static void setbins(double *x, size_t n, double min, double dy)
-  { for(size_t i=0;i<n;++i) x[i] = i/dy+min;
-  }
-  	
-  static size_t findIndex(QVector<double> &cdf, double perct)
-  {
-    size_t index;
-    double * cdfdata = cdf.data();
-    double diff=1.0, minDiff = 1.0;
-
-    for (size_t i=0; i<cdf.size(); ++i)
-    {
-      diff = abs(cdfdata[i] - perct);
-      if (diff <= minDiff) 
-      {
-        minDiff = diff;
-        index = i;
-      }
-    }
-
-    return index;
-  }
-      
-  static void histogram(QVector<double> &x, QVector<double> &pdf, QVector<double> &cdf, mylib::Array *a)
-  { double min,max,dy;
-    unsigned n;
-    min=amin(a);
-    max=amax(a);
-#if 0
-    HERE;
-    mylib::Write_Image("histogram.tif",a,mylib::DONT_PRESS);    
-#endif
-//    debug("%s(%d) %s"ENDL "\tmin %6.1f\tmax %6.1f"ENDL,__FILE__,__LINE__,__FUNCTION__,min,max);
-    n=nbins(a,min,max);
-    dy=binsize(n,min,max); // value transform is  (data[i]-min)*dy --> for max this is (max-min)*(nbins-1)/(max-min)
-
-    x.resize(n);
-    pdf.resize(n);
-    cdf.resize(n);
-    
-#define CASE(ID,T) case mylib::ID: count<T>(pdf.data(),n,(T*)a->data,a->size,min,dy); break;
-    TYPECASES(a);
-#undef CASE
-    scan(cdf.data(),pdf.data(),n);
-    setbins(x.data(),n,min,dy);
-  } */
- // histogram utilities END
-
  void HistogramDockWidget::set(mylib::Array *im)
-  { TRY(check_chan(im));
+ {  //DGA: Gets called when player signals an image is ready
+	TRY(check_chan(im)); 
     swap(im);
+	currentImagePointerAccordingToUI_ = im; //DGA: Sets the currentImagePointerAccordingToUI_ equal to im
+	if (!maximumValueForImageDataType_){ //DGA: If the maximum value for the data type has not yet been determined, then determine it
+		determineMaximumValueForDataType(im->type, maximumValueForImageDataType_);
+		if (maximumValueForImageDataType_ != USHRT_MAX){ //DGA: If the max is not the default 65535
+			//DGA: If the min or max values exceed the new maximumValueForImageDataType_, then set the min to 0 and the maxValue to maximumValueForImageDataType_
+			for (size_t tempChannelIndex = 0; tempChannelIndex < 3; tempChannelIndex++){
+				if (round(channelHistogramInformation[tempChannelIndex].minValue) > maximumValueForImageDataType_) { channelHistogramInformation[tempChannelIndex].minValue = 0; didScalingChange_ = true; }
+				if (round(channelHistogramInformation[tempChannelIndex].maxValue) > maximumValueForImageDataType_) { channelHistogramInformation[tempChannelIndex].maxValue = maximumValueForImageDataType_; didScalingChange_ = true; }
+			}
+			updateMinimumMaximumCutoffValues(); //DGA: Update minimum/maximum and possibly redisplay image
+		}
+		intensitySlider_->maximumValueForImageDataType = maximumValueForImageDataType_; //DGA: Set intensity slider's maximumValueForImageDataType
+	}
 	if(!is_live_) return;
     compute(im);
  Error:
@@ -464,7 +342,7 @@ void HistogramDockWidget::set_autoscale(bool is_autoscale)
   }
 
 void HistogramDockWidget::percentileValuesEntered(QString whichPercentile)
-{ bool conversionWorked; bool didScalingChange=false;
+{ bool conversionWorked;
 	if (QString::compare(whichPercentile,"undersaturatedPercentile")==0)
     {
 		//then the newly entered value was for the undersaturated percentile
@@ -472,7 +350,7 @@ void HistogramDockWidget::percentileValuesEntered(QString whichPercentile)
 		if (possibleNewUndersaturatedPercentile >= 0 && possibleNewUndersaturatedPercentile <= oversaturatedPercentile_->text().toDouble() && conversionWorked)
 		{
 			channelHistogramInformation[ichan_].undersaturatedPercentile = possibleNewUndersaturatedPercentile/100.0;
-			didScalingChange=true;
+			didScalingChange_=true;
 		}
 		else undersaturatedPercentile_->setText(QString("%1").arg(channelHistogramInformation[ichan_].undersaturatedPercentile*100.0));
 }
@@ -482,11 +360,13 @@ else{
 		if (possibleNewOversaturatedPercentile <=100 && possibleNewOversaturatedPercentile >= undersaturatedPercentile_->text().toDouble() && conversionWorked)
 		{
 			channelHistogramInformation[ichan_].oversaturatedPercentile = possibleNewOversaturatedPercentile/100.0;
-			didScalingChange = true;
+			didScalingChange_ = true;
 		}
 		else oversaturatedPercentile_->setText(QString("%1").arg(channelHistogramInformation[ichan_].oversaturatedPercentile*100.0));
-		if (didScalingChange && last_) emit redisplayImage(last_, currentImagePointerAccordingToUI_, true);
 }
+		if (didScalingChange_ && last_) emit redisplayImage(last_, currentImagePointerAccordingToUI_, true);
+		didScalingChange_ = false; /////??????
+			updateMinimumMaximumCutoffValues();
 
 }
 
@@ -498,12 +378,12 @@ void HistogramDockWidget::set_displayChannel(int is_displayChannel)
   }
 
 void HistogramDockWidget::updateMinimumMaximumCutoffValues()
-  {	bool didScalingChange=false;
+  {	
 	if (channelHistogramInformation[ichan_].minValue != minimumCutoffPrevious_)
-	{ minimumCutoffLabel_->setText(QString("Minimum: %1").arg(channelHistogramInformation[ichan_].minValue, 6));
+	{ minimumCutoffLabel_->setText(QString("Minimum: %1").arg(round(channelHistogramInformation[ichan_].minValue), 6));
 	  minimumCutoffVector_ = { (double)channelHistogramInformation[ichan_].minValue, (double)channelHistogramInformation[ichan_].minValue };
 	  minimumCutoffPrevious_ = channelHistogramInformation[ichan_].minValue;
-	  didScalingChange=true;
+	  didScalingChange_ = true;
 	}
 	plot_->graph(2)->setVisible(false);
 	if (plot_->xAxis2->range().lower <= channelHistogramInformation[ichan_].minValue && plot_->xAxis2->range().upper >= channelHistogramInformation[ichan_].minValue){
@@ -511,10 +391,10 @@ void HistogramDockWidget::updateMinimumMaximumCutoffValues()
 		plot_->graph(2)->setVisible(true);
 	}
 	if (channelHistogramInformation[ichan_].maxValue != maximumCutoffPrevious_)
-	{ maximumCutoffLabel_->setText(QString("Maximum: %1").arg(channelHistogramInformation[ichan_].maxValue, 6));
+	{ maximumCutoffLabel_->setText(QString("Maximum: %1").arg(round(channelHistogramInformation[ichan_].maxValue), 6));
 	  maximumCutoffVector_ = { (double)channelHistogramInformation[ichan_].maxValue, (double)channelHistogramInformation[ichan_].maxValue };
 	  maximumCutoffPrevious_ = channelHistogramInformation[ichan_].maxValue;
-	  didScalingChange = true;
+	  didScalingChange_ = true;
 	}
 	plot_->graph(3)->setVisible(false);
 	if (plot_->xAxis2->range().lower <= channelHistogramInformation[ichan_].maxValue && plot_->xAxis2->range().upper >= channelHistogramInformation[ichan_].maxValue)
@@ -524,7 +404,8 @@ void HistogramDockWidget::updateMinimumMaximumCutoffValues()
 	}
 	intensitySlider_->update();
 	plot_->replot();
-	if (didScalingChange && !channelHistogramInformation[ichan_].autoscale && last_) emit redisplayImage(last_,currentImagePointerAccordingToUI_, true);
+	if (didScalingChange_ && !channelHistogramInformation[ichan_].autoscale && last_) emit redisplayImage(last_,currentImagePointerAccordingToUI_, true);
+	didScalingChange_ = false;
   }
 void HistogramDockWidget::reset_minmax()
   {
@@ -543,7 +424,6 @@ void HistogramDockWidget::swap(mylib::Array *im)
   { 
     mylib::Array *t=last_;
     TRY(last_=mylib::Copy_Array(im));
-	currentImagePointerAccordingToUI_ = im;
     if(t) mylib::Free_Array(t);
   Error:
     ; // presumably a memory error...not sure what to do, should be rare    

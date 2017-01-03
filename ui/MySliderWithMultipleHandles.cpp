@@ -23,10 +23,10 @@ void MySliderWithMultipleHandles::paintEvent(QPaintEvent *ev)
 	opt.rect = style()->subControlRect(QStyle::CC_Slider, &opt, QStyle::SC_SliderGroove, this);
 	style()->drawComplexControl(QStyle::CC_Slider, &opt, &p, this);
 
-
+	convertToSliderCoordinates=maximum()/maximumValueForImageDataType;
 	//First handle.
 	initStyleOption(&opt);
-	opt.sliderPosition = mostRecentlySelected==0 ? channelHistogramInformation[*currentIndex].maxValue : channelHistogramInformation[*currentIndex].minValue;
+	opt.sliderPosition = mostRecentlySelected==0 ? channelHistogramInformation[*currentIndex].maxValue*convertToSliderCoordinates : channelHistogramInformation[*currentIndex].minValue*convertToSliderCoordinates;
 	opt.subControls = QStyle::SC_SliderHandle;
 	opt.rect = style()->subControlRect(QStyle::CC_Slider, &opt, QStyle::SC_SliderHandle, this);
 	sliderWidthInSliderCoordinates = ((maximum() - minimum()) * 1.0*opt.rect.width()) / width();
@@ -34,7 +34,7 @@ void MySliderWithMultipleHandles::paintEvent(QPaintEvent *ev)
 
 		//Second handle
 	initStyleOption(&opt);
-	opt.sliderPosition = mostRecentlySelected==0 ? channelHistogramInformation[*currentIndex].minValue : channelHistogramInformation[*currentIndex].maxValue;
+	opt.sliderPosition = mostRecentlySelected==0 ? channelHistogramInformation[*currentIndex].minValue*convertToSliderCoordinates : channelHistogramInformation[*currentIndex].maxValue*convertToSliderCoordinates;
 	opt.subControls = QStyle::SC_SliderHandle;
 	opt.rect = style()->subControlRect(QStyle::CC_Slider, &opt, QStyle::SC_SliderHandle, this);
 	style()->drawComplexControl(QStyle::CC_Slider, &opt, &p, this);
@@ -43,9 +43,9 @@ void MySliderWithMultipleHandles::paintEvent(QPaintEvent *ev)
 
 
 void MySliderWithMultipleHandles::mouseMoveEvent(QMouseEvent *ev)
-{	mousePositionInSliderCoordinates = minimum() + ((maximum() - minimum()) * ev->x() )/ width();
-	minValue = channelHistogramInformation[*currentIndex].minValue;
-	maxValue = channelHistogramInformation[*currentIndex].maxValue;
+{	mousePositionInSliderCoordinates = minimum() + (double(maximum() - minimum()) * ev->x() )/ width();
+	minValue = channelHistogramInformation[*currentIndex].minValue*convertToSliderCoordinates;
+	maxValue = channelHistogramInformation[*currentIndex].maxValue*convertToSliderCoordinates;
 	minDistanceBetweenSliders = 0;//sliderWidthInSliderCoordinates/2.0;
 	switch (currentlySelected)
 	{ 
@@ -58,8 +58,8 @@ void MySliderWithMultipleHandles::mouseMoveEvent(QMouseEvent *ev)
 		}
 		if (minValue < minimum()) minValue = minimum();
 		setSliderPosition(minValue);
-		channelHistogramInformation[*currentIndex].minValue = minValue;
-		channelHistogramInformation[*currentIndex].maxValue = maxValue;
+		channelHistogramInformation[*currentIndex].minValue = minValue/convertToSliderCoordinates;
+		channelHistogramInformation[*currentIndex].maxValue = maxValue/convertToSliderCoordinates;
 		break;
 	case 1:
 		maxValue = newSliderValue(distanceToCurrentlySelectedSlidersLeftEdge);
@@ -69,8 +69,8 @@ void MySliderWithMultipleHandles::mouseMoveEvent(QMouseEvent *ev)
 		}
 		if (maxValue > maximum()) maxValue = maximum();
 		setSliderPosition(maxValue);
-		channelHistogramInformation[*currentIndex].minValue = minValue;
-		channelHistogramInformation[*currentIndex].maxValue = maxValue;
+		channelHistogramInformation[*currentIndex].minValue = minValue/convertToSliderCoordinates;
+		channelHistogramInformation[*currentIndex].maxValue = maxValue/convertToSliderCoordinates;
 		break;
 	}
 	emit minimumMaximumCutoffValuesChanged();
@@ -84,9 +84,10 @@ void MySliderWithMultipleHandles::mouseReleaseEvent(QMouseEvent *ev)
 }
 
 void MySliderWithMultipleHandles::mousePressEvent(QMouseEvent *ev)
-{ mousePositionInSliderCoordinatesForSliderSelection = minimum() + ((maximum() - minimum()) * ev->x()) / width();
-  minValue = channelHistogramInformation[*currentIndex].minValue;
-  maxValue = channelHistogramInformation[*currentIndex].maxValue;
+{ convertToSliderCoordinates=maximum()/maximumValueForImageDataType;
+mousePositionInSliderCoordinatesForSliderSelection = minimum() + (double(maximum() - minimum()) * ev->x()) / width();
+  minValue = channelHistogramInformation[*currentIndex].minValue*convertToSliderCoordinates;
+  maxValue = channelHistogramInformation[*currentIndex].maxValue*convertToSliderCoordinates;
   int topSliderValue, bottomSliderValue;
   if (mostRecentlySelected == 0) {topSliderValue = minValue; bottomSliderValue = maxValue;}
   else { topSliderValue = maxValue; bottomSliderValue = minValue;}

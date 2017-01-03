@@ -50,16 +50,6 @@ namespace mylib {
   //DGA added this
   static void percentiles(mylib::Array *a, unsigned int * _pixelValueCounts, double minPercent, double maxPercent, double &minValueOut, double &maxValueOut)
   { int minValue=-1, maxValue, totalCount=0, currentValue=0; minValueOut=-1;
- /*  const u16 *d = (u16*)a->data; 
-   memset(_pixelValueCounts,0,65536); 
-   printf("%d \n", sizeof(*_pixelValueCounts));
-   for(int i=0; i<a->size; i++) {
-	   _pixelValueCounts[(int)d[i]]++;}
-						    while (totalCount <= maxPercent * a->size){
-							       totalCount+=_pixelValueCounts[currentValue];
-		                           if (minValue == -1 && totalCount> a->size*minPercent) minValueOut = currentValue;
-		                           currentValue++;}
-				            maxValueOut = currentValue;*/
 #define PDFMETHOD(T) do{ const T *d = (T*)a->data; memset(_pixelValueCounts,0,65536*sizeof(unsigned int)); for(int i=0; i<a->size; i++) _pixelValueCounts[(int)d[i]]++;\
 						    while (totalCount <= maxPercent * a->size){\
 							       totalCount+=_pixelValueCounts[currentValue];\
@@ -67,10 +57,6 @@ namespace mylib {
 		                           currentValue++;}\
 				            maxValueOut = currentValue;}while(0) 
 #define SORTMETHOD(T) do{T * dataArray = new T [a->size];  memcpy(dataArray, a->data, a->size*sizeof(T)); std::sort(dataArray,dataArray+a->size); minValueOut = dataArray[int(a->size*minPercent)]; maxValueOut = dataArray[int(a->size*maxPercent)];}while(0)
- /*u16 * dataArray = new u16 [a->size];  
- memcpy(dataArray, a->data, a->size*sizeof(u16));
- std::sort(dataArray,dataArray+a->size);//a->size*sizeof(u16)); 
- minValueOut = dataArray[int(a->size*minValue)]; maxValueOut = dataArray[int(a->size*maxPercent)];*/
 if (a->type == mylib::UINT8_TYPE) PDFMETHOD(u8);
 else if (a->type == mylib::UINT16_TYPE) PDFMETHOD(u16);
 else if (a->type == mylib::INT8_TYPE) PDFMETHOD(i8);
@@ -83,6 +69,19 @@ else if (a->type == mylib::FLOAT32_TYPE) SORTMETHOD(f32);
 else if (a->type == mylib::FLOAT64_TYPE) SORTMETHOD(f64);
 #undef PDFMETHOD;
 #undef SORTMETHOD;
+  }
+
+  static void determineMaximumValueForDataType(mylib::Value_Type type, f64 &maximumValueForDataType){
+	  if (type == mylib::UINT8_TYPE) maximumValueForDataType = UCHAR_MAX;
+	  else if (type == mylib::UINT16_TYPE) maximumValueForDataType = USHRT_MAX;
+	  else if (type == mylib::UINT32_TYPE)  maximumValueForDataType = UINT_MAX;
+	  else if (type == mylib::UINT64_TYPE)  maximumValueForDataType = ULLONG_MAX;
+	  else if (type == mylib::INT8_TYPE) maximumValueForDataType = CHAR_MAX;
+	  else if (type == mylib::INT16_TYPE) maximumValueForDataType = SHRT_MAX;
+	  else if (type == mylib::INT32_TYPE)  maximumValueForDataType = INT_MAX;
+	  else if (type == mylib::INT64_TYPE)  maximumValueForDataType = LLONG_MAX;
+	  else if (type == mylib::FLOAT32_TYPE)  maximumValueForDataType = FLT_MAX;
+	  else if (type == mylib::FLOAT64_TYPE)  maximumValueForDataType = DBL_MAX;
   }
 
   static unsigned nbins(mylib::Array *a,double min, double max)
@@ -106,57 +105,6 @@ else if (a->type == mylib::FLOAT64_TYPE) SORTMETHOD(f64);
         FAIL;
     }
   }
-
-  //DGA added this
-  static unsigned binWidths(mylib::Array *a)
-  { unsigned maxValueFromArray;
-	double binWidth;
-    switch(a->type)
-    { case mylib::UINT8_TYPE:
-      case mylib::INT8_TYPE:
-      case mylib::UINT16_TYPE:
-	  case mylib::INT16_TYPE:
-		  return 1;
-      case mylib::UINT32_TYPE:
-      case mylib::UINT64_TYPE:
-      case mylib::INT32_TYPE:
-      case mylib::INT64_TYPE:
-      case mylib::FLOAT32_TYPE:
-      case mylib::FLOAT64_TYPE:
-		  maxValueFromArray = amax(a);
-		  binWidth = maxValueFromArray/65536.0;
-		  if (binWidth < 1) binWidth = 1;
-		  return binWidth;
-      default:
-        FAIL;
-    }
-  }
-
-    //DGA added this
-  static unsigned stuff(mylib::Array *a)
-  { unsigned maxValueFromArray;
-	double binWidth;
-    switch(a->type)
-    { case mylib::UINT8_TYPE:
-      case mylib::INT8_TYPE:
-      case mylib::UINT16_TYPE:
-	  case mylib::INT16_TYPE:
-		  return 1;
-      case mylib::UINT32_TYPE:
-      case mylib::UINT64_TYPE:
-      case mylib::INT32_TYPE:
-      case mylib::INT64_TYPE:
-      case mylib::FLOAT32_TYPE:
-      case mylib::FLOAT64_TYPE:
-		  maxValueFromArray = amax(a);
-		  binWidth = maxValueFromArray/65536.0;
-		  if (binWidth < 1) binWidth = 1;
-		  return binWidth;
-      default:
-        FAIL;
-    }
-  }
-
   
   static double binsize(unsigned n, double min, double max)
   { return (n==0)?0:(((double)n)-1)/(max-min);

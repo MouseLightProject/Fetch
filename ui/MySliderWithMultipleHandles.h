@@ -17,17 +17,18 @@ public:
 	void mouseMoveEvent(QMouseEvent *ev);
 	float newSliderValue(float distanceFromLeftEdge);
 	float slidersLeftEdge(int position);
-	int maxValue = 100;
-	int minValue = 0;
+	double maxValue = 100;
+	double minValue = 0;
 	float sliderWidthInSliderCoordinates;
 	int currentlySelected, mostRecentlySelected;
 	bool justPushed = true;
 	bool justGotFocus = true;
-	int mousePositionInSliderCoordinates, mousePositionInSliderCoordinatesForSliderSelection;
-	int minDistanceBetweenSliders;
+	double mousePositionInSliderCoordinates, mousePositionInSliderCoordinatesForSliderSelection;
+	double minDistanceBetweenSliders;
 	channelHistogramInformationStruct *channelHistogramInformation;
 	size_t *currentIndex, currentIndexPrevious=0;
 	float distanceToCurrentlySelectedSlidersLeftEdge;
+	double maximumValueForImageDataType=65535, convertToSliderCoordinates;
 
 	signals:
 	void minimumMaximumCutoffValuesChanged(void);

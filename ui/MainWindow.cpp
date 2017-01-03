@@ -429,7 +429,7 @@ void fetch::ui::MainWindow::createViews()
               _display,       SLOT(setGamma(float))));
   TRY(connect(
       _histogramDockWidget,SIGNAL(redisplayImage(mylib::Array*,mylib::Array*,bool)),
-      _display		      ,SLOT  (imshow(mylib::Array*,mylib::Array*,bool))));
+      _display		      ,SLOT  (imshow(mylib::Array*,mylib::Array*,bool))),Qt::BlockingQueuedConnection);
   _display->setColormap(_cmapDockWidget->cmap());
   //_player->start();
 }
