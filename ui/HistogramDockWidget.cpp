@@ -28,6 +28,7 @@ namespace ui {
 
   HistogramDockWidget::HistogramDockWidget(QWidget *parent)
     : QDockWidget("Image Display and Histogram",parent) //DGA: Changed widget name
+	, dataType_(mylib::UINT16_TYPE) //DGA: Initialize it to uint16 type
 	, didScalingChange_(false)
     , plot_(0)
     , ichan_(0)
@@ -53,7 +54,30 @@ namespace ui {
       setWidget(w);
     }
 
-    QFormLayout *form = new QFormLayout;
+	QFormLayout *form = new QFormLayout;
+	//DGA: Channel display checkboxes
+	{
+	  QHBoxLayout* displayChannelCheckBoxRow = new QHBoxLayout();
+	  QLabel * undersaturatedPercentileLabel = new QLabel("Select Channels To Display:");
+	  displayChannelCheckBoxRow->addWidget(undersaturatedPercentileLabel);
+	  displayChannelSignalMapper_ = new QSignalMapper(this);
+	  for (int i = 0; i < 4; i++){
+		  //DGA: Initialize each display channel checkbox, by default set to true
+		  displayChannelCheckBoxes_[i] = new QCheckBox(); 
+		  displayChannelCheckBoxes_[i]->setText(QStringLiteral("%1").arg(i));
+		  displayChannelCheckBoxes_[i]->setChecked(true);
+		  //DGA: Connect the checkboxes clicked signal to the signalmapper's map slot, set the mapping to equal the channel index and add the chanel (map emits mapped signal)
+		  PANIC(connect(displayChannelCheckBoxes_[i], SIGNAL(clicked()),
+			  displayChannelSignalMapper_, SLOT(map())));
+		  displayChannelSignalMapper_->setMapping(displayChannelCheckBoxes_[i], i);
+		  displayChannelCheckBoxRow->addWidget(displayChannelCheckBoxes_[i]);
+	  }
+	  //DGA: Connect the mapped signal of the signal mapper to the slot set_displayChannel, so that set_displayChannel gets passed the index of the clicked channel
+	  PANIC(connect(displayChannelSignalMapper_, SIGNAL(mapped(int)),
+		    this, SLOT(set_displayChannel(int))));
+	  form->addRow(displayChannelCheckBoxRow); //DGA: Add the checkboxes
+	}
+
     // channel selector
     { 
       QComboBox *c=new QComboBox;
@@ -129,14 +153,6 @@ namespace ui {
       leMax_->setReadOnly(true);;
       row->addWidget(leMax_);
 	  form->addRow(row);
-
-	  //DGA: channel display checkbox
-	  displayChannelCheckBox_ = new QCheckBox(); //DGA: Initialize display channel checkbox, by default set to true
-	  displayChannelCheckBox_->setText("Display Channel");
-	  displayChannelCheckBox_->setChecked(true);
-	  PANIC(connect(displayChannelCheckBox_, SIGNAL(stateChanged(int)), //DGA: Connect displayChannelCheckBox_ stateChanged signal to set_displayChannel slot
-		  this, SLOT(set_displayChannel(int))));
-	  form->addRow(displayChannelCheckBox_); //DGA: Add the checkbox as a row
     }
 
     layout->addLayout(form);
@@ -191,21 +207,21 @@ namespace ui {
 	  PANIC(connect(autoscaleGroupCheckBox_, SIGNAL(clicked(bool)), //DGA: Connect the group checkbox clicked signal to the autoscale slot
 		    this, SLOT(set_autoscale(bool))));
 
-	  signalMapper_ = new QSignalMapper(this); //DGA: Create signal mapper
+	  percentileSignalMapper_ = new QSignalMapper(this); //DGA: Create signal mapper
 	  QHBoxLayout* percentileRow = new QHBoxLayout(); //DGA: Percentile row for changing cutoffs
 	  //DGA: Labels and default values for under/oversaturated percentages (10/90 respectively)
 	  QLabel * undersaturatedPercentileLabel = new QLabel("Undersaturated %:"); 
 	  undersaturatedPercentile_ = new QLineEdit("10");
 	  QLabel * oversaturatedPercentileLabel = new QLabel("Oversaturated %:");
 	  oversaturatedPercentile_ = new QLineEdit("90");
-	   //DGA: connect the editing finished signals of the under/oversaturated percentiles to the signal mapper's map slot, mapping the signals respectively
+	  //DGA: connect the editing finished signals of the under/oversaturated percentiles to the signal mapper's map slot, mapping the signals respectively
 	  PANIC(connect(undersaturatedPercentile_, SIGNAL(editingFinished()),
-		    signalMapper_, SLOT(map())));
-	  signalMapper_->setMapping(undersaturatedPercentile_, "undersaturatedPercentile");
+		    percentileSignalMapper_, SLOT(map())));
+	  percentileSignalMapper_->setMapping(undersaturatedPercentile_, "undersaturatedPercentile");
 	  PANIC(connect(oversaturatedPercentile_, SIGNAL(editingFinished()),
-		    signalMapper_, SLOT(map())));
-	  signalMapper_->setMapping(oversaturatedPercentile_, "oversaturatedPercentile");
-	  PANIC(connect(signalMapper_, SIGNAL(mapped(QString)), this, SLOT(percentileValuesEntered(QString)))); //DGA: Connect signal mapper's mapped signal to the percentileValuesEntered slot so that when either percentile is changed, this signal is called with the appropriate string identifier
+		    percentileSignalMapper_, SLOT(map())));
+	  percentileSignalMapper_->setMapping(oversaturatedPercentile_, "oversaturatedPercentile");
+	  PANIC(connect(percentileSignalMapper_, SIGNAL(mapped(QString)), this, SLOT(percentileValuesEntered(QString)))); //DGA: Connect signal mapper's mapped signal to the percentileValuesEntered slot so that when either percentile is changed, this signal is called with the appropriate string identifier
 
 	  //DGA: Add the percentile labels and edit boxes to the autoscale group
 	  percentileRow->addWidget(undersaturatedPercentileLabel);
@@ -232,12 +248,11 @@ void HistogramDockWidget::showEvent( QShowEvent* event ) { //DGA: Rescale axes w
 	if (!maximumValueForImageDataType_){ //DGA: If the maximum value for the data type has not yet been determined, then determine it
 		determineMaximumValueForDataType(im->type, maximumValueForImageDataType_);
 		if (maximumValueForImageDataType_ != USHRT_MAX){ //DGA: If the max is not the default 65535
-			//DGA: If the min or max values exceed the new maximumValueForImageDataType_, then set the min to 0 and the maxValue to maximumValueForImageDataType_
+			//DGA: If the min or max values exceed the new maximumValueForImageDataType_, then set the minValue to 0 and the maxValue to maximumValueForImageDataType_, and set didScalingChange_ to true
 			for (size_t tempChannelIndex = 0; tempChannelIndex < 3; tempChannelIndex++){
-				if (round(channelHistogramInformation[tempChannelIndex].minValue) > maximumValueForImageDataType_) { channelHistogramInformation[tempChannelIndex].minValue = 0; didScalingChange_ = true; }
-				if (round(channelHistogramInformation[tempChannelIndex].maxValue) > maximumValueForImageDataType_) { channelHistogramInformation[tempChannelIndex].maxValue = maximumValueForImageDataType_; didScalingChange_ = true; }
+				if (channelHistogramInformation[tempChannelIndex].minValue > maximumValueForImageDataType_) { channelHistogramInformation[tempChannelIndex].minValue = 0; didScalingChange_ = true; }
+				if (channelHistogramInformation[tempChannelIndex].maxValue > maximumValueForImageDataType_) { channelHistogramInformation[tempChannelIndex].maxValue = maximumValueForImageDataType_; didScalingChange_ = true; }
 			}
-			updateMinimumMaximumCutoffValues(); //DGA: Update minimum/maximum and possibly redisplay image
 		}
 		intensitySlider_->maximumValueForImageDataType = maximumValueForImageDataType_; //DGA: Set intensity slider's maximumValueForImageDataType
 	}
@@ -271,6 +286,13 @@ static int g_inited=0;
 	plot_->xAxis2->setRange(plot_->xAxis->range().lower, plot_->xAxis->range().upper);
 	plot_->graph(0)->setVisible(true);
 	plot_->graph(1)->setVisible(true);
+	numberOfChannels_ = (im->ndims == 3 ?  im->dims[2] : 1);
+	for (int i = numberOfChannels_; i < 4; i++){
+		displayChannelCheckBoxes_[i]->setEnabled(false);
+		displayChannelCheckBoxes_[i]->setChecked(false);
+	}
+	dataType_ = im->type;
+	intensitySlider_->dataType = dataType_;
 	//plot_->graph(1)->rescaleAxes();
       g_inited=1;
     }
@@ -320,12 +342,9 @@ void HistogramDockWidget::set_ichan(int ichan)
       compute(last_);
     }
 	//autoscaleCheckBox_->setChecked(channelHistogramInformation[ichan_].autoscale);
-	autoscaleGroupCheckBox_->clicked(channelHistogramInformation[ichan_].autoscale);
 	autoscaleGroupCheckBox_->setChecked(channelHistogramInformation[ichan_].autoscale);
-	displayChannelCheckBox_->setChecked(channelHistogramInformation[ichan_].displayChannel);
 	undersaturatedPercentile_->setText(QString("%1").arg(channelHistogramInformation[ichan_].undersaturatedPercentile*100.0));
 	oversaturatedPercentile_->setText(QString("%1").arg(channelHistogramInformation[ichan_].oversaturatedPercentile*100.0));
-	updateMinimumMaximumCutoffValues();
   }
 
 void HistogramDockWidget::set_live(bool is_live)
@@ -370,17 +389,17 @@ else{
 
 }
 
-void HistogramDockWidget::set_displayChannel(int is_displayChannel)
+void HistogramDockWidget::set_displayChannel(int currentlyCheckedChannel)
   { 
-    channelHistogramInformation[ichan_].displayChannel = is_displayChannel;
+    channelHistogramInformation[currentlyCheckedChannel].displayChannel = displayChannelCheckBoxes_[currentlyCheckedChannel]->isChecked();
 	//DGA do junk to calculate actual min max and to see if minmax changed
-	if (last_) emit redisplayImage(last_,currentImagePointerAccordingToUI_, true);
+	if (last_ && currentlyCheckedChannel<numberOfChannels_) emit redisplayImage(last_,currentImagePointerAccordingToUI_, true);
   }
 
 void HistogramDockWidget::updateMinimumMaximumCutoffValues()
   {	
 	if (channelHistogramInformation[ichan_].minValue != minimumCutoffPrevious_)
-	{ minimumCutoffLabel_->setText(QString("Minimum: %1").arg(round(channelHistogramInformation[ichan_].minValue), 6));
+	{ minimumCutoffLabel_->setText(QString("Minimum: %1").arg(channelHistogramInformation[ichan_].minValue,6));
 	  minimumCutoffVector_ = { (double)channelHistogramInformation[ichan_].minValue, (double)channelHistogramInformation[ichan_].minValue };
 	  minimumCutoffPrevious_ = channelHistogramInformation[ichan_].minValue;
 	  didScalingChange_ = true;
@@ -391,7 +410,7 @@ void HistogramDockWidget::updateMinimumMaximumCutoffValues()
 		plot_->graph(2)->setVisible(true);
 	}
 	if (channelHistogramInformation[ichan_].maxValue != maximumCutoffPrevious_)
-	{ maximumCutoffLabel_->setText(QString("Maximum: %1").arg(round(channelHistogramInformation[ichan_].maxValue), 6));
+	{ maximumCutoffLabel_->setText(QString("Maximum: %1").arg(channelHistogramInformation[ichan_].maxValue,6));
 	  maximumCutoffVector_ = { (double)channelHistogramInformation[ichan_].maxValue, (double)channelHistogramInformation[ichan_].maxValue };
 	  maximumCutoffPrevious_ = channelHistogramInformation[ichan_].maxValue;
 	  didScalingChange_ = true;

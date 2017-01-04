@@ -15,16 +15,16 @@ class HistogramDockWidget: public QDockWidget
 { Q_OBJECT
 	QCustomPlot      *plot_;
 	MySliderWithMultipleHandles *intensitySlider_; //DGA: Slider with two handles
-	size_t            ichan_;
+	size_t            ichan_, numberOfChannels_, dataType_; //DGA: Added number of channels and dataType
 	mylib::Array     *last_, *currentImagePointerAccordingToUI_; //DGA: currentImagePointerAccordingToUI_ stores the most recent pointer used by the widget
 	bool              is_live_, didScalingChange_; //DGA: Added didScalingChange_, used to determine whether or not to update the image
 	QVector<double>   x_,pdf_,cdf_,minimumCutoffVector_, maximumCutoffVector_, yForPlottingCutoffsVector_; //DGA: Added minimum/maximumCutoffs and yForPlotting which are used for plotting lines in histogram showing min/max cutoffs
 	double            minX_,maxX_,perct_,minimumCutoffPrevious_,maximumCutoffPrevious_,maximumValueForImageDataType_=0; //DGA: Added previous cutoffs, used to check whether anything changed which determines if something should be updated; maximumValueForImageDataType_ is used 
+	QCheckBox		  *displayChannelCheckBoxes_[4]; //DGA: Four checkboxes for the four possible channels
 	QLineEdit         *leMin_, *leMax_, *lePerct_, *undersaturatedPercentile_, *oversaturatedPercentile_; //DGA: Added the under/oversaturatedPercentile_ line edit pointers
-	QCheckBox		  *displayChannelCheckBox_; //DGA: Added displayChannelCheckBox_
-	QGroupBox		  *autoscaleGroupCheckBox_; //DGA: autoscale group check box which houses the undersaturated and oversaturated percentiles
-	QLabel			  *minimumCutoffLabel_, *maximumCutoffLabel_; //DGA: cutoff labels that are displayed below slider
-	QSignalMapper	  *signalMapper_; //DGA: signal mapper for entering percentiles
+	QGroupBox		  *autoscaleGroupCheckBox_; //DGA: Autoscale group check box which houses the undersaturated and oversaturated percentiles
+	QLabel			  *minimumCutoffLabel_, *maximumCutoffLabel_; //DGA: Cutoff labels that are displayed below slider
+	QSignalMapper	  *displayChannelSignalMapper_, *percentileSignalMapper_; //DGA: Signal mapper for entering displaying channels and for changing percentiles
 
 	public:
 		HistogramDockWidget(QWidget *parent=NULL);
@@ -40,7 +40,7 @@ class HistogramDockWidget: public QDockWidget
 		void set_ichan(int ichan);
 		void set_live(bool is_live);
 		void set_autoscale(bool is_autoscale); //DGA: Slot to set a channel to be autoscaled
-		void set_displayChannel(int is_displayChannel); //DGA: Slot to set a channel to display or not
+		void set_displayChannel(int currentlyCheckedChannel); //DGA: Slot to set a channel to display or not
 		void rescale_axes();
 		void updateMinimumMaximumCutoffValues(); //DGA: Slot to update the minimum/maximum values that are displayed
 		void percentileValuesEntered(QString); //DGA: Slot to update percentiles when new values entered

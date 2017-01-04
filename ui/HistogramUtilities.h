@@ -48,6 +48,8 @@ namespace mylib {
   }
 
   //DGA added this
+#define floorIfInt(dataType, value) value = (dataType != mylib::FLOAT32_TYPE && dataType != mylib::FLOAT64_TYPE) ? floor(value) : value 
+
   static void percentiles(mylib::Array *a, unsigned int * _pixelValueCounts, double minPercent, double maxPercent, double &minValueOut, double &maxValueOut)
   { int minValue=-1, maxValue, totalCount=0, currentValue=0; minValueOut=-1;
 #define PDFMETHOD(T) do{ const T *d = (T*)a->data; memset(_pixelValueCounts,0,65536*sizeof(unsigned int)); for(int i=0; i<a->size; i++) _pixelValueCounts[(int)d[i]]++;\
