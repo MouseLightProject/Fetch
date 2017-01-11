@@ -73,8 +73,10 @@ void MySliderWithMultipleHandles::mouseMoveEvent(QMouseEvent *ev)
 		channelHistogramInformation[*currentIndex].maxValue = maxValue/convertToSliderCoordinates;
 		break;
 	}
-	floorIfInt(dataType, channelHistogramInformation[*currentIndex].minValue);
-	floorIfInt(dataType, channelHistogramInformation[*currentIndex].maxValue);
+	if (dataType != mylib::FLOAT32_TYPE && dataType != mylib::FLOAT64_TYPE){
+		channelHistogramInformation[*currentIndex].minValue = floor(channelHistogramInformation[*currentIndex].minValue);
+		channelHistogramInformation[*currentIndex].maxValue = floor(channelHistogramInformation[*currentIndex].maxValue);
+	}
 	emit minimumMaximumCutoffValuesChanged();
 	justPushed = false;
 }

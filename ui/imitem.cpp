@@ -92,7 +92,6 @@ void ImItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QW
   {
     painter->beginNativePainting();
     checkGLError();
-
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_3D, _hTexture);
     glTexParameterf( GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
@@ -106,8 +105,8 @@ void ImItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QW
     glBindTexture(GL_TEXTURE_2D,_hTexCmap);
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S,     GL_CLAMP_TO_EDGE);
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T,     GL_CLAMP_TO_EDGE);
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     checkGLError();
 
     glActiveTexture(GL_TEXTURE2);
@@ -354,12 +353,13 @@ void ImItem::_setupShader()
   //_shader.setUniformValue("shouldPlot",(GL_BOOL_VEC3){true,true,true});
   _shader.release();
 
-  loadColormap(":/cmap/2");
+  loadColormap(":/cmap/3");
 }
 
 void ImItem::loadColormap(const QString& filename)
 { QImage cmap;
   CHKJMP(cmap.load(filename),Error);
+
   //qDebug()<<cmap.format();
   glActiveTexture(GL_TEXTURE1);
   {

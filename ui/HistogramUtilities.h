@@ -6,6 +6,8 @@ namespace mylib {
 #include "qcustomplot.h"
 #include <algorithm>
 
+//DGA: Moved this from HistogramDockWidget to its own header file.
+
 #ifdef _MSC_VER
 #define restrict __restrict
 #else
@@ -47,33 +49,42 @@ namespace mylib {
     return out;    
   }
 
-  //DGA added this
-#define floorIfInt(dataType, value) value = (dataType != mylib::FLOAT32_TYPE && dataType != mylib::FLOAT64_TYPE) ? floor(value) : value 
 
-  static void percentiles(mylib::Array *a, unsigned int * _pixelValueCounts, double minPercent, double maxPercent, double &minValueOut, double &maxValueOut)
-  { int minValue=-1, maxValue, totalCount=0, currentValue=0; minValueOut=-1;
-#define PDFMETHOD(T) do{ const T *d = (T*)a->data; memset(_pixelValueCounts,0,65536*sizeof(unsigned int)); for(int i=0; i<a->size; i++) _pixelValueCounts[(int)d[i]]++;\
-						    while (totalCount <= maxPercent * a->size){\
-							       totalCount+=_pixelValueCounts[currentValue];\
-		                           if (minValueOut == -1 && totalCount> a->size*minPercent) minValueOut = currentValue;\
-		                           currentValue++;}\
-				            maxValueOut = currentValue;}while(0) 
-#define SORTMETHOD(T) do{T * dataArray = new T [a->size];  memcpy(dataArray, a->data, a->size*sizeof(T)); std::sort(dataArray,dataArray+a->size); minValueOut = dataArray[int(a->size*minPercent)]; maxValueOut = dataArray[int(a->size*maxPercent)];}while(0)
-if (a->type == mylib::UINT8_TYPE) PDFMETHOD(u8);
-else if (a->type == mylib::UINT16_TYPE) PDFMETHOD(u16);
-else if (a->type == mylib::INT8_TYPE) PDFMETHOD(i8);
-else if (a->type == mylib::INT16_TYPE) PDFMETHOD(i16);
-else if (a->type == mylib::UINT32_TYPE) SORTMETHOD(u32);
-else if (a->type == mylib::INT32_TYPE) SORTMETHOD(i32);
-else if (a->type == mylib::UINT64_TYPE) SORTMETHOD(u64);
-else if (a->type == mylib::INT64_TYPE) SORTMETHOD(i64);
-else if (a->type == mylib::FLOAT32_TYPE) SORTMETHOD(f32);
-else if (a->type == mylib::FLOAT64_TYPE) SORTMETHOD(f64);
+  static void percentiles(mylib::Array *a, unsigned int * _pixelValueCounts, double minPercent, double maxPercent, double &minValueOut, double &maxValueOut) //DGA: Function to calculate percentiles
+  { int totalCount=0, currentValue=0; //DGA: totalCount for pdfMethod and currentValue for incrementing through PDF
+	double minCount = minPercent * a->size, maxCount = maxPercent * a->size; //DGA: minCount and maxCount used for determining when correct value is reached
+	minValueOut=-1; //DGA: Initialize minValueOut to -1
+	//DGA: Define PDFMETHOD as a way to calculate the minimum and maximum cutoff values for image a when a has int data types that are less than 32 bits. 
+	//Set d equal to the data from a,hen set _pixelValueCounts (unsigned int array) to 0.
+	//Bin values of d and increment corresponding bins to build up a PDF of pixel values.
+	//Loop through _pixelValueCounts, incrementing the total count, thereby creating a CDF.
+	//When totalCount >= minCount, then minValueOut should equal currentValue.
+	//When totalCount >= maxCount, then maxValueOut should equal currentValue.
+#define PDFMETHOD(T) do{ const T *d = (T*)a->data; memset(_pixelValueCounts,0,65536*sizeof(unsigned int)); for(int i=0;i<a->size;i++) _pixelValueCounts[d[i]]++;\
+						 while (totalCount<maxCount){\
+							    totalCount+=_pixelValueCounts[currentValue];\
+		                        if (minValueOut==-1 && totalCount>=minCount) minValueOut=currentValue;\
+		                        currentValue++;}\
+				         maxValueOut=currentValue;}while(0) 
+	//DGA: For data types requiring 32 or more bits, use SORTMETHOD to calculate minimum and maximum cutoff values for image a. First copy data from a into new dataArray.
+	//Then sort data array. minValueOut will be the value at the ceil(minCount) location, maxValueOut will be the value at ceil(maxCount) location.
+#define SORTMETHOD(T) do{T * dataArray = new T [a->size];  memcpy(dataArray,a->data,a->size*sizeof(T)); std::sort(dataArray,dataArray+a->size); minValueOut=dataArray[int(ceil(minCount))]; maxValueOut=dataArray[int(ceil(maxCount))];}while(0)
+    //DGA: Use the PDF method if type is less than 32 bits, toherwise use the sort method
+    if (a->type == mylib::UINT8_TYPE) PDFMETHOD(u8);
+	else if (a->type == mylib::UINT16_TYPE) PDFMETHOD(u16);
+	else if (a->type == mylib::INT8_TYPE) PDFMETHOD(i8);
+	else if (a->type == mylib::INT16_TYPE) PDFMETHOD(i16);
+	else if (a->type == mylib::UINT32_TYPE) SORTMETHOD(u32);
+	else if (a->type == mylib::INT32_TYPE) SORTMETHOD(i32);
+	else if (a->type == mylib::UINT64_TYPE) SORTMETHOD(u64);
+	else if (a->type == mylib::INT64_TYPE) SORTMETHOD(i64);
+	else if (a->type == mylib::FLOAT32_TYPE) SORTMETHOD(f32);
+	else if (a->type == mylib::FLOAT64_TYPE) SORTMETHOD(f64);
 #undef PDFMETHOD;
 #undef SORTMETHOD;
   }
 
-  static void determineMaximumValueForDataType(mylib::Value_Type type, f64 &maximumValueForDataType){
+  static void determineMaximumValueForDataType(mylib::Value_Type type, f64 &maximumValueForDataType){ //DGA: Determine the maximum value for the data type
 	  if (type == mylib::UINT8_TYPE) maximumValueForDataType = UCHAR_MAX;
 	  else if (type == mylib::UINT16_TYPE) maximumValueForDataType = USHRT_MAX;
 	  else if (type == mylib::UINT32_TYPE)  maximumValueForDataType = UINT_MAX;

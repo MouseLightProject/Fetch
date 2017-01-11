@@ -425,13 +425,14 @@ Error:
           d->_zpiezo.getScanRange(&ummin,&ummax,&umstep);
 		  srand(GetCurrentThreadId()); //DGA: This is necessary because otherwise each thread starts with the same seed
 		  (ummin != ummax) ? isTakingStack = true : Sleep(100); //DGA: Either it is taking a stack, or sleep for 100 ms so it is easier to see it moving in the main window
-	
+		  double centerX[3], centerY[3], deltaX, deltaY, scaleFactor;
+		  for(int channel=0; channel<3; channel++){ centerX[channel] = width*rand() / (float)RAND_MAX; centerY[channel] = height*rand() / (float)RAND_MAX;}
+		 
 		  for (z_um = ummin; ((ummax - z_um) / umstep) >= -0.5f && !d->_agent->is_stopping(); z_um += umstep) //DGA: Now this is inclusive of ummin and ummax
-          { size_t pitch[4];
+          { size_t pitch[4]; 				int count=0; int channel=-1;
             size_t n[3];
             frm->compute_pitches(pitch);
             frm->get_shape(n);
-
             //Fill frame w random colors.
             { TPixel *c,*e;
 			  const f32 low = TypeMin<TPixel>(),
@@ -441,13 +442,14 @@ Error:
               c=e=(TPixel*)frm->data;
               e+=pitch[0]/pitch[3];
 			  for (; c < e; ++c){
+				  if (count % (width * 2 * height) == 0) {count = 0; channel++;}
 				  if (!isTakingStack){ //DGA: Then it is not taking a stack
 					  *c = (TPixel)((ptp*rand() / (float)RAND_MAX) + low); //DGA: When not in surface find mode, just do the normal frame generation
 				  }
 				  else{
 					  // DGA: In surface find mode, this ensures the surface is not found in the first frame and will likely be found in the middle of stack and the stage should move up
 					  // such that the surface would be expected in the next first frame
-					  *c = (TPixel)(((ptp*rand() / (float)RAND_MAX)*((z_um - ummin) / (ummax - ummin))) + low);
+						  *c = (TPixel)((ptp*rand() / (float)RAND_MAX)*(z_um - ummin) / (ummax - ummin) + low);
 				 }
 			  }
 			}
@@ -460,7 +462,7 @@ Error:
 		    DBG("Task: ScanStack<%s>: pushing frame"ENDL, TypeStr<TPixel>());
 		  }
           HERE;
-	  Finalize:
+	  Finalize: Sleep(100);
 		  Chan_Close(qdata);
           free( frm );
           return status; // status == 0 implies success, error otherwise

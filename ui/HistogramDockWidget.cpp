@@ -189,8 +189,8 @@ namespace ui {
 	  //DGA: Add the minimum and maximum cutoff labels, by default assuming max is 65535
 	  minimumCutoffLabel_ = new QLabel(QString("Minimum: %1").arg("0", 6));
 	  maximumCutoffLabel_ = new QLabel(QString("Maximum: %1").arg(QString::number(USHRT_MAX), 6));
-	  PANIC(connect(intensitySlider_, SIGNAL(minimumMaximumCutoffValuesChanged(void)), //DGA: connect the minimumMaximumCutoffValuesChanged signal of the intensity slider to the updateMinimumMaximumCuotffValues slot
-		    this, SLOT(updateMinimumMaximumCutoffValues(void))));
+	  PANIC(connect(intensitySlider_, SIGNAL(minimumMaximumCutoffValuesChanged(void)), //DGA: connect the minimumMaximumCutoffValuesChanged signal of the intensity slider to the updateMinimumMaximumCutoffValuesReplotAndRedisplay slot
+		    this, SLOT(updateMinimumMaximumCutoffValuesReplotAndRedisplay(void))));
 	  //DGA: Add the cutoff labels on the left/right ends, and disable the slider by default and add the slider and cutoff labels to the form
 	  cutoffRow->addWidget(minimumCutoffLabel_, 0, 0, Qt::AlignLeft);
 	  cutoffRow->addWidget(maximumCutoffLabel_, 0, 1, Qt::AlignRight);
@@ -241,26 +241,26 @@ void HistogramDockWidget::showEvent( QShowEvent* event ) { //DGA: Rescale axes w
 } 
 
  void HistogramDockWidget::set(mylib::Array *im)
- {  //DGA: Gets called when player signals an image is ready
-	TRY(check_chan(im)); 
-    swap(im);
-	currentImagePointerAccordingToUI_ = im; //DGA: Sets the currentImagePointerAccordingToUI_ equal to im
-	if (!maximumValueForImageDataType_){ //DGA: If the maximum value for the data type has not yet been determined, then determine it
-		determineMaximumValueForDataType(im->type, maximumValueForImageDataType_);
-		if (maximumValueForImageDataType_ != USHRT_MAX){ //DGA: If the max is not the default 65535
-			//DGA: If the min or max values exceed the new maximumValueForImageDataType_, then set the minValue to 0 and the maxValue to maximumValueForImageDataType_, and set didScalingChange_ to true
-			for (size_t tempChannelIndex = 0; tempChannelIndex < 3; tempChannelIndex++){
-				if (channelHistogramInformation[tempChannelIndex].minValue > maximumValueForImageDataType_) { channelHistogramInformation[tempChannelIndex].minValue = 0; didScalingChange_ = true; }
-				if (channelHistogramInformation[tempChannelIndex].maxValue > maximumValueForImageDataType_) { channelHistogramInformation[tempChannelIndex].maxValue = maximumValueForImageDataType_; didScalingChange_ = true; }
-			}
-		}
-		intensitySlider_->maximumValueForImageDataType = maximumValueForImageDataType_; //DGA: Set intensity slider's maximumValueForImageDataType
-	}
-	if(!is_live_) return;
-    compute(im);
- Error:
-    ; // bad input, ignore 
-  }
+ { //DGA: Gets called when player signals an image is ready
+   TRY(check_chan(im));
+   swap(im);
+   currentImagePointerAccordingToUI_ = im; //DGA: Sets the currentImagePointerAccordingToUI_ equal to im
+   if(!maximumValueForImageDataType_) //DGA: If the maximum value for the data type has not yet been determined, then determine it
+   { determineMaximumValueForDataType(im->type, maximumValueForImageDataType_);
+	 if(maximumValueForImageDataType_ != USHRT_MAX) //DGA: If the max is not the default 65535
+	 { //DGA: If the min or max values exceed the new maximumValueForImageDataType_, then set the minValue to 0 and the maxValue to maximumValueForImageDataType_, and set didScalingChange_ to true
+	   for(size_t tempChannelIndex = 0; tempChannelIndex < 3; tempChannelIndex++)
+	   { if (channelHistogramInformation[tempChannelIndex].minValue > maximumValueForImageDataType_) { channelHistogramInformation[tempChannelIndex].minValue = 0; didScalingChange_ = true; }
+	     if (channelHistogramInformation[tempChannelIndex].maxValue > maximumValueForImageDataType_) { channelHistogramInformation[tempChannelIndex].maxValue = maximumValueForImageDataType_; didScalingChange_ = true; }
+	   }
+	 }
+	 intensitySlider_->maximumValueForImageDataType = maximumValueForImageDataType_; //DGA: Set intensity slider's maximumValueForImageDataType
+   }
+   if (!is_live_) return;
+   compute(im);
+Error:
+   ; // bad input, ignore 
+ }
 
 static int g_inited=0;
 
@@ -271,68 +271,56 @@ static int g_inited=0;
     QString tempStr;
     TRY(ch=mylib::Get_Array_Plane(&(t=*im),ichan_)); //select channel    
     histogram(x_,pdf_,cdf_,ch);
-	    plot_->graph(0)->setData(x_,pdf_);
+	plot_->graph(0)->setData(x_,pdf_);
     plot_->graph(1)->setData(x_,cdf_);
-	if (x_.first() <= plot_->xAxis->range().upper && x_.last() >= plot_->xAxis->range().lower){
-		plot_->graph(0)->setVisible(true);
-		plot_->graph(1)->setVisible(true);
+	//DGA: Only need plot visible if it is in range (if we don't do this, then we get an error)
+	if(x_.first() <= plot_->xAxis->range().upper && x_.last() >= plot_->xAxis->range().lower)
+	{ (pdf_.first() <= plot_->yAxis->range().upper && pdf_.last() >= plot_->yAxis->range().lower) ? plot_->graph(0)->setVisible(true) : plot_->graph(0)->setVisible(false);
+	  plot_->graph(1)->setVisible(true); //DGA: CDF is always in range 0-1 on y-axis
 	}
-	else{
-		plot_->graph(0)->setVisible(false);
-		plot_->graph(1)->setVisible(false);
+	else
+	{ plot_->graph(0)->setVisible(false);
+	  plot_->graph(1)->setVisible(false);
 	}
-    if(!g_inited)
-    { plot_->graph(0)->rescaleAxes();
-	plot_->xAxis2->setRange(plot_->xAxis->range().lower, plot_->xAxis->range().upper);
-	plot_->graph(0)->setVisible(true);
-	plot_->graph(1)->setVisible(true);
-	numberOfChannels_ = (im->ndims == 3 ?  im->dims[2] : 1);
-	for (int i = numberOfChannels_; i < 4; i++){
-		displayChannelCheckBoxes_[i]->setEnabled(false);
-		displayChannelCheckBoxes_[i]->setChecked(false);
-	}
-	dataType_ = im->type;
-	intensitySlider_->dataType = dataType_;
-	//plot_->graph(1)->rescaleAxes();
+    if(!g_inited) //DGA: Only done first time
+    { rescale_axes();
+	  //DGA: Set the number of channels and disable all the invalid channel checkboxes
+	  numberOfChannels_ = (im->ndims == 3 ?  im->dims[2] : 1); 
+	  for(int i = numberOfChannels_; i < 4; i++)
+	  { displayChannelCheckBoxes_[i]->setEnabled(false);
+	    displayChannelCheckBoxes_[i]->setChecked(false);
+      }
+	  //DGA: Determine the image data type and set the dataType variables for the widget and slider
+	  dataType_ = im->type;
+	  intensitySlider_->dataType = dataType_;
       g_inited=1;
     }
-	updateMinimumMaximumCutoffValues();
-    //plot_->replot(); 
+	else{ updateMinimumMaximumCutoffValuesReplotAndRedisplay();} //DGA: Update the cutoff values and replot
 
-    //find intensity value for the input CDF percentile 
-  int index;
-  index = findIndex(cdf_, perct_);
-  double xValue;
-  xValue = x_.data()[index];
-  if (xValue < minX_)  minX_ = xValue;
-  if (xValue > maxX_)  maxX_ = xValue;
-  
-  tempStr.setNum(minX_);
-  leMin_->setText(tempStr);
-  tempStr.setNum(maxX_);
-  leMax_->setText(tempStr);
+	//find intensity value for the input CDF percentile 
+	int index;
+	index = findIndex(cdf_, perct_);
+	double xValue;
+	xValue = x_.data()[index];
+	if (xValue < minX_)  minX_ = xValue;
+	if (xValue > maxX_)  maxX_ = xValue;
 
- Error:
-  ; // memory error or oob channel, should never get here.    
+	tempStr.setNum(minX_);
+	leMin_->setText(tempStr);
+	tempStr.setNum(maxX_);
+	leMax_->setText(tempStr);
+
+Error:
+    ; // memory error or oob channel, should never get here.    
   }
 
  void HistogramDockWidget::rescale_axes()
- {
-	 plot_->graph(0)->rescaleAxes();
-	 plot_->xAxis2->setRange(plot_->xAxis->range().lower, plot_->xAxis->range().upper);
-	 plot_->graph(0)->setVisible(true);
-		plot_->graph(1)->setVisible(true);
-	/* if (channelHistogramInformation[ichan_].minValue < plot_->xAxis->range().lower) channelHistogramInformation[ichan_].minValue = plot_->xAxis->range().lower;
-	 if (channelHistogramInformation[ichan_].minValue > plot_->xAxis->range().upper) channelHistogramInformation[ichan_].minValue = plot_->xAxis->range().upper;
-	 if (channelHistogramInformation[ichan_].maxValue < plot_->xAxis->range().lower) channelHistogramInformation[ichan_].maxValue = plot_->xAxis->range().lower;
-	 if (channelHistogramInformation[ichan_].maxValue > plot_->xAxis->range().upper) channelHistogramInformation[ichan_].maxValue = plot_->xAxis->range().upper;
-	 intensitySlider_->setMinimum(plot_->xAxis->range().lower);
-	 intensitySlider_->setMaximum(plot_->xAxis->range().upper);*/
-	 updateMinimumMaximumCutoffValues();
-	 // plot_->graph(0)->rescaleValueAxis();
-	 //	plot_->graph(1)->rescaleValueAxis();
-	 //plot_->graph(0)->rescaleAxes();
-    //plot_->graph(1)->rescaleAxes();
+ { //DGA: Rescale the axes, meaning they should both be visible, and then replot
+   plot_->graph(0)->rescaleAxes();
+   plot_->xAxis2->setRange(plot_->xAxis->range().lower, plot_->xAxis->range().upper);
+   plot_->graph(0)->setVisible(true);
+   plot_->graph(1)->setVisible(true);
+   updateMinimumMaximumCutoffValuesReplotAndRedisplay();
   }
 
 void HistogramDockWidget::set_ichan(int ichan)
@@ -341,7 +329,7 @@ void HistogramDockWidget::set_ichan(int ichan)
     { check_chan(last_);
       compute(last_);
     }
-	//autoscaleCheckBox_->setChecked(channelHistogramInformation[ichan_].autoscale);
+	//DGA: Set the autoscale checkbox and the percentile values to their respective values from the current channels
 	autoscaleGroupCheckBox_->setChecked(channelHistogramInformation[ichan_].autoscale);
 	undersaturatedPercentile_->setText(QString("%1").arg(channelHistogramInformation[ichan_].undersaturatedPercentile*100.0));
 	oversaturatedPercentile_->setText(QString("%1").arg(channelHistogramInformation[ichan_].oversaturatedPercentile*100.0));
@@ -352,79 +340,71 @@ void HistogramDockWidget::set_live(bool is_live)
   }
 
 void HistogramDockWidget::set_autoscale(bool is_autoscale)
-  { 
-    channelHistogramInformation[ichan_].autoscale = is_autoscale;
-	intensitySlider_->setEnabled(!is_autoscale);//is_autoscale ? intensitySlider_->setEnabled(false) : intensitySlider_->setEnabled(true);
-	//DGA do junk to calculate actual min max and to see if minmax changed
-	if (last_ && is_autoscale) emit redisplayImage(last_,currentImagePointerAccordingToUI_, true);
-	updateMinimumMaximumCutoffValues();
+  { //DGA: Called when autoscale checkbox has been clicked
+    channelHistogramInformation[ichan_].autoscale = is_autoscale; //DGA: Set the channel's autoscale value equal to the checkbox state
+	intensitySlider_->setEnabled(!is_autoscale); //DGA: Disable slider if autoscale enabled
+	if(last_ && is_autoscale) emit redisplayImage(last_,currentImagePointerAccordingToUI_, true); //DGA: If there is a valid frame and autoscale has been checked, signal to redisplay the image, true indicating it is from UI
+	updateMinimumMaximumCutoffValuesReplotAndRedisplay(); //DGA: Update the minimum and maximum cutoff values if necessary
   }
 
-void HistogramDockWidget::percentileValuesEntered(QString whichPercentile)
-{ bool conversionWorked;
-	if (QString::compare(whichPercentile,"undersaturatedPercentile")==0)
-    {
-		//then the newly entered value was for the undersaturated percentile
-		double possibleNewUndersaturatedPercentile = undersaturatedPercentile_->text().toDouble(&conversionWorked);
-		if (possibleNewUndersaturatedPercentile >= 0 && possibleNewUndersaturatedPercentile <= oversaturatedPercentile_->text().toDouble() && conversionWorked)
-		{
-			channelHistogramInformation[ichan_].undersaturatedPercentile = possibleNewUndersaturatedPercentile/100.0;
-			didScalingChange_=true;
-		}
-		else undersaturatedPercentile_->setText(QString("%1").arg(channelHistogramInformation[ichan_].undersaturatedPercentile*100.0));
-}
-else{
-		//then the newly entered value was for the undersaturated percentile
-		double possibleNewOversaturatedPercentile = oversaturatedPercentile_->text().toDouble(&conversionWorked);
-		if (possibleNewOversaturatedPercentile <=100 && possibleNewOversaturatedPercentile >= undersaturatedPercentile_->text().toDouble() && conversionWorked)
-		{
-			channelHistogramInformation[ichan_].oversaturatedPercentile = possibleNewOversaturatedPercentile/100.0;
-			didScalingChange_ = true;
-		}
-		else oversaturatedPercentile_->setText(QString("%1").arg(channelHistogramInformation[ichan_].oversaturatedPercentile*100.0));
-}
-		if (didScalingChange_ && last_) emit redisplayImage(last_, currentImagePointerAccordingToUI_, true);
-		didScalingChange_ = false; /////??????
-			updateMinimumMaximumCutoffValues();
-
-}
-
-void HistogramDockWidget::set_displayChannel(int currentlyCheckedChannel)
-  { 
-    channelHistogramInformation[currentlyCheckedChannel].displayChannel = displayChannelCheckBoxes_[currentlyCheckedChannel]->isChecked();
-	//DGA do junk to calculate actual min max and to see if minmax changed
-	if (last_ && currentlyCheckedChannel<numberOfChannels_) emit redisplayImage(last_,currentImagePointerAccordingToUI_, true);
+void HistogramDockWidget::percentileValuesEntered(QString whichPercentile) //DGA: Called when a percentile value is entered in the text edit box
+  { bool conversionWorked;
+	if(QString::compare(whichPercentile,"undersaturatedPercentile")==0) //DGA: Then the newly entered value was for the undersaturated percentile
+    { double possibleNewUndersaturatedPercentile = undersaturatedPercentile_->text().toDouble(&conversionWorked); 
+	  if(possibleNewUndersaturatedPercentile >= 0 && possibleNewUndersaturatedPercentile <= oversaturatedPercentile_->text().toDouble() //DGA: Set the new percentile value if valid, otherwise reset it to current valid value
+		  && possibleNewUndersaturatedPercentile/100.0 != channelHistogramInformation[ichan_].undersaturatedPercentile && conversionWorked) 
+	  {	channelHistogramInformation[ichan_].undersaturatedPercentile = possibleNewUndersaturatedPercentile/100.0;
+		didScalingChange_=true;
+	  }
+	  else undersaturatedPercentile_->setText(QString("%1").arg(channelHistogramInformation[ichan_].undersaturatedPercentile*100.0));
+	}
+    else //DGA: Then the newly entered value was for the oversaturated percentile
+	{ double possibleNewOversaturatedPercentile = oversaturatedPercentile_->text().toDouble(&conversionWorked);
+	  if(possibleNewOversaturatedPercentile <=100 && possibleNewOversaturatedPercentile >= undersaturatedPercentile_->text().toDouble() //DGA: Set the new percentile value if valid, otherwise reset it to current valid value
+		 && possibleNewOversaturatedPercentile/100.0 != channelHistogramInformation[ichan_].oversaturatedPercentile && conversionWorked) 
+	  {	channelHistogramInformation[ichan_].oversaturatedPercentile = possibleNewOversaturatedPercentile/100.0;
+		didScalingChange_ = true;
+	  }
+	  else oversaturatedPercentile_->setText(QString("%1").arg(channelHistogramInformation[ichan_].oversaturatedPercentile*100.0));
+    }
+    if(didScalingChange_ && last_) emit redisplayImage(last_, currentImagePointerAccordingToUI_, true); //DGA: If scaling changed and the last frame was valid, signal to redisplay the image with true indicating it is from UI
+    didScalingChange_ = false; //DGA: Reset scaling to false and update the cutoff values
+    updateMinimumMaximumCutoffValuesReplotAndRedisplay();
   }
 
-void HistogramDockWidget::updateMinimumMaximumCutoffValues()
-  {	
-	if (channelHistogramInformation[ichan_].minValue != minimumCutoffPrevious_)
+void HistogramDockWidget::set_displayChannel(int currentlyCheckedChannel) //DGA: Called when a display channel checkbox is toggled
+  { channelHistogramInformation[currentlyCheckedChannel].displayChannel = displayChannelCheckBoxes_[currentlyCheckedChannel]->isChecked(); //DGA: Update the displayChannel property and redisplay the image
+	if (last_) emit redisplayImage(last_,currentImagePointerAccordingToUI_, true);
+  }
+
+void HistogramDockWidget::updateMinimumMaximumCutoffValuesReplotAndRedisplay() //DGA: This function updates the minimum and maximum cutoff values for the slider widget, replots them and signals to redisplay the image if necessary
+  {	//DGA: For minimum and maximum cutoffs, check if the current value is different from the previous. If so, update the current label and cutoff vector used for plotting and set didScalingChange_ equal to true. Then if the line would be in range, make it visible
+	if(channelHistogramInformation[ichan_].minValue != minimumCutoffPrevious_)
 	{ minimumCutoffLabel_->setText(QString("Minimum: %1").arg(channelHistogramInformation[ichan_].minValue,6));
-	  minimumCutoffVector_ = { (double)channelHistogramInformation[ichan_].minValue, (double)channelHistogramInformation[ichan_].minValue };
+	  minimumCutoffVector_ = { channelHistogramInformation[ichan_].minValue, channelHistogramInformation[ichan_].minValue };
 	  minimumCutoffPrevious_ = channelHistogramInformation[ichan_].minValue;
 	  didScalingChange_ = true;
 	}
 	plot_->graph(2)->setVisible(false);
-	if (plot_->xAxis2->range().lower <= channelHistogramInformation[ichan_].minValue && plot_->xAxis2->range().upper >= channelHistogramInformation[ichan_].minValue){
+	if (plot_->xAxis2->range().lower <= minimumCutoffPrevious_ && plot_->xAxis2->range().upper >= minimumCutoffPrevious_){
 		plot_->graph(2)->setData(minimumCutoffVector_, yForPlottingCutoffsVector_);
 		plot_->graph(2)->setVisible(true);
 	}
-	if (channelHistogramInformation[ichan_].maxValue != maximumCutoffPrevious_)
+	if(channelHistogramInformation[ichan_].maxValue != maximumCutoffPrevious_)
 	{ maximumCutoffLabel_->setText(QString("Maximum: %1").arg(channelHistogramInformation[ichan_].maxValue,6));
-	  maximumCutoffVector_ = { (double)channelHistogramInformation[ichan_].maxValue, (double)channelHistogramInformation[ichan_].maxValue };
+	  maximumCutoffVector_ = { channelHistogramInformation[ichan_].maxValue, channelHistogramInformation[ichan_].maxValue };
 	  maximumCutoffPrevious_ = channelHistogramInformation[ichan_].maxValue;
 	  didScalingChange_ = true;
 	}
 	plot_->graph(3)->setVisible(false);
-	if (plot_->xAxis2->range().lower <= channelHistogramInformation[ichan_].maxValue && plot_->xAxis2->range().upper >= channelHistogramInformation[ichan_].maxValue)
-	{
-		plot_->graph(3)->setData(maximumCutoffVector_, yForPlottingCutoffsVector_);
-		plot_->graph(3)->setVisible(true);
+	if(plot_->xAxis2->range().lower <= maximumCutoffPrevious_ && plot_->xAxis2->range().upper >= maximumCutoffPrevious_)
+	{ plot_->graph(3)->setData(maximumCutoffVector_, yForPlottingCutoffsVector_);
+	  plot_->graph(3)->setVisible(true);
 	}
-	intensitySlider_->update();
-	plot_->replot();
-	if (didScalingChange_ && !channelHistogramInformation[ichan_].autoscale && last_) emit redisplayImage(last_,currentImagePointerAccordingToUI_, true);
-	didScalingChange_ = false;
+	intensitySlider_->update(); //DGA: Update the intensitySlider_
+	plot_->replot(); //DGA: Replot the histogram
+	if (didScalingChange_ && !channelHistogramInformation[ichan_].autoscale && last_) emit redisplayImage(last_,currentImagePointerAccordingToUI_, true); //DGA: If scaling changed and if the channel is not currently being autoscaled and if the last_ frame was valid, emit redisplay signal where true indicates it is coming from UI
+	didScalingChange_ = false; //DGA: Reset didScalingChange_ to false
   }
 void HistogramDockWidget::reset_minmax()
   {
