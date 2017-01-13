@@ -226,8 +226,6 @@ Error:
         { WARN("No tiles found to image.\n");
           goto Error;
         }
-		if(!dc->_agent->is_stopping() && any_explorable) //DGA: Only dilate active tiles if it is not being stopped
-          tiling->dilateActive(iplane);
 		tiling->fillHolesInActive(iplane);
 		if(ctx) delete ctx;
         return 1;
