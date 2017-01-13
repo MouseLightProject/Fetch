@@ -256,6 +256,7 @@ surface_scan {
 surface_find {
   backup_frac: 0.6
   max_backup_um: 100
+  max_raise_um: 60
   min_um: 0
   max_um: 1
   dz_um: 0.01
