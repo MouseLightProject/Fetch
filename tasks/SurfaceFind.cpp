@@ -154,12 +154,12 @@ TODO:
         while( eflag==0 
             && !dc->_agent->is_stopping()  // running?
             && !dc->surface_finder.any()   // search complete?   \/---search in bounds?
-            && ( starting_pos.z() - dc->stage()->getTarget().z() )*1000.0 < cfg.max_backup_um() 
+            && ( starting_pos.z() - dc->stage()->getTarget().z() )*1000.0 < cfg.max_backup_um() //DGA: Ensure that the stage can't backup or be raised more than predefined amounts for each tile
 			&& ( dc->stage()->getTarget().z() - starting_pos.z() )*1000.0 < cfg.max_raise_um()
             && (iters<maxiter)
             )
-        {     
-          TS_TIC;
+        {
+		  TS_TIC;
           iters++;
 
           // Start the acquisition
