@@ -35,6 +35,7 @@ namespace device {
     mylib::Indx_Type           current_plane_offset_;                      ///< marks the current plane
     mylib::Indx_Type           sz_plane_nelem_;                            ///< the size of a plane in the tile database
 	bool					   useTwoDimensionalTiling_;				   ///< whether or not to use two dimensional tiling
+	bool					   didTileDilationForThisSlice_;				   ///< DGA: To keep track of whether tile dilation occured in a slice
     TTransform                 latticeToStage_;                            ///< Transforms lattice coordinates to the tiles anchor point on the stage
     TListeners                 listeners_;                                 ///< set of objects to be notified of tiling events
     FieldOfViewGeometry        fov_;                                       ///< the geometry used to generate the tiling
