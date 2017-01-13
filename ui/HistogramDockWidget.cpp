@@ -295,7 +295,8 @@ static int g_inited=0;
 	  intensitySlider_->dataType = dataType_;
       g_inited=1;
     }
-	else{ updateMinimumMaximumCutoffValuesReplotAndRedisplay();} //DGA: Update the cutoff values and replot
+	updateMinimumMaximumCutoffValuesReplotAndRedisplay(); //DGA: Update widget even if haven't started collecting data
+
 
 	//find intensity value for the input CDF percentile 
 	int index;
@@ -329,6 +330,7 @@ void HistogramDockWidget::set_ichan(int ichan)
     { check_chan(last_);
       compute(last_);
     }
+	else{ updateMinimumMaximumCutoffValuesReplotAndRedisplay();} //DGA: Update widget even if haven't started collecting data}
 	//DGA: Set the autoscale checkbox and the percentile values to their respective values from the current channels
 	autoscaleGroupCheckBox_->setChecked(channelHistogramInformation[ichan_].autoscale);
 	undersaturatedPercentile_->setText(QString("%1").arg(channelHistogramInformation[ichan_].undersaturatedPercentile*100.0));
@@ -372,6 +374,11 @@ void HistogramDockWidget::percentileValuesEntered(QString whichPercentile) //DGA
     updateMinimumMaximumCutoffValuesReplotAndRedisplay();
   }
 
+/*void HistogramDockWidget::autoscaleToggledInFigure(int ichan)
+  { channelHistogramInformation[ichan].autoscale = !channelHistogramInformation[ichan].autoscale;
+	if (ichan==ichan_) { intensitySlider_->setEnabled(!channelHistogramInformation[ichan].autoscale); autoscaleGroupCheckBox_->setChecked(channelHistogramInformation[ichan].autoscale);}
+  }*/
+
 void HistogramDockWidget::set_displayChannel(int currentlyCheckedChannel) //DGA: Called when a display channel checkbox is toggled
   { channelHistogramInformation[currentlyCheckedChannel].displayChannel = displayChannelCheckBoxes_[currentlyCheckedChannel]->isChecked(); //DGA: Update the displayChannel property and redisplay the image
 	if (last_) emit redisplayImage(last_,currentImagePointerAccordingToUI_, true);
@@ -401,9 +408,11 @@ void HistogramDockWidget::updateMinimumMaximumCutoffValuesReplotAndRedisplay() /
 	{ plot_->graph(3)->setData(maximumCutoffVector_, yForPlottingCutoffsVector_);
 	  plot_->graph(3)->setVisible(true);
 	}
-	intensitySlider_->update(); //DGA: Update the intensitySlider_
 	plot_->replot(); //DGA: Replot the histogram
-	if (didScalingChange_ && !channelHistogramInformation[ichan_].autoscale && last_) emit redisplayImage(last_,currentImagePointerAccordingToUI_, true); //DGA: If scaling changed and if the channel is not currently being autoscaled and if the last_ frame was valid, emit redisplay signal where true indicates it is coming from UI
+	if (didScalingChange_)
+	{ if (!channelHistogramInformation[ichan_].autoscale && last_) emit redisplayImage(last_, currentImagePointerAccordingToUI_, true); //DGA: If scaling changed and if the channel is not currently being autoscaled and if the last_ frame was valid, emit redisplay signal where true indicates it is coming from UI
+	  intensitySlider_->update(); //DGA: Update the intensitySlider_
+	}
 	didScalingChange_ = false; //DGA: Reset didScalingChange_ to false
   }
 void HistogramDockWidget::reset_minmax()

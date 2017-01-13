@@ -18,7 +18,7 @@ namespace ui {
 class ImItem: public QGraphicsItem, protected QOpenGLFunctions
 {
 public:
-  ImItem(channelHistogramInformationStruct *_channelHistogramInformation, size_t *channelIndex);
+  ImItem(channelHistogramInformationStruct *_channelHistogramInformation, size_t *channelIndex); //DGA: ImItem now takes in pointers to _channelHistogramInformation and channelIndex
   virtual ~ImItem();
 
   QRectF boundingRect  () const;                                           // in meters
@@ -28,9 +28,7 @@ public:
   void push(mylib::Array *plane);
   void flip(int isupdate=1);
 
-  void autoscale(int chan)                                                {_selected_channel=chan; _autoscale_next=true;}
-  void resetscale(int chan)                                               {_selected_channel=chan; _resetscale_next=true;}
-
+  void toggleAutoscale(int chan);
   void setRotation(double radians);
   void setFOVGeometry(float w_um, float h_um, float rotation_radians);
 
@@ -38,15 +36,13 @@ public:
   void setGamma(float gamma)                                              {_gamma=gamma; update();}
 
   inline double rotationRadians()                                         {return _rotation_radians;}
-
 protected:
   void updateDisplayLists();
   void _common_setup();
   void _loadTex(mylib::Array *im);
   void _setupShader();
   void _updateCmapCtrlPoints();
-  void _scaleImage(mylib::Array *data, unsigned int ichannel, float percent);
-  void _resetscale(unsigned int ichannel);
+  void _scaleImage(mylib::Array *data); //DGA: scaleImage function takes in a pointer to data
 
   void mouseDoubleClickEvent(QGraphicsSceneMouseEvent *e);
 
@@ -60,9 +56,9 @@ protected:
   unsigned int _hTexture;
   unsigned int _nchan;                   // updated when an image is pushed
   unsigned int _show_mode;
-  unsigned int _pixelValueCounts[65536];
-  bool _determinedMaximumValueForDataType=false;
-  double _maximumValueForImageDataType;
+  unsigned int _pixelValueCounts[65536]; //DGA: Array used to store pixel counts PDF
+  bool _determinedMaximumValueForDataType=false; //DGA: Boolean to check if the maximum value for the data type has been determined
+  double _maximumValueForImageDataType; //DGA: Double storing the maximum value for the data type
 
   QGLShaderProgram _shader;
   unsigned int _hShaderPlane;
@@ -86,9 +82,9 @@ protected:
   int  _selected_channel;
 
 private:
-	    channelHistogramInformationStruct *_channelHistogramInformation;
-		size_t *_channelIndex;
-		GLint _displayChannelsArray[4];
+  channelHistogramInformationStruct *_channelHistogramInformation; //DGA: pointer to channel histogram information struct
+  size_t *_channelIndex; //DGA: Pointer to channel index
+  GLint _displayChannelsArray[4]; //DGA: Array storing whether or not channels should be displayed
 };
 
 

@@ -34,7 +34,7 @@ namespace ui {
 using namespace units;
 
 
-ImItem::ImItem(channelHistogramInformationStruct *channelHistogramInformation, size_t *channelIndex)
+ImItem::ImItem(channelHistogramInformationStruct *channelHistogramInformation, size_t *channelIndex) //DGA: ImItem takes in pointers to channelHistogramInformation and channelIndex
 : _fill(1.0),
   _gain(1.0),
   _bias(0.0),
@@ -45,8 +45,6 @@ ImItem::ImItem(channelHistogramInformationStruct *channelHistogramInformation, s
   _bbox_um(),
   //_pixel_size_meters(100e-9,100e-9),
   _loaded(0),
-  _autoscale_next(false),
-  _resetscale_next(false),
   _selected_channel(0),
   _show_mode(0),
   _nchan(3),
@@ -54,7 +52,7 @@ ImItem::ImItem(channelHistogramInformationStruct *channelHistogramInformation, s
   _cmap_ctrl_last_size(0),
   _cmap_ctrl_s(NULL),
   _cmap_ctrl_t(NULL),
-  _channelHistogramInformation(channelHistogramInformation),
+  _channelHistogramInformation(channelHistogramInformation), //DGA: Initialize channel histgoram information and channel index
   _channelIndex(channelIndex)
 {
   _text.setBrush(Qt::yellow);
@@ -92,6 +90,7 @@ void ImItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QW
   {
     painter->beginNativePainting();
     checkGLError();
+
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_3D, _hTexture);
     glTexParameterf( GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
@@ -105,8 +104,8 @@ void ImItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QW
     glBindTexture(GL_TEXTURE_2D,_hTexCmap);
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S,     GL_CLAMP_TO_EDGE);
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T,     GL_CLAMP_TO_EDGE);
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     checkGLError();
 
     glActiveTexture(GL_TEXTURE2);
@@ -135,7 +134,7 @@ void ImItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QW
     _shader.setUniformValue("bias" ,(GLfloat)_bias);
     _shader.setUniformValue("gamma",(GLfloat)_gamma);
     _shader.setUniformValue("show_mode",(GLint)(_show_mode%4));
-	_shader.setUniformValueArray("displayChannel",_displayChannelsArray,4);
+	_shader.setUniformValueArray("displayChannel",_displayChannelsArray,4);//DGA: Set the uniform array displayChannel equal to _displayChannelsArray, of size 4
     checkGLError();
     //glPushMatrix();
     //glRotatef(_rotation_radians*180.0/M_PI,0.0,0.0,1.0);
@@ -268,7 +267,7 @@ void ImItem::flip(int isupdate/*=0*/)
 
 // double-buffers, so you might not see your image right away.
 void ImItem::push(mylib::Array *plane)
-{ if(!_determinedMaximumValueForDataType) determineMaximumValueForDataType(plane->type, _maximumValueForImageDataType); _determinedMaximumValueForDataType=true;
+{ if(!_determinedMaximumValueForDataType) {determineMaximumValueForDataType(plane->type, _maximumValueForImageDataType); _determinedMaximumValueForDataType=true;} //DGA: Determine the maximum value for the data type and store it in _maximumValueForImageDataType (passed by reference)
   checkGLError();
 
   float w,h;
@@ -285,17 +284,7 @@ void ImItem::push(mylib::Array *plane)
   else
     _nchan = 1;
 
-
-  //_channelHistogramInformation[*_channelIndex].autoscale
-  //if(_autoscale_next)
-  //{
-	_scaleImage(plane,*_channelIndex,0.2f); //dga: only do it if channel changed?
-   // _autoscale_next = false;
-  //}
-  if(_resetscale_next)
-  { _resetscale(*_channelIndex);
-    _resetscale_next = false;
-  }
+  _scaleImage(plane); //DGA: Scale the image according to cutoffs
 
   //Guess the "fill" for mixing different channels
   // - this is needed for when there are a ton of channels
@@ -344,13 +333,12 @@ void ImItem::_setupShader()
         ":/shaders/vert/trivial") );
   SHADERASSERT( _shader.addShaderFromSourceFile(
         QGLShader::Fragment,
-        ":/shaders/frag/cmapDavid") );
+        ":/shaders/frag/cmap") );
   SHADERASSERT( _shader.link() );
   SHADERASSERT( _shader.bind() );
   _hShaderPlane = _shader.uniformLocation("plane");
   _hShaderCmap  = _shader.uniformLocation("cmap");
   _shader.setUniformValue("nchan",(GLfloat)_nchan);
-  //_shader.setUniformValue("shouldPlot",(GL_BOOL_VEC3){true,true,true});
   _shader.release();
 
   loadColormap(":/cmap/3");
@@ -359,7 +347,6 @@ void ImItem::_setupShader()
 void ImItem::loadColormap(const QString& filename)
 { QImage cmap;
   CHKJMP(cmap.load(filename),Error);
-
   //qDebug()<<cmap.format();
   glActiveTexture(GL_TEXTURE1);
   {
@@ -381,7 +368,7 @@ Error:
 
 // Control points for colormapping
 // - support different lookup on each channel
-// - lookup is into a 2d colormap indexed by s and t (each go 0 to 1). DGA: s is color (column), t is intensity (row)?
+// - lookup is into a 2d colormap indexed by s and t (each go 0 to 1).
 void ImItem::_updateCmapCtrlPoints()
 { 
   //if(_nchan<=1) return;
@@ -394,12 +381,12 @@ void ImItem::_updateCmapCtrlPoints()
 
     // fill in uninitizalized data (if any)
     if(nelem>_cmap_ctrl_last_size)
-    { int ir,ic; //DGA: index of row, index of column?
+    { int ir,ic;
 
       // convention here is that channels are evenly spaced along s and intensity on t
       for(GLuint i=_cmap_ctrl_last_size;i<nelem;++i)
       {
-        ir = i/_cmap_ctrl_count; //DGA: channel?
+        ir = i/_cmap_ctrl_count;
         ic = i%_cmap_ctrl_count;
         _cmap_ctrl_s[i] = (ir+1)/(_nchan+1.0);
         _cmap_ctrl_t[i] = ic/(_cmap_ctrl_count-1.0f);
@@ -438,78 +425,67 @@ MemoryError:
   error("(%s:%d) Memory (re)allocation failed."ENDL,__FILE__,__LINE__);
 }
 
-void ImItem::_scaleImage(mylib::Array *data, GLuint ichannel, float percent)
-{ mylib::Array c; int w = data->dims[0]; int h = data->dims[1]; int t=data->dims[2];
-  if(ichannel>=data->dims[2] || (ichannel>=_nchan))
-  { warning("(%s:%d) Autoscale: selected channel out of bounds."ENDL,__FILE__,__LINE__);
-    return;
-  }
+void ImItem::toggleAutoscale(int chan)
+{
+ _channelHistogramInformation[chan].autoscale = !_channelHistogramInformation[chan].autoscale;
+}
+
+void ImItem::_scaleImage(mylib::Array *data)
+{ mylib::Array c; 
  /* mylib::Array *t = Convert_Image(data,mylib::PLAIN_KIND,mylib::FLOAT32_TYPE,32);
   c = *t;    // For Get_Array_Plane
   if(mylib::UINT64_TYPE<data->type && data->type<=mylib::INT64_TYPE)  // if signed integer type
     mylib::Scale_Array(&c,0.5,1.0);                                   //    x = 0.5*(x+1.0)
   mylib::Get_Array_Plane(&c,(mylib::Dimn_Type)ichannel);
   */
-  for(GLuint tempchannel=0; tempchannel<_nchan; tempchannel++){
-	  _displayChannelsArray[tempchannel] = _channelHistogramInformation[tempchannel].displayChannel;
-  c = *data;
-  mylib::Get_Array_Plane(&c,(mylib::Dimn_Type)tempchannel);//ichannel);
-  
-  //mylib::Write_Image("ImItem_autoscale_input.tif",data,mylib::DONT_PRESS);
-  //mylib::Write_Image("ImItem_autoscale_channel_float.tif",&c,mylib::DONT_PRESS);
+  for(GLuint ichannel=0; ichannel<_nchan; ichannel++) //DGA: Loop through all the channels
+  { _displayChannelsArray[ichannel] = _channelHistogramInformation[ichannel].displayChannel;
+    c = *data;
+	mylib::Get_Array_Plane(&c, (mylib::Dimn_Type)ichannel);//ichannel);
 
-  
-  float max,min,m,b;
-  mylib::Range_Bundle range;
+	//mylib::Write_Image("ImItem_autoscale_input.tif",data,mylib::DONT_PRESS);
+	//mylib::Write_Image("ImItem_autoscale_channel_float.tif",&c,mylib::DONT_PRESS);
+
+
+	float max, min, m, b;
+	mylib::Range_Bundle range;
 #if 0
-  /* This here in case existing colormapping scheme
-     didn't result in enough dynamic range.
-  */
-  mylib::Array_Range(&range,t);  // min max of entire array
-  max = range.maxval.fval;
-  min = range.minval.fval;
-  _gain = 1.0f/(max-min);
-  _bias = min/(min-max);
+	/* This here in case existing colormapping scheme
+	   didn't result in enough dynamic range.
+	   */
+	mylib::Array_Range(&range,t);  // min max of entire array
+	max = range.maxval.fval;
+	min = range.minval.fval;
+	_gain = 1.0f/(max-min);
+	_bias = min/(min-max);
 #endif
 
-  //mylib::Array_Range(&range,&c); // min max of single channel
+	//mylib::Array_Range(&range,&c); // min max of single channel
 
-  //mylib::Free_Array(t);
+	//mylib::Free_Array(t);
 
-  if(_channelHistogramInformation[tempchannel].autoscale)
-  { 
-	  double maxValue=0, minValue=0;
-	 percentiles(&c,_pixelValueCounts, _channelHistogramInformation[tempchannel].undersaturatedPercentile,_channelHistogramInformation[tempchannel].oversaturatedPercentile,minValue,maxValue);
-	//multiply gain and bias by 65535?
-    max = _gain*maxValue/_maximumValueForImageDataType+_bias;//_gain*range.maxval.fval+_bias; // adjust for gain and bias
-    min = _gain*minValue/_maximumValueForImageDataType+_bias;//_gain*range.minval.fval+_bias;
-	_channelHistogramInformation[tempchannel].minValue = minValue;
-	_channelHistogramInformation[tempchannel].maxValue = maxValue;
-  }
-  else
-  {
-    max = _gain*_channelHistogramInformation[tempchannel].maxValue/_maximumValueForImageDataType+_bias; // adjust for gain and bias
-    min = _gain*_channelHistogramInformation[tempchannel].minValue/_maximumValueForImageDataType+_bias;
-  }
-  m = 1.0f/(max-min);
-  b = min/(min-max);
+	//DGA: Autoscale the channels if it is turned on (and set the channel cutoffs appropriately), otherwise use the set cutoff values (max and min need to be in range 0 to 1)
+	if(_channelHistogramInformation[ichannel].autoscale)
+	{ double maxValue = 0, minValue = 0;
+	  percentiles(&c, _pixelValueCounts, _channelHistogramInformation[ichannel].undersaturatedPercentile, _channelHistogramInformation[ichannel].oversaturatedPercentile, minValue, maxValue);
+	  max = _gain*maxValue / _maximumValueForImageDataType + _bias;
+	  min = _gain*minValue / _maximumValueForImageDataType + _bias;
+	  _channelHistogramInformation[ichannel].minValue = minValue;
+	  _channelHistogramInformation[ichannel].maxValue = maxValue;
+	}
+	else
+	{ max = _gain*_channelHistogramInformation[ichannel].maxValue/_maximumValueForImageDataType + _bias; // adjust for gain and bias
+	  min = _gain*_channelHistogramInformation[ichannel].minValue/_maximumValueForImageDataType + _bias;
+	}
+	m = 1.0f / (max - min);
+	b = min / (min - max);
 
-  for(GLuint i=0;i<_cmap_ctrl_count;++i)
-  { float x = i/(_cmap_ctrl_count-1.0f);
-    _cmap_ctrl_t[tempchannel*_cmap_ctrl_count+i] = m*x+b; // upload to gpu will clamp to [0,1]
+	for (GLuint i = 0; i < _cmap_ctrl_count; ++i) //DGA: Reset the scaling for the shader
+	{ float x = i / (_cmap_ctrl_count - 1.0f);
+	  _cmap_ctrl_t[ichannel*_cmap_ctrl_count + i] = m*x + b; // upload to gpu will clamp to [0,1]
+	}
   }
-  }
-    _updateCmapCtrlPoints();
-
-}
-
-void ImItem::_resetscale(GLuint ichannel)
-{
-  if(ichannel<_nchan)
-  { for(GLuint i=0;i<_cmap_ctrl_count;++i)
-      _cmap_ctrl_t[ichannel*_cmap_ctrl_count+i] = i/(_cmap_ctrl_count-1.0f);
-    _updateCmapCtrlPoints();
-  }
+  _updateCmapCtrlPoints();
 }
 
 void ImItem::mouseDoubleClickEvent (QGraphicsSceneMouseEvent *e)

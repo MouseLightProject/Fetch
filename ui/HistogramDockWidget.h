@@ -44,6 +44,8 @@ class HistogramDockWidget: public QDockWidget
 		void rescale_axes();
 		void updateMinimumMaximumCutoffValuesReplotAndRedisplay(); //DGA: Slot to update the minimum/maximum values that are displayed, replot the graph and redisplay the image
 		void percentileValuesEntered(QString); //DGA: Slot to update percentiles when new values entered
+		//void autoscaleToggledInFigure(int ichan); //DGA: To update the widget if autoscaling was changed in the figure
+		//void displayChannelChangedInFigure(int ichan); //DGA: To update the widget if display channels changed in figure
 	void reset_minmax();
 	void set_percentile(QString);
 	private:

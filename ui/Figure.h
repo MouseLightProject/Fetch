@@ -52,14 +52,10 @@ public slots:
   inline void fitNext(void)                                                {/*_isFitOnNext=true;*/}
   inline void updatePos(void)                                              {_item->setPos(units::cvt<units::PIXEL_SCALE,PlanarStageController::Unit>(_sc->pos())); _stage->update();}
   inline void updatePos(QPointF r)                                         {_item->setPos(units::cvt<units::PIXEL_SCALE,PlanarStageController::Unit>(r));  _stage->update();}
-  inline void autoscale0()                                                 {_item->autoscale(0);}
-  inline void autoscale1()                                                 {_item->autoscale(1);}
-  inline void autoscale2()                                                 {_item->autoscale(2);}
-  inline void autoscale3()                                                 {_item->autoscale(3);}
-  inline void resetscale0()                                                {_item->resetscale(0);}
-  inline void resetscale1()                                                {_item->resetscale(1);}
-  inline void resetscale2()                                                {_item->resetscale(2);}
-  inline void resetscale3()                                                {_item->resetscale(3);}
+  inline void autoscale0()                                                 {_item->toggleAutoscale(0); emit autoscaleToggledInFigure(0);}
+  inline void autoscale1()                                                 {_item->toggleAutoscale(1); emit autoscaleToggledInFigure(1);}
+  inline void autoscale2()                                                 {_item->toggleAutoscale(2); emit autoscaleToggledInFigure(2);}
+  inline void autoscale3()                                                 {_item->toggleAutoscale(3); emit autoscaleToggledInFigure(3);}
   inline void fovGeometryChanged(float w_um,float h_um, float radians)     {_item->setFOVGeometry(w_um,h_um,radians);}
   inline void setColormap(const QString& filename)                         {_item->loadColormap(filename);}
   inline void setGamma(float gamma)                                        {_item->setGamma(gamma);}
@@ -78,6 +74,7 @@ public slots:
 signals:
   void lastFigureClosed();
   void pushed();
+  void autoscaleToggledInFigure(int);
 
 protected:
   void readSettings();
