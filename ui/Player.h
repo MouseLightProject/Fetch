@@ -56,7 +56,7 @@ public:
   virtual void stop()                      {running_=0; is_stopping_.wakeAll();} 
 
 signals:
-  void imageReady(mylib::Array *im);
+  void imageReady(mylib::Array *im); 
 
 protected:
   Figure *w_;

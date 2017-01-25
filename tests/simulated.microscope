@@ -1,7 +1,7 @@
 scanner3d {
   scanner2d {
     frequency_hz: 7920
-    nscans: 128
+    nscans:128
     line_duty_cycle: 0.95
     daq {
       kind: Simulated
@@ -215,8 +215,8 @@ vibratome {
   backup_distance_mm: 1.3
 }
 fov {
-  x_size_um: 500
-  y_size_um: 400
+  x_size_um: 256
+  y_size_um: 512
   z_size_um: 250
   x_overlap_um: 20
   y_overlap_um: 20
@@ -256,6 +256,7 @@ surface_scan {
 surface_find {
   backup_frac: 0.6
   max_backup_um: 100
+  max_raise_um: 60
   min_um: 0
   max_um: 1
   dz_um: 0.01
@@ -266,7 +267,7 @@ surface_find {
 }
 adaptive_tiling {
   every: 2
-  mindist: 1
+  mindist: 3
 }
 trip_detect {
 }

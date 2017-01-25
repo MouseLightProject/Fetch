@@ -70,9 +70,10 @@ ZoomableView::drawForeground(QPainter* painter, const QRectF& rect)
 /* FIGURE                                                               */
 /************************************************************************/
 
-Figure::Figure(PlanarStageController *stageController, QWidget *parent/*=0*/)
+Figure::Figure(PlanarStageController *stageController, channelHistogramInformationStruct *channelHistogramInformation, size_t *channelIndex, QWidget *parent/*=0*/) //DGA: added channelHistogramInformation and channelIndex pointers
 :QWidget(parent)
 ,_sc(stageController)
+,_previous_im(0) //DGA: initialize previous image pointer to 0
 {
   _view = new ZoomableView(&_scene);
   QGLWidget *viewport;
@@ -99,7 +100,7 @@ Figure::Figure(PlanarStageController *stageController, QWidget *parent/*=0*/)
   connect(stageController->tiling(),SIGNAL(fovGeometryChanged(float,float,float)),
           this,SLOT(fovGeometryChanged(float,float,float)));
 
-  _item = new ImItem;
+  _item = new ImItem(channelHistogramInformation, channelIndex); //DGA: Create new image item, which now takes in channelHistogramInformation pointer and channelIndex pointer
   _scene.addItem(_item);
   checkGLError();
 
@@ -177,53 +178,29 @@ void Figure::createActions()
   addAction(c);
   _rubberBandModeAct = c;
 
-  c = new QAction(tr("Autoscale &0"),this);
+ /* c = new QAction(tr("Toggle Autoscale &0"),this);
   c->setShortcut(QKeySequence(tr("0","Autoscale|Channel0")));
-  c->setStatusTip(tr("Autoscale channel 0."));
+  c->setStatusTip(tr("Toggle Autoscale channel 0."));
   connect(c,SIGNAL(triggered()),this,SLOT(autoscale0()));
   addAction(c);
 
-  c = new QAction(tr("Autoscale &1"),this);
+  c = new QAction(tr("Toggle Autoscale &1"),this);
   c->setShortcut(QKeySequence(tr("1","Autoscale|Channel1")));
-  c->setStatusTip(tr("Autoscale channel 1."));
+  c->setStatusTip(tr("Toggle Autoscale channel 1."));
   connect(c,SIGNAL(triggered()),this,SLOT(autoscale1()));
   addAction(c);
 
-  c = new QAction(tr("Autoscale &2"),this);
+  c = new QAction(tr("Toggle Autoscale &2"),this);
   c->setShortcut(QKeySequence(tr("2","Autoscale|Channel2")));
-  c->setStatusTip(tr("Autoscale channel 2."));
+  c->setStatusTip(tr("Toggle Autoscale channel 2."));
   connect(c,SIGNAL(triggered()),this,SLOT(autoscale2()));
   addAction(c);
 
-  c = new QAction(tr("Autoscale &3"),this);
+  c = new QAction(tr("Toggle Autoscale &3"),this);
   c->setShortcut(QKeySequence(tr("3","Autoscale|Channel3")));
-  c->setStatusTip(tr("Autoscale channel 3."));
+  c->setStatusTip(tr("Toggle Autoscale channel 3."));
   connect(c,SIGNAL(triggered()),this,SLOT(autoscale3()));
-  addAction(c);
-
-  c = new QAction(tr("Reset 0"),this);
-  c->setShortcut(QKeySequence(tr("Shift+0","Autoscale|Channel0")));
-  c->setStatusTip(tr("Autoscale channel 0."));
-  connect(c,SIGNAL(triggered()),this,SLOT(resetscale0()));
-  addAction(c);
-
-  c = new QAction(tr("Reset 1"),this);
-  c->setShortcut(QKeySequence(tr("Shift+1","Autoscale|Channel1")));
-  c->setStatusTip(tr("Autoscale channel 1."));
-  connect(c,SIGNAL(triggered()),this,SLOT(resetscale1()));
-  addAction(c);
-
-  c = new QAction(tr("Reset 2"),this);
-  c->setShortcut(QKeySequence(tr("Shift+2","Autoscale|Channel2")));
-  c->setStatusTip(tr("Autoscale channel 2."));
-  connect(c,SIGNAL(triggered()),this,SLOT(resetscale2()));
-  addAction(c);
-
-  c = new QAction(tr("Reset 3"),this);
-  c->setShortcut(QKeySequence(tr("Shift+3","Autoscale|Channel3")));
-  c->setStatusTip(tr("Autoscale channel 3."));
-  connect(c,SIGNAL(triggered()),this,SLOT(resetscale3()));
-  addAction(c);
+  addAction(c);*/
 
   //c = new QAction(tr("Add Tiles"),this);
   //QList<QKeySequence> shortcuts;
