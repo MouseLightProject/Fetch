@@ -116,6 +116,7 @@ void
     
     QFileInfo finfo(arrayFileName);    
     metadata.set_rel_path( finfo.fileName().toLocal8Bit().data() );
+	metadata.set_dilated_this_slice ( t->didTileDilationForThisSlice_);
 
     QFile metafile(filename);
     std::string buf;

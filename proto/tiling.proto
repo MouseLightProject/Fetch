@@ -6,4 +6,5 @@ message Tiling
 { required device.FieldOfViewGeometry         fov  = 1;                   // determines the layout of the tiling
   optional string                         rel_path = 2 [default="."];     // relative path to the attribute bit array
   optional string                         attr_ext = 3 [default=".tif"];  // extension to append to determine the filename for the attribute array.  Only used on write.
+  optional bool	                dilated_this_slice = 4 [default = false];  //DGA: boolean to keep track of whether tile dilation was performed on this slice
 }

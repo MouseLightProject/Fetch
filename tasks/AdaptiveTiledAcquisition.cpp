@@ -170,6 +170,7 @@ Error:
 		}
 
 		size_t iplane=dc->stage()->getPosInLattice().z(); //DGA: Get the plane position
+		dc->get_config().
 		if(!dc->_agent->is_stopping() && !tiling->didTileDilationForThisSlice_) //DGA: Only dilate active tiles if it is not being stopped if it hasn't already dilated tiles for this slice
 		{ tiling->dilateActive(iplane);
 		  tiling->didTileDilationForThisSlice_=true;
