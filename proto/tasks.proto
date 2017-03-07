@@ -40,4 +40,5 @@ message SurfaceFind
 message AdaptiveTiling {
   optional int32 every   = 1 [default=100]; // check every "every" tiles
   optional int32 mindist = 2 [default=3];   // avoid tiles where the edge of the active area is within mindist tiles
+  optional double initial_distance_from_surface_um = 3 [default=-20]; //DGA: the distance from the surface that the stage should move to before moving to the proper surface height
 }
