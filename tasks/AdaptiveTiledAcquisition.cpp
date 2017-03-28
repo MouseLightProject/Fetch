@@ -204,6 +204,9 @@ Error:
 			tilepos_reference = tilepos;
 			tilepos_reference[2] += initial_distance_from_surface_um;
 			dc->stage()->setPos(0.001f*tilepos_reference);
+			curpos = dc->stage()->getTarget();
+			debug("%s(%d)"ENDL "\t[Adaptive Tiling Task] curpos: %5.1f %5.1f %5.1f"ENDL,__FILE__,__LINE__,curpos[0]*1000.0f,curpos[1]*1000.0f,curpos[2]*1000.0f);
+			Sleep(5000); //DGA: Sleep for five seconds
 			didUseTileposReference = true;
 		  }
 		  dc->stage()->setPos(0.001f*tilepos);        // convert um to mm
