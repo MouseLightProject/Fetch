@@ -172,7 +172,7 @@ Error:
 		}
 
 		size_t iplane=dc->stage()->getPosInLattice().z(); //DGA: Get the plane position
-		if(!dc->_agent->is_stopping() && !tiling->didTileDilationForThisSlice_) //DGA: Only dilate active tiles if it is not being stopped if it hasn't already dilated tiles for this slice
+		if(!dc->_agent->is_stopping() && !tiling->didTileDilationForThisSlice_) //DGA: Only dilate active tiles if it is not being stopped if it hasn't already dilated tiles for this slice or explore has been performed
 		{ tiling->dilateActive(iplane);
 		  tiling->didTileDilationForThisSlice_=true;
 		}
@@ -206,7 +206,6 @@ Error:
 			dc->stage()->setPos(0.001f*tilepos_reference);
 			curpos = dc->stage()->getTarget();
 			debug("%s(%d)"ENDL "\t[Adaptive Tiling Task] curpos: %5.1f %5.1f %5.1f"ENDL,__FILE__,__LINE__,curpos[0]*1000.0f,curpos[1]*1000.0f,curpos[2]*1000.0f);
-			Sleep(5000); //DGA: Sleep for five seconds
 			didUseTileposReference = true;
 		  }
 		  dc->stage()->setPos(0.001f*tilepos);        // convert um to mm
