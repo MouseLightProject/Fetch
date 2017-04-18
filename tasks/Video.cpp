@@ -351,7 +351,7 @@ Error:
             c=e=(TPixel*)frm->data;
             e+=pitch[0]/pitch[3];
             for(;c<e;++c)
-              *c = (TPixel) ((ptp*rand()/(float)RAND_MAX) + low);
+			  *c = (TPixel) ((ptp*rand()/(float)RAND_MAX) + low);
           }
 #endif
 

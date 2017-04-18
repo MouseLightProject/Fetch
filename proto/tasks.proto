@@ -22,21 +22,23 @@ message SurfaceFind
 {
   optional double backup_frac  = 1 [default = 0.1]; // step stage out by stack depth * backup_frac
   optional double max_backup_um =2 [default = 500]; // limit the total search space
+  optional double max_raise_um  =3 [default = 50]; // limit the amount the stage can be moved up during surface find
 
-  optional double min_um       = 3 [default = 0];   // 
-  optional double max_um       = 4 [default = 100]; // scan a stack from min to max by dz, inclusive
-  optional double dz_um        = 5 [default = 5];   // 
+  optional double min_um       = 4 [default = 0];   // 
+  optional double max_um       = 5 [default = 100]; // scan a stack from min to max by dz, inclusive
+  optional double dz_um        = 6 [default = 5];   // 
   
-  optional uint32 ichan               = 6 [default = 0];    //
-  optional double intensity_threshold = 7 [default = 1000]; // Classify as in or out
-  optional double area_threshold      = 8 [default = 0.1];  //
+  optional uint32 ichan               = 7 [default = 0];    //
+  optional double intensity_threshold = 8 [default = 1000]; // Classify as in or out
+  optional double area_threshold      = 9 [default = 0.1];  //
 
   optional double offset_um           =10 [default = 0];    // adjust tile offset to image this many microns below the cut
-  //optional double response            = 10[default = 2.0]; // correct stage z by response * measured error
-  //optional double response_limit_frac = 11[default = 0.1]; // response is limited to response_limit_frac * stack depth
+  //optional double response            = 11[default = 2.0]; // correct stage z by response * measured error
+  //optional double response_limit_frac = 12[default = 0.1]; // response is limited to response_limit_frac * stack depth
 }
 
 message AdaptiveTiling {
   optional int32 every   = 1 [default=100]; // check every "every" tiles
   optional int32 mindist = 2 [default=3];   // avoid tiles where the edge of the active area is within mindist tiles
+  optional double initial_distance_from_surface_um = 3 [default=-20]; //DGA: the distance from the surface that the stage should move to before moving to the proper surface height
 }

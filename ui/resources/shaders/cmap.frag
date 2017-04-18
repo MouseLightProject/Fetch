@@ -10,6 +10,8 @@ uniform float gain;      // applied to all channels - modifies indexing between 
 uniform float bias;      // applied to all channels 
 uniform float gamma;     // applied to all channels
 
+uniform int displayChannel[4];// DGA: ints regarding which channels to plot
+
 uniform int   show_mode; // bypasses mixing and shows one of the other textures instead; for debugging
 
 /*
@@ -58,17 +60,20 @@ void main(void)
     {
       float a = 1.0/(nchan-1.0);  // e.g. 2 channels -> a=1.0; 3 channels -> a=0.5
       vec4 c = vec4(0.0,0.0,0.0,1.0);
-      for(float i=0.0;i<nchan;++i)
-      { vec4 v,s,t;
-        vec2 p;
-        uvw.z = a*i;                              // addresses the channel ( 2ch->(0,1); 3ch->(0,0.5,1) ) 
-        v = texture(plane,uvw);                   // luma                                                 
-        v.x = pow(v.x,gamma);                     // gamma adjust                                         
-        { vec2 mu = vec2(v.x,uvw.z);
-          p.x = texture(sctrl,mu).x;
-          p.y = texture(tctrl,mu).x;
+      for(float i=0;i<nchan;++i)
+      { if(bool(displayChannel[int(i)]))
+        { 
+	   vec4 v,s,t;
+          vec2 p;
+          uvw.z = a*i;                              // addresses the channel ( 2ch->(0,1); 3ch->(0,0.5,1) ) 
+          v = texture(plane,uvw);                   // luma                                                 
+          v.x = pow(v.x,gamma);                     // gamma adjust                                         
+          { vec2 mu = vec2(v.x,uvw.z);
+            p.x = texture(sctrl,mu).x;
+            p.y = texture(tctrl,mu).x;
+          }
+          c += fill*texture(cmap,p);
         }
-        c += fill*texture(cmap,p);
       }
       c.w=1.0;
       FragColor = c;
