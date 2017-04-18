@@ -30,7 +30,8 @@
 #endif
 
 #define LOG(sev,...)          sev(__VA_ARGS__)
-#define REPORT(sev,msg1,msg2) LOG(sev,"%s(%d)-%s()"ENDL "\t%s"ENDL "\t%s"ENDL,msg1,msg2)
+//DGA: Corrected REPRT so that it prints out __FILE__ and __LINE__ (removed redundant \t%s)
+#define REPORT(sev,msg1,msg2) LOG(sev,"%s(%d)-%s()"ENDL "\t%s",__FILE__,__LINE__,msg1,msg2)
 
 #define CHKJMP(expr) if(!(expr)) {warning("%s(%d)"ENDL"\tExpression indicated failure:"ENDL"\t%s"ENDL,__FILE__,__LINE__,#expr); goto Error;}
 
@@ -218,6 +219,15 @@ TODO:
             REPORT(warning,"maxiter exceeded on SurfaceFind","Reporting no hit for tile");
             hit_=0;
         }
+		else if(( starting_pos.z() - dc->stage()->getTarget().z() )*1000.0 >= cfg.max_backup_um()) { //DGA: Report warning and ensure hit_ = 0 if max_backup or max_raise exceeded
+            REPORT(warning,"max_backup_um exceeded on SurfaceFind","Reporting no hit for tile");
+            hit_=0;
+        }
+	    else if(( dc->stage()->getTarget().z() - starting_pos.z() )*1000.0 >= cfg.max_raise_um()) {
+            REPORT(warning,"max_raise_um exceeded on SurfaceFind","Reporting no hit for tile");
+            hit_=0;
+        }
+
             
         
 // [ ] FIXME task is not restartable...had a bug at one point        
