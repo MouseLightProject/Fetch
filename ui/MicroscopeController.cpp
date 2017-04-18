@@ -6,7 +6,7 @@
   QObject(parent), 
   microscope_(microscope)
 { //DGA: MicroscopeController constructor which initializes microscope_ to microscope and QObject with argument parent
-    connect(&(microscope_->cutCompletedSoStopSignaler),SIGNAL(signaler()),ac,SLOT(stop()), Qt::QueuedConnection); //DGA: Connects signal_setValue() of cutCompletedSoStopSignaler to ac
+    connect(&(microscope_->cutCompletedSoStopSignaler),SIGNAL(signaler()),ac,SLOT(stop()), Qt::BlockingQueuedConnection); //DGA: Connects signal_setValue() of cutCompletedSoStopSignaler to ac
 } 
 
 QCheckBox *

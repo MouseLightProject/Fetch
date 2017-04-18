@@ -415,7 +415,7 @@ void fetch::ui::MainWindow::createDockWidgets()
 
 void fetch::ui::MainWindow::createViews()
 {
-  _display = new Figure(_stageController);
+  _display = new Figure(_stageController, _histogramDockWidget->channelHistogramInformation, _histogramDockWidget->channelIndex); //DGA: Added inputs of channelHistogramInformation and channelIndex
 
   setCentralWidget(_display);
   TRY(connect(_videoAcquisitionDockWidget,SIGNAL(onRun()),
@@ -427,6 +427,10 @@ void fetch::ui::MainWindow::createViews()
               _display,       SLOT(setColormap(const QString&))));
   TRY(connect(_cmapDockWidget,SIGNAL(gammaChanged(float)),
               _display,       SLOT(setGamma(float))));
+  TRY(connect(_histogramDockWidget,SIGNAL(redisplayImage(mylib::Array*,mylib::Array*,bool)), //DGA: Connect the redisplay signal from the histogram widget to the imshow slot of the display, passing in the last image pointer, the currentimagepointer according to the ui and whether or not the signal came from the ui
+			  _display,		       SLOT  (imshow(mylib::Array*,mylib::Array*,bool))),Qt::BlockingQueuedConnection);
+  //TRY(connect(_display            ,SIGNAL(autoscaleToggledInFigure),
+  //			  _histogramDockWidget,SLOT(autoscaleToggledInFigure)));
   _display->setColormap(_cmapDockWidget->cmap());
   //_player->start();
 }
