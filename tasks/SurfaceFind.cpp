@@ -218,6 +218,15 @@ TODO:
             REPORT(warning,"maxiter exceeded on SurfaceFind","Reporting no hit for tile");
             hit_=0;
         }
+		else if(( starting_pos.z() - dc->stage()->getTarget().z() )*1000.0 >= cfg.max_backup_um()) { //DGA: If maximum backup or maximum raise are exceeded, then return no hit
+            REPORT(warning,"maximum backup exceeded on SurfaceFind","Reporting no hit for tile");
+            hit_=0;
+        }
+		else if(( dc->stage()->getTarget().z() - starting_pos.z() )*1000.0 >= cfg.max_raise_um()) {
+            REPORT(warning,"maximum raise exceeded on SurfaceFind","Reporting no hit for tile");
+            hit_=0;
+        }
+
             
         
 // [ ] FIXME task is not restartable...had a bug at one point        
