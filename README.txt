@@ -78,3 +78,10 @@ _______________
   		      position in the .acquisition file is replaced by the cut 
 		      count. Tile selection now corresponds to tile centers, and 
 		      explored tiles are colored purple.
+
+1.2    Apr 18, 2017   Image contrast can be controlled automatically or manually via
+		      sliders. Restrictions are placed on how much the stage can 
+		      lowered or raised during surface find. Tile dilation is performed
+		      after surface find, and occurs once per slice every time an
+		      explore occurs.
+

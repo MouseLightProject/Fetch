@@ -461,7 +461,7 @@ Error:
           HERE;
 	  Finalize:
 		  Chan_Close(qdata);
-          free( frm );
+          free( frm ); 
           return status; // status == 0 implies success, error otherwise
 	  Error:
           warning("Error occurred during ScanStack<%s> task."ENDL,TypeStr<TPixel>());
