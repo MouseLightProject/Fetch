@@ -174,7 +174,7 @@ TODO:
           eflag |= dc->runPipeline();
           eflag |= run_and_wait(&dc->__self_agent,&dc->__scan_agent,NULL,NULL); // perform the scan
           eflag |= dc->stopPipeline();         // wait till everything stops
-          
+
           // readout
           if(dc->surface_finder.too_inside())
           {
