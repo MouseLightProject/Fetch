@@ -19,6 +19,7 @@ namespace mylib {
 #include <assert.h>
 #include "config.h"
 
+#include <algorithm>
 
 #undef HERE
 #define HERE printf("[ImItem] At %s(%d)\n",__FILE__,__LINE__)
@@ -33,7 +34,7 @@ namespace ui {
 using namespace units;
 
 
-ImItem::ImItem()
+ImItem::ImItem(channelHistogramInformationStruct *channelHistogramInformation, size_t *channelIndex) //DGA: ImItem takes in pointers to channelHistogramInformation and channelIndex
 : _fill(1.0),
   _gain(1.0),
   _bias(0.0),
@@ -44,15 +45,15 @@ ImItem::ImItem()
   _bbox_um(),
   //_pixel_size_meters(100e-9,100e-9),
   _loaded(0),
-  _autoscale_next(false),
-  _resetscale_next(false),
   _selected_channel(0),
   _show_mode(0),
   _nchan(3),
   _cmap_ctrl_count(1<<14),
   _cmap_ctrl_last_size(0),
   _cmap_ctrl_s(NULL),
-  _cmap_ctrl_t(NULL)
+  _cmap_ctrl_t(NULL),
+  _channelHistogramInformation(channelHistogramInformation), //DGA: Initialize channel histgoram information and channel index
+  _channelIndex(channelIndex)
 {
   _text.setBrush(Qt::yellow);
   //  m_context->makeCurrent(this);
@@ -133,6 +134,7 @@ void ImItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QW
     _shader.setUniformValue("bias" ,(GLfloat)_bias);
     _shader.setUniformValue("gamma",(GLfloat)_gamma);
     _shader.setUniformValue("show_mode",(GLint)(_show_mode%4));
+	_shader.setUniformValueArray("displayChannel",_displayChannelsArray,4);//DGA: Set the uniform array displayChannel equal to _displayChannelsArray, of size 4
     checkGLError();
     //glPushMatrix();
     //glRotatef(_rotation_radians*180.0/M_PI,0.0,0.0,1.0);
@@ -265,7 +267,7 @@ void ImItem::flip(int isupdate/*=0*/)
 
 // double-buffers, so you might not see your image right away.
 void ImItem::push(mylib::Array *plane)
-{
+{ if(!_determinedMaximumValueForDataType) {determineMaximumValueForDataType(plane->type, _maximumValueForImageDataType); _determinedMaximumValueForDataType=true;} //DGA: Determine the maximum value for the data type and store it in _maximumValueForImageDataType (passed by reference)
   checkGLError();
 
   float w,h;
@@ -282,14 +284,7 @@ void ImItem::push(mylib::Array *plane)
   else
     _nchan = 1;
 
-  if(_autoscale_next)
-  { _autoscale(plane,_selected_channel,0.01f);
-    _autoscale_next = false;
-  }
-  if(_resetscale_next)
-  { _resetscale(_selected_channel);
-    _resetscale_next = false;
-  }
+  _scaleImage(plane); //DGA: Scale the image according to cutoffs
 
   //Guess the "fill" for mixing different channels
   // - this is needed for when there are a ton of channels
@@ -346,7 +341,7 @@ void ImItem::_setupShader()
   _shader.setUniformValue("nchan",(GLfloat)_nchan);
   _shader.release();
 
-  loadColormap(":/cmap/2");
+  loadColormap(":/cmap/3");
 }
 
 void ImItem::loadColormap(const QString& filename)
@@ -375,7 +370,7 @@ Error:
 // - support different lookup on each channel
 // - lookup is into a 2d colormap indexed by s and t (each go 0 to 1).
 void ImItem::_updateCmapCtrlPoints()
-{
+{ 
   //if(_nchan<=1) return;
   assert(_cmap_ctrl_count>=2);
 
@@ -403,12 +398,12 @@ void ImItem::_updateCmapCtrlPoints()
   // upload to the gpu
   glActiveTexture(GL_TEXTURE2);
   glBindTexture(GL_TEXTURE_2D,_hTexCmapCtrlS);
-  glTexImage2D(GL_TEXTURE_2D,
-    0,
-    GL_LUMINANCE,
-    _cmap_ctrl_count, _nchan, 0,
-    GL_LUMINANCE, GL_FLOAT,
-    _cmap_ctrl_s);
+  glTexImage2D(GL_TEXTURE_2D, //DGA: Target texture
+    0, //DGA: Level of detail (0 is base image)
+    GL_LUMINANCE, //DGA: Internal format (number of color components in texture)
+    _cmap_ctrl_count, _nchan, 0, //DGA: width of texture image, height of texture image, border
+    GL_LUMINANCE, GL_FLOAT, //DGA: Format of pixel data, data type of pixel data, _cmap_ctrl_s
+    _cmap_ctrl_s); //DGA: Pointer to image data in memory
   glBindTexture(GL_TEXTURE_2D,0);
   checkGLError();
 
@@ -430,58 +425,67 @@ MemoryError:
   error("(%s:%d) Memory (re)allocation failed."ENDL,__FILE__,__LINE__);
 }
 
-void ImItem::_autoscale(mylib::Array *data, GLuint ichannel, float percent)
-{ mylib::Array c;
-  if(ichannel>=data->dims[2] || (ichannel>=_nchan))
-  { warning("(%s:%d) Autoscale: selected channel out of bounds."ENDL,__FILE__,__LINE__);
-    return;
-  }
-  mylib::Array *t = Convert_Image(data,mylib::PLAIN_KIND,mylib::FLOAT32_TYPE,32);
+void ImItem::toggleAutoscale(int chan)
+{
+ _channelHistogramInformation[chan].autoscale = !_channelHistogramInformation[chan].autoscale;
+}
+
+void ImItem::_scaleImage(mylib::Array *data)
+{ mylib::Array c; 
+ /* mylib::Array *t = Convert_Image(data,mylib::PLAIN_KIND,mylib::FLOAT32_TYPE,32);
   c = *t;    // For Get_Array_Plane
   if(mylib::UINT64_TYPE<data->type && data->type<=mylib::INT64_TYPE)  // if signed integer type
     mylib::Scale_Array(&c,0.5,1.0);                                   //    x = 0.5*(x+1.0)
   mylib::Get_Array_Plane(&c,(mylib::Dimn_Type)ichannel);
-
-
-  //mylib::Write_Image("ImItem_autoscale_input.tif",data,mylib::DONT_PRESS);
-  //mylib::Write_Image("ImItem_autoscale_channel_float.tif",&c,mylib::DONT_PRESS);
-
-
-  float max,min,m,b;
-  mylib::Range_Bundle range;
-#if 0
-  /* This here in case existing colormapping scheme
-     didn't result in enough dynamic range.
   */
-  mylib::Array_Range(&range,t);  // min max of entire array
-  max = range.maxval.fval;
-  min = range.minval.fval;
-  _gain = 1.0f/(max-min);
-  _bias = min/(min-max);
+  for(GLuint ichannel=0; ichannel<_nchan; ichannel++) //DGA: Loop through all the channels
+  { _displayChannelsArray[ichannel] = _channelHistogramInformation[ichannel].displayChannel;
+    c = *data;
+	mylib::Get_Array_Plane(&c, (mylib::Dimn_Type)ichannel);//ichannel);
+
+	//mylib::Write_Image("ImItem_autoscale_input.tif",data,mylib::DONT_PRESS);
+	//mylib::Write_Image("ImItem_autoscale_channel_float.tif",&c,mylib::DONT_PRESS);
+
+
+	float max, min, m, b;
+	mylib::Range_Bundle range;
+#if 0
+	/* This here in case existing colormapping scheme
+	   didn't result in enough dynamic range.
+	   */
+	mylib::Array_Range(&range,t);  // min max of entire array
+	max = range.maxval.fval;
+	min = range.minval.fval;
+	_gain = 1.0f/(max-min);
+	_bias = min/(min-max);
 #endif
 
-  mylib::Array_Range(&range,&c); // min max of single channel
-  mylib::Free_Array(t);
-  max = _gain*range.maxval.fval+_bias; // adjust for gain and bias
-  min = _gain*range.minval.fval+_bias;
-  m = 1.0f/(max-min);
-  b = min/(min-max);
+	//mylib::Array_Range(&range,&c); // min max of single channel
 
-  for(GLuint i=0;i<_cmap_ctrl_count;++i)
-  { float x = i/(_cmap_ctrl_count-1.0f);
-    _cmap_ctrl_t[ichannel*_cmap_ctrl_count+i] = m*x+b; // upload to gpu will clamp to [0,1]
+	//mylib::Free_Array(t);
+
+	//DGA: Autoscale the channels if it is turned on (and set the channel cutoffs appropriately), otherwise use the set cutoff values (max and min need to be in range 0 to 1)
+	if(_channelHistogramInformation[ichannel].autoscale)
+	{ double maxValue = 0, minValue = 0;
+	  percentiles(&c, _pixelValueCounts, _channelHistogramInformation[ichannel].undersaturatedPercentile, _channelHistogramInformation[ichannel].oversaturatedPercentile, minValue, maxValue);
+	  max = _gain*maxValue / _maximumValueForImageDataType + _bias;
+	  min = _gain*minValue / _maximumValueForImageDataType + _bias;
+	  _channelHistogramInformation[ichannel].minValue = minValue;
+	  _channelHistogramInformation[ichannel].maxValue = maxValue;
+	}
+	else
+	{ max = _gain*_channelHistogramInformation[ichannel].maxValue/_maximumValueForImageDataType + _bias; // adjust for gain and bias
+	  min = _gain*_channelHistogramInformation[ichannel].minValue/_maximumValueForImageDataType + _bias;
+	}
+	m = 1.0f / (max - min);
+	b = min / (min - max);
+
+	for (GLuint i = 0; i < _cmap_ctrl_count; ++i) //DGA: Reset the scaling for the shader
+	{ float x = i / (_cmap_ctrl_count - 1.0f);
+	  _cmap_ctrl_t[ichannel*_cmap_ctrl_count + i] = m*x + b; // upload to gpu will clamp to [0,1]
+	}
   }
-
   _updateCmapCtrlPoints();
-}
-
-void ImItem::_resetscale(GLuint ichannel)
-{
-  if(ichannel<_nchan)
-  { for(GLuint i=0;i<_cmap_ctrl_count;++i)
-      _cmap_ctrl_t[ichannel*_cmap_ctrl_count+i] = i/(_cmap_ctrl_count-1.0f);
-    _updateCmapCtrlPoints();
-  }
 }
 
 void ImItem::mouseDoubleClickEvent (QGraphicsSceneMouseEvent *e)

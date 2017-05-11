@@ -425,13 +425,12 @@ Error:
           d->_zpiezo.getScanRange(&ummin,&ummax,&umstep);
 		  srand(GetCurrentThreadId()); //DGA: This is necessary because otherwise each thread starts with the same seed
 		  (ummin != ummax) ? isTakingStack = true : Sleep(100); //DGA: Either it is taking a stack, or sleep for 100 ms so it is easier to see it moving in the main window
-	
+
 		  for (z_um = ummin; ((ummax - z_um) / umstep) >= -0.5f && !d->_agent->is_stopping(); z_um += umstep) //DGA: Now this is inclusive of ummin and ummax
           { size_t pitch[4];
             size_t n[3];
             frm->compute_pitches(pitch);
             frm->get_shape(n);
-
             //Fill frame w random colors.
             { TPixel *c,*e;
 			  const f32 low = TypeMin<TPixel>(),
@@ -447,11 +446,11 @@ Error:
 				  else{
 					  // DGA: In surface find mode, this ensures the surface is not found in the first frame and will likely be found in the middle of stack and the stage should move up
 					  // such that the surface would be expected in the next first frame
-					  *c = (TPixel)(((ptp*rand() / (float)RAND_MAX)*((z_um - ummin) / (ummax - ummin))) + low);
+				      *c = (TPixel)((ptp*rand() / (float)RAND_MAX)*(z_um - ummin) / (ummax - ummin) + low);
 				 }
 			  }
 			}
-			
+
 		    if (CHAN_FAILURE(SCANNER_PUSH(qdata, (void**)&frm, nbytes)))
 		    { warning("Scanner output frame queue overflowed."ENDL"\tAborting acquisition task."ENDL);
 			    goto Error;
@@ -462,7 +461,7 @@ Error:
           HERE;
 	  Finalize:
 		  Chan_Close(qdata);
-          free( frm );
+          free( frm ); 
           return status; // status == 0 implies success, error otherwise
 	  Error:
           warning("Error occurred during ScanStack<%s> task."ENDL,TypeStr<TPixel>());

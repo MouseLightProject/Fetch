@@ -202,7 +202,7 @@ Error:
         device::StageTiling* tiling = dc->stage()->tiling();
         tiling->markAddressable(iplane); // make sure the current plane is marked addressable
         tiling->setCursorToPlane(iplane);
-		
+
 		device::Digitizer::Config digcfg = dc->scanner._scanner2d._digitizer.get_config(); //DGA: Get the configuration of the digitizer to know if it is simulated
         device::TileSearchContext *ctx=0;
         while(  !dc->_agent->is_stopping()
@@ -222,12 +222,11 @@ Error:
 		  }
           mylib::Free_Array(im);
         }
+		any_explorable ? tiling->didTileDilationForThisSlice_ = false : tiling->didTileDilationForThisSlice_ = true; //DGA: Reset didTileDilationForThisSlice_ based on whether any tiles were explorable
         if(!tiling->updateActive(iplane))
         { WARN("No tiles found to image.\n");
           goto Error;
         }
-		if(!dc->_agent->is_stopping() && any_explorable) //DGA: Only dilate active tiles if it is not being stopped
-          tiling->dilateActive(iplane);
 		tiling->fillHolesInActive(iplane);
 		if(ctx) delete ctx;
         return 1;

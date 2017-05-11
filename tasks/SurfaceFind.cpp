@@ -30,7 +30,8 @@
 #endif
 
 #define LOG(sev,...)          sev(__VA_ARGS__)
-#define REPORT(sev,msg1,msg2) LOG(sev,"%s(%d)-%s()"ENDL "\t%s"ENDL "\t%s"ENDL,msg1,msg2)
+//DGA: Corrected REPRT so that it prints out __FILE__ and __LINE__ (removed redundant \t%s)
+#define REPORT(sev,msg1,msg2) LOG(sev,"%s(%d)-%s()"ENDL "\t%s",__FILE__,__LINE__,msg1,msg2)
 
 #define CHKJMP(expr) if(!(expr)) {warning("%s(%d)"ENDL"\tExpression indicated failure:"ENDL"\t%s"ENDL,__FILE__,__LINE__,#expr); goto Error;}
 
@@ -151,14 +152,16 @@ TODO:
         }
 
         double delta_um=0.0;
+		bool backupDistanceAcceptable = true, raiseDistanceAcceptable = true;
         while( eflag==0 
             && !dc->_agent->is_stopping()  // running?
             && !dc->surface_finder.any()   // search complete?   \/---search in bounds?
-            && ( ((dc->stage()->getTarget() - starting_pos).norm()*1000.0) < cfg.max_backup_um() )
+            && backupDistanceAcceptable //DGA: Ensure that the stage can't backup or be raised more than predefined amounts for each tile
+			&& raiseDistanceAcceptable
             && (iters<maxiter)
             )
-        {     
-          TS_TIC;
+        {
+		  TS_TIC;
           iters++;
 
           // Start the acquisition
@@ -171,7 +174,7 @@ TODO:
           eflag |= dc->runPipeline();
           eflag |= run_and_wait(&dc->__self_agent,&dc->__scan_agent,NULL,NULL); // perform the scan
           eflag |= dc->stopPipeline();         // wait till everything stops
-          
+
           // readout
           if(dc->surface_finder.too_inside())
           {
@@ -179,16 +182,22 @@ TODO:
             Vector3f pos_mm = dc->stage()->getTarget(); // use current target z for tilepos z            
             double dz = 0.001f*cfg.backup_frac()*range_um;// convert um to mm
             pos_mm[2] -= dz;
-            delta_um -= dz*1e3;
-            dc->stage()->setPos(pos_mm);            
+			backupDistanceAcceptable = ( starting_pos.z() - pos_mm[2] )*1000.0 < cfg.max_backup_um(); //DGA: Will only move stage if move is within acceptable range
+			if (backupDistanceAcceptable){
+				delta_um -= dz*1e3;
+				dc->stage()->setPos(pos_mm);
+			}
           } else if(dc->surface_finder.too_outside())
           {
             // Move stage - move sample up
             Vector3f pos_mm = dc->stage()->getTarget(); // use current target z for tilepos z
             double dz = 0.001f*cfg.backup_frac()*range_um;// convert um to mm
             pos_mm[2] += dz;
-            delta_um += dz*1e3;
-            dc->stage()->setPos(pos_mm);
+			raiseDistanceAcceptable = (pos_mm[2] - starting_pos.z())*1000.0 < cfg.max_raise_um(); //DGA: Will only move stage if move is within acceptable range
+			if (raiseDistanceAcceptable){
+				delta_um += dz*1e3;
+				dc->stage()->setPos(pos_mm);
+			}
           } else // just right
           { 
             // Surface found, commit to tiling
@@ -199,13 +208,7 @@ TODO:
             // doesn't move stage, just offsets tiling and notifies view, etc...
 /**/        dc->stage()->inc_tiling_z_offset_mm(1e-3*z_stack_um);
 
-            // move stage by offset
-            // - this ensures that we end up on the same plane in the iling lattice
-            // - the motion will happen on the way out of the task
-            { starting_pos[2]+=1e-3*z_stack_um; // mm
-            }
-
-            hit_=1;
+			hit_=1;
             debug("---"ENDL "\twhich: %f"ENDL "\tz_stack_um: %f"ENDL "\ttiling_z_offset_mm: %f"ENDL "..."ENDL,
               (double) (dc->surface_finder.which()),
               (double) z_stack_um,
@@ -213,10 +216,17 @@ TODO:
           }
           TS_TOC;
         } // end - loop until surface found
-        if(iters>=maxiter) {
-            REPORT(warning,"maxiter exceeded on SurfaceFind","Reporting no hit for tile");
-            hit_=0;
-        }
+		if (!dc->surface_finder.any()){ //DGA: If didn't find any, then failed for some other reason
+			if (iters >= maxiter) {
+				REPORT(warning, "maxiter exceeded on SurfaceFind", "Reporting no hit for tile");
+			}
+			else if (!backupDistanceAcceptable) { //DGA: Report warning for exceeding backup or raise
+				REPORT(warning, "max_backup_um exceeded on SurfaceFind", "Reporting no hit for tile");
+			}
+			else if (!raiseDistanceAcceptable) {
+				REPORT(warning, "max_raise_um exceeded on SurfaceFind", "Reporting no hit for tile");
+			}
+		}
             
         
 // [ ] FIXME task is not restartable...had a bug at one point        

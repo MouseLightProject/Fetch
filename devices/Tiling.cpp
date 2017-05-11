@@ -58,7 +58,8 @@ namespace device {
       travel_(travel),
       lock_(0),
       mode_(alignment),
-	  useTwoDimensionalTiling_(useTwoDimensionalTiling) //DGA: Added initialization of useTwoDimensionalTiling_
+	  useTwoDimensionalTiling_(useTwoDimensionalTiling), //DGA: Added initialization of useTwoDimensionalTiling_
+	  didTileDilationForThisSlice_(false)				 //DGA: Added initialization of didTileDilationForThisSlice_
   {
     PANIC(lock_=Mutex_Alloc());
     computeLatticeToStageTransform_(fov,alignment);

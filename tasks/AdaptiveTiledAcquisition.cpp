@@ -99,13 +99,15 @@ Error:
         SurfaceFind surface_find;
         std::string filename;
         unsigned int eflag = 0; // success
-        Vector3f tilepos;
+        Vector3f tilepos, tilepos_reference;
         float tiling_offset_acc_mm=0.0f;
         float nsamp=0;
 		int numberImaged;
         int adapt_thresh=dc->get_config().adaptive_tiling().every();
         int adapt_mindist=dc->get_config().adaptive_tiling().mindist();
+		double initial_distance_from_surface_um = (dc->get_config().adaptive_tiling().initial_distance_from_surface_um()>200 ? 200 : dc->get_config().adaptive_tiling().initial_distance_from_surface_um()); //DGA: The distance from the surface the stage will be moved by before moving to the surface height, with minimum of 200
 		int minDistToTileWithOffsetMeasured; //DGA: Stores the minimum distance measured to any tile whose offset was already measured
+		bool didUseTileposReference = false; //DGA: Boolean storing if we used tilepos_reference already
         TS_OPEN("timer-tiles.f32");
         CHKJMP(dc->__scan_agent.is_runnable());
 		
@@ -149,7 +151,6 @@ Error:
 						eflag |= surface_find.run(dc);
 						if (surface_find.hit())
 						{	tiling->markOffsetMeasured(true); //DGA: If a tile's surface was found, mark its offset as being measured
-							tiling_offset_acc_mm += dc->stage()->tiling_z_offset_mm();
 							++nsamp;
 						}
 					}
@@ -161,6 +162,7 @@ Error:
 				//goto Error;
 			}
 			else {
+				tiling_offset_acc_mm = dc->stage()->tiling_z_offset_mm(); //DGA: Because we are starting surface find for each tile at the same z, no longer need to accumulate on top of the already inc_tiling_z_offset_mm in SurfaceFind. So the accumulation is just equal to the total
 				debug("%s(%d)"ENDL "\t[Adaptive Tiling Task] Average tile offset (samples: %5d) %f"ENDL, __FILE__, __LINE__, (int)nsamp, tiling_offset_acc_mm / nsamp);
 				dc->stage()->set_tiling_z_offset_mm(tiling_offset_acc_mm / nsamp);
 				startingZForImagingTilesForTwoDimensionalTiling_um += dc->stage()->tiling_z_offset_mm()*1000.0f; //DGA: If offset measurement has been performed, add the average tiling offset to the starting z position for two dimensional tiling imaging
@@ -169,11 +171,17 @@ Error:
 			didSkipSurfaceFind = false; //DGA: Surface find was not skipped
 		}
 
+		size_t iplane=dc->stage()->getPosInLattice().z(); //DGA: Get the plane position
+		if(!dc->_agent->is_stopping() && !tiling->didTileDilationForThisSlice_) //DGA: Only dilate active tiles if it is not being stopped if it hasn't already dilated tiles for this slice or explore has been performed
+		{ tiling->dilateActive(iplane);
+		  tiling->didTileDilationForThisSlice_=true;
+		}
+
 		// restore connection between end of pipeline and disk 
         IDevice::connect(&dc->disk,0,dc->_end_of_pipeline,0);
 
         // 2. iterate over tiles to image
-        tiling->resetCursor();
+		tiling->resetCursor();
         while(eflag==0 && !dc->_agent->is_stopping() && tiling->nextInPlanePosition(tilepos))
         { TS_TIC;
           debug("%s(%d)"ENDL "\t[Adaptive Tiling Task] tilepos: %5.1f %5.1f %5.1f"ENDL,__FILE__,__LINE__,tilepos[0],tilepos[1],tilepos[2]);
@@ -191,7 +199,16 @@ Error:
           Vector3f curpos = dc->stage()->getTarget(); // use current target z for tilepos z
           debug("%s(%d)"ENDL "\t[Adaptive Tiling Task] curpos: %5.1f %5.1f %5.1f"ENDL,__FILE__,__LINE__,curpos[0]*1000.0f,curpos[1]*1000.0f,curpos[2]*1000.0f);
 		  if (didSkipSurfaceFind || tiling->useTwoDimensionalTiling_) tilepos[2] = startingZForImagingTilesForTwoDimensionalTiling_um; // DGA: Use startingZForImagingTilesForTwoDimensionalTiling_um if using two dimensional tiling or if surface find was skipped (useful when 3D tiling used)
-          dc->stage()->setPos(0.001f*tilepos);        // convert um to mm
+		  if (!didUseTileposReference){
+			//DGA: Move the stage to a reference z height before moving it to its final z location, to prevent mechanical variation in positioning (ensures it always goes the same distance in z for the final move)
+			tilepos_reference = tilepos;
+			tilepos_reference[2] += initial_distance_from_surface_um;
+			dc->stage()->setPos(0.001f*tilepos_reference);
+			curpos = dc->stage()->getTarget();
+			debug("%s(%d)"ENDL "\t[Adaptive Tiling Task] curpos: %5.1f %5.1f %5.1f"ENDL,__FILE__,__LINE__,curpos[0]*1000.0f,curpos[1]*1000.0f,curpos[2]*1000.0f);
+			didUseTileposReference = true;
+		  }
+		  dc->stage()->setPos(0.001f*tilepos);        // convert um to mm
           curpos = dc->stage()->getTarget(); // use current target z for tilepos z
           debug("%s(%d)"ENDL "\t[Adaptive Tiling Task] curpos: %5.1f %5.1f %5.1f"ENDL,__FILE__,__LINE__,curpos[0]*1000.0f,curpos[1]*1000.0f,curpos[2]*1000.0f);
 
@@ -231,6 +248,7 @@ Error:
 
           TS_TOC;          
         } // end loop over tiles
+		if (eflag == 0 && !dc->_agent->is_stopping()) { tiling->didTileDilationForThisSlice_ = false;} //DGA: Then completed with the slice and should reset bool for next slice
         eflag |= dc->stopPipeline();           // wait till the  pipeline stops
         TS_CLOSE;
         return eflag;
