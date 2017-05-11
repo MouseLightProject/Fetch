@@ -208,13 +208,7 @@ TODO:
             // doesn't move stage, just offsets tiling and notifies view, etc...
 /**/        dc->stage()->inc_tiling_z_offset_mm(1e-3*z_stack_um);
 
-            // move stage by offset
-            // - this ensures that we end up on the same plane in the iling lattice
-            // - the motion will happen on the way out of the task
-            { starting_pos[2]+=1e-3*z_stack_um; // mm
-            }
-
-            hit_=1;
+			hit_=1;
             debug("---"ENDL "\twhich: %f"ENDL "\tz_stack_um: %f"ENDL "\ttiling_z_offset_mm: %f"ENDL "..."ENDL,
               (double) (dc->surface_finder.which()),
               (double) z_stack_um,
