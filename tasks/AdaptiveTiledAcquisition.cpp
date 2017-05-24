@@ -151,7 +151,6 @@ Error:
 						eflag |= surface_find.run(dc);
 						if (surface_find.hit())
 						{	tiling->markOffsetMeasured(true); //DGA: If a tile's surface was found, mark its offset as being measured
-							tiling_offset_acc_mm += dc->stage()->tiling_z_offset_mm();
 							++nsamp;
 						}
 					}
@@ -163,6 +162,7 @@ Error:
 				//goto Error;
 			}
 			else {
+				tiling_offset_acc_mm = dc->stage()->tiling_z_offset_mm(); //DGA: Because we are starting surface find for each tile at the same z, no longer need to accumulate on top of the already inc_tiling_z_offset_mm in SurfaceFind. So the accumulation is just equal to the total
 				debug("%s(%d)"ENDL "\t[Adaptive Tiling Task] Average tile offset (samples: %5d) %f"ENDL, __FILE__, __LINE__, (int)nsamp, tiling_offset_acc_mm / nsamp);
 				dc->stage()->set_tiling_z_offset_mm(tiling_offset_acc_mm / nsamp);
 				startingZForImagingTilesForTwoDimensionalTiling_um += dc->stage()->tiling_z_offset_mm()*1000.0f; //DGA: If offset measurement has been performed, add the average tiling offset to the starting z position for two dimensional tiling imaging
