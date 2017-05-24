@@ -35,7 +35,6 @@ namespace device {
     mylib::Indx_Type           current_plane_offset_;                      ///< marks the current plane
     mylib::Indx_Type           sz_plane_nelem_;                            ///< the size of a plane in the tile database
 	bool					   useTwoDimensionalTiling_;				   ///< whether or not to use two dimensional tiling
-	bool					   didTileDilationForThisSlice_;				   ///< DGA: To keep track of whether tile dilation occured in a slice
     TTransform                 latticeToStage_;                            ///< Transforms lattice coordinates to the tiles anchor point on the stage
     TListeners                 listeners_;                                 ///< set of objects to be notified of tiling events
     FieldOfViewGeometry        fov_;                                       ///< the geometry used to generate the tiling
@@ -57,7 +56,8 @@ namespace device {
       Safe        = 128,                                                   ///< indicates a tile is safe to image; it is within the allowed travel of the stages
       Reserved    = 512,                                                   ///< used internally to temporarily mark tiles
       Reserved2   = 256,                                                   ///< used internally to temporarily mark tiles
-	  OffsetMeasured = 1024												   ///< used internally to temporarily mark tiles when their offset has been measured 
+	  OffsetMeasured = 1024,												   ///< used internally to temporarily mark tiles when their offset has been measured 
+	  Dilated     = 2048												   ///< used  internally to mark a section as having been dilated
     };
 
              StageTiling(const device::StageTravel& travel,
@@ -94,6 +94,7 @@ namespace device {
     void     markAddressable(size_t iplane); ///< Marks the indicated plane as addressable according to the travel.
     void     markUserReset(); ///< Resets user-settable flags to default
 	void	 markResetGivenAttributeCombinationForTilesInCurrentPlane(uint32_t query_mask); //DGA: Resets given attributes combination for the tiles in the current plane
+	void     markSliceDilated(bool tf=true); //DGA: Will mark a section as being dilated/not dilated
 
     int      anyExplored(int iplane);                                      //   2d
     int      updateActive(size_t iplane);                                  //   2d - returns 1 if any tiles were marked active, otherwise 0.
@@ -117,7 +118,8 @@ namespace device {
     void unlock()                                                          {Mutex_Unlock(lock_);}
 	
     bool on_plane(uint32_t *p); //used by TileSearch    
-	
+    bool didTileDilationForThisSlice(); ///DGA: Check if a section has been dilated 
+
     int minDistTo( // used by adaptive tiling
     uint32_t search_mask,uint32_t search_flags,   // area to search 
     uint32_t query_mask ,uint32_t query_flags);  // tile to find

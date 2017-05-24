@@ -58,8 +58,7 @@ namespace device {
       travel_(travel),
       lock_(0),
       mode_(alignment),
-	  useTwoDimensionalTiling_(useTwoDimensionalTiling), //DGA: Added initialization of useTwoDimensionalTiling_
-	  didTileDilationForThisSlice_(false)				 //DGA: Added initialization of didTileDilationForThisSlice_
+	  useTwoDimensionalTiling_(useTwoDimensionalTiling) //DGA: Added initialization of useTwoDimensionalTiling_
   {
     PANIC(lock_=Mutex_Alloc());
     computeLatticeToStageTransform_(fov,alignment);
@@ -621,11 +620,12 @@ DoneOutlining:
 
   //  markUserReset  /////////////////////////////////////////////////////
   //
+	
   void StageTiling::markUserReset()
   { uint32_t *m=0;
     { AutoLock lock(lock_);
       m = AUINT32(attr_) + cursor_;
-      *m &= ~( Active|Detected|Explored|Explorable|Safe|Done );
+	  *m &= ~( Active|Detected|Explored|Explorable|Safe|Done|TileError|OffsetMeasured|Dilated ); //DGA: Added TileError, OffsetMeasured, Dilated
     }
     notifyDone(cursor_,*m);
   }
@@ -668,6 +668,19 @@ DoneOutlining:
     while(ON_PLANE(++cursor_))
       v[cursor_]|=Addressable*in(a,b,computeCursorPos()*0.001);
     cursor_=old; // restore cursor
+  }
+
+  // markDilated to mark whether a section has been dilated; just mark the first tile for simplicity
+   void StageTiling::markSliceDilated(bool tf)
+  {   AutoLock lock(lock_);  
+	  uint32_t *beg = AUINT32(attr_) + current_plane_offset_; // DGA: First tile in current plane
+	  tf ? (*beg) |= Dilated : (*beg) &= ~Dilated; //DGA: If true, mark section as Dilated, else mark it as not dilated 
+	  notifyDone(cursor_,*beg); //DGA: Used to notify that the tile has been changed
+  }
+
+  bool StageTiling::didTileDilationForThisSlice() //DGA: Returns whether or not section as been dilated
+  { uint32_t *beg = AUINT32(attr_) + current_plane_offset_;
+	return (*beg) & Dilated;
   }
 
   //  anyExplored  ///////////////////////////////////////////////////////////////

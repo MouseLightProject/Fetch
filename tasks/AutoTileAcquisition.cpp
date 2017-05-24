@@ -222,7 +222,7 @@ Error:
 		  }
           mylib::Free_Array(im);
         }
-		any_explorable ? tiling->didTileDilationForThisSlice_ = false : tiling->didTileDilationForThisSlice_ = true; //DGA: Reset didTileDilationForThisSlice_ based on whether any tiles were explorable
+		any_explorable ? tiling->markSliceDilated(false) : tiling->markSliceDilated(true); //DGA: Reset dilation state based on whether any tiles were explorable
         if(!tiling->updateActive(iplane))
         { WARN("No tiles found to image.\n");
           goto Error;
