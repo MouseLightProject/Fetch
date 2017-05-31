@@ -670,7 +670,7 @@ DoneOutlining:
     cursor_=old; // restore cursor
   }
 
-  // markDilated to mark whether a section has been dilated; just mark the first tile for simplicity
+  // DGA: markDilated to mark whether a section has been dilated; just mark the first tile for simplicity
    void StageTiling::markSliceDilated(bool tf)
   {   AutoLock lock(lock_);  
 	  uint32_t *beg = AUINT32(attr_) + current_plane_offset_; // DGA: First tile in current plane
