@@ -100,6 +100,14 @@ scanner3d {
       }
       simulated {
       }
+      calibration_stack {
+        v_open: 0.5
+        target_mm{
+          x: 2
+          y: 2
+          z: 2
+        }
+      }
     }
     pockels {
       kind: Simulated
@@ -119,6 +127,14 @@ scanner3d {
         ai_channel: ""
       }
       simulated {
+      }
+      calibration_stack {
+        v_open: 0.5
+        target_mm{
+          x: 3
+          y: 3
+          z: 3
+        }
       }
     }
     shutter {

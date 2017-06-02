@@ -21,6 +21,7 @@
 #include "devices\Microscope.h"
 #include "devices\tiling.h"
 #include "AdaptiveTiledAcquisition.h"
+#include "CalibrationStack.h"
 
 #define CHKJMP(expr) if(!(expr)) {warning("%s(%d)"ENDL"\tExpression indicated failure:"ENDL"\t%s"ENDL,__FILE__,__LINE__,#expr); goto Error;}
 #define WARN(msg)    warning("%s(%d)"ENDL"\t%s"ENDL,__FILE__,__LINE__,msg)
@@ -71,7 +72,7 @@ namespace fetch
       */
 
       //Upcasting
-      unsigned int AutoTileAcquisition::config(IDevice *d) {return config(dynamic_cast<device::Microscope*>(d));}
+      unsigned int AutoTileAcquisition::config(IDevice *d) {return config(dynamic_cast<device::Microscope*>(d));} 
       unsigned int AutoTileAcquisition::run   (IDevice *d) {return run   (dynamic_cast<device::Microscope*>(d));}
 
       unsigned int AutoTileAcquisition::config(device::Microscope *d)
@@ -238,19 +239,21 @@ Error:
       unsigned int AutoTileAcquisition::run(device::Microscope *dc)
       { unsigned eflag=0; //success
         cfg::tasks::AutoTile cfg=dc->get_config().autotile();
-        TiledAcquisition         nonadaptive_tiling;
+		TiledAcquisition         nonadaptive_tiling;
         AdaptiveTiledAcquisition adaptive_tiling;
         MicroscopeTask *tile=0;
         Cut cut;
 		device::StageTiling * tiling = dc->stage()->tiling(); //DGA: Pointer to tiling object
 
         tile=cfg.use_adaptive_tiling()?((MicroscopeTask*)&adaptive_tiling):((MicroscopeTask*)&nonadaptive_tiling);
+		CalibrationStack calibration_stack;
 
         while(!dc->_agent->is_stopping() && PlaneInBounds(dc,cfg.maxz_mm()))
-        { 
+        { calibration_stack.config(dc);
+		  calibration_stack.run(dc);
           if(cfg.use_explore())
             CHKJMP(explore(dc));       // will return an error if no explorable tiles found on the plane
-          CHKJMP(   tile->config(dc));
+		  CHKJMP(tile->config(dc));
           CHKJMP(0==tile->run(dc));
 
           /* Assert the trip detector hasn't gone off.  
