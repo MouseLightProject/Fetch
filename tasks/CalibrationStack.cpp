@@ -112,62 +112,70 @@ Error:
       */
       unsigned int CalibrationStack::run(device::Microscope *dc)
 	  {
-		  Vector3f tilepos, curpos;
+		  Vector3f pos, curpos;
 		  unsigned int eflag = 0; // success
 		  std::string filename;
+		  device::Pockels pockels1 = dc->scanner._scanner2d._pockels1;
+		  device::Pockels pockels2 = dc->scanner._scanner2d._pockels2;
+		  device::Pockels * pockelToTurnOn = &pockels1;
+		  device::Pockels * pockelToTurnOff = &pockels2;
+		  if (pockels1.get_config().has_calibration_stack() || pockels2.get_config().has_calibration_stack())
+		  {
+			  if (!(pockels1.get_config().has_calibration_stack())) { pockelToTurnOn = &pockels2; pockelToTurnOff = &pockels1; }
+			  pos[0] = pockelToTurnOn->get_config().calibration_stack().target_mm().x();
+			  pos[1] = pockelToTurnOn->get_config().calibration_stack().target_mm().y();
+			  pos[2] = pockelToTurnOn->get_config().calibration_stack().target_mm().z();
+			 pockelToTurnOn->setOpenPercentNoWait(pockelToTurnOn->get_config().calibration_stack().v_open());
+			 pockelToTurnOff->setOpenPercentNoWait(0);
+			  CHKJMP(dc->__scan_agent.is_runnable());
+			  CHKJMP(dc->stage()->setPos(pos)); // convert um to mm
+			  debug("%s(%d)"ENDL "\t[Calibration Stack Task] tilepos: %5.1f %5.1f %5.1f"ENDL, __FILE__, __LINE__, pos[0], pos[1], pos[2]);
+			  filename = dc->stack_filename();
+			  dc->file_series.ensurePathExists();
+			  dc->disk.set_nchan(dc->scanner.get2d()->digitizer()->nchan());
+			  eflag |= dc->disk.open(filename, "w");
+			  if (eflag)
+			  {
+				  warning("Couldn't open file: %s"ENDL, filename.c_str());
+				  return eflag;
+			  }
 
-		  cfg::device::Pockels pockels1 = dc->scanner._scanner2d._pockels1.get_config();
-		  tilepos[0] = pockels1.calibration_stack().target_mm().x();
-		  tilepos[1] = pockels1.calibration_stack().target_mm().y();
-		  tilepos[2] = pockels1.calibration_stack().target_mm().z();
-		  CHKJMP(dc->__scan_agent.is_runnable());
-		  CHKJMP(dc->stage()->setPos(tilepos)); // convert um to mm
-          debug("%s(%d)"ENDL "\t[Calibration Stack Task] tilepos: %5.1f %5.1f %5.1f"ENDL,__FILE__,__LINE__,tilepos[0],tilepos[1],tilepos[2]);
-          filename = dc->stack_filename();
-          dc->file_series.ensurePathExists();
-          dc->disk.set_nchan(dc->scanner.get2d()->digitizer()->nchan());
-          eflag |= dc->disk.open(filename,"w");
-          if(eflag)
-          {
-            warning("Couldn't open file: %s"ENDL, filename.c_str());
-            return eflag;
-          }
+			  eflag |= dc->runPipeline();
+			  eflag |= dc->__scan_agent.run() != 1;
 
-          eflag |= dc->runPipeline();
-          eflag |= dc->__scan_agent.run() != 1;
+			  { // Wait for stack to finish
+				  HANDLE hs[] = {
+					  dc->__scan_agent._thread,
+					  dc->__self_agent._notify_stop };
+				  DWORD res;
+				  int   t;
 
-          { // Wait for stack to finish
-            HANDLE hs[] = {
-              dc->__scan_agent._thread,
-              dc->__self_agent._notify_stop};
-            DWORD res;
-            int   t;
+				  // wait for scan to complete (or cancel)
+				  res = WaitForMultipleObjects(2, hs, FALSE, INFINITE);
+				  t = _handle_wait_for_result(res, "CalibrationStack::run - Wait for scanner to finish.");
+				  switch (t)
+				  {
+				  case 0:                            // in this case, the scanner thread stopped.  Nothing left to do.
+					  eflag |= dc->__scan_agent.last_run_result(); // check the run result
+					  eflag |= dc->__io_agent.last_run_result();
+					  if (eflag == 0) // remove this if statement to mark tiles as "error" tiles.  In practice, it seems it's ok to go back and reimage, so the if statement stays
+						  //DGA: DO I NEED THIS      tiling->markDone(eflag==0);      // only mark the tile done if the scanner task completed normally
+				  case 1:                            // in this case, the stop event triggered and must be propagated.
+					  eflag |= dc->__scan_agent.stop(SCANNER2D_DEFAULT_TIMEOUT) != 1;
+					  break;
+				  default:                           // in this case, there was a timeout or abandoned wait
+					  eflag |= 1;                      // failure
+				  }
+			  } // end waiting block
 
-            // wait for scan to complete (or cancel)
-            res = WaitForMultipleObjects(2,hs,FALSE,INFINITE);
-            t = _handle_wait_for_result(res,"CalibrationStack::run - Wait for scanner to finish.");
-            switch(t)
-            {
-            case 0:                            // in this case, the scanner thread stopped.  Nothing left to do.
-              eflag |= dc->__scan_agent.last_run_result(); // check the run result
-              eflag |= dc->__io_agent.last_run_result();
-              if(eflag==0) // remove this if statement to mark tiles as "error" tiles.  In practice, it seems it's ok to go back and reimage, so the if statement stays
-          //DGA: DO I NEED THIS      tiling->markDone(eflag==0);      // only mark the tile done if the scanner task completed normally
-            case 1:                            // in this case, the stop event triggered and must be propagated.
-              eflag |= dc->__scan_agent.stop(SCANNER2D_DEFAULT_TIMEOUT) != 1;
-              break;
-            default:                           // in this case, there was a timeout or abandoned wait
-              eflag |= 1;                      // failure
-            }
-          } // end waiting block
-
-          // Output and Increment files
-          dc->write_stack_metadata();          // write the metadata
-          eflag |= dc->disk.close();
-          dc->file_series.inc();               // increment regardless of completion status
-          eflag |= dc->stopPipeline();         // wait till everything stops
-	  Error:
-		  return 0;
+			  // Output and Increment files
+			  dc->write_stack_metadata();          // write the metadata
+			  eflag |= dc->disk.close();
+			  dc->file_series.inc();               // increment regardless of completion status
+			  eflag |= dc->stopPipeline();         // wait till everything stops
+		  Error:
+			  return 0;
+		  }
 	  }
 
     } // namespace microscope

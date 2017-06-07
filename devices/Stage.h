@@ -77,6 +77,8 @@ namespace device {
 
       virtual bool prepareForCut     ( unsigned axis)=0;                    ///< Ready axis for cutting. \returns true on success, otherwise false.
       virtual bool doneWithCut       ( unsigned axis)=0;                    ///< Return axis to normal. \returns true on success, otherwise false.
+
+	  inline void  getSafeZ          ( float *z )                           { (*z) = ((*z)>8) ? (*z) : 8;} // DGA: Make sure the z that is used is greater than 8 mm
   };
 
   template<class T>

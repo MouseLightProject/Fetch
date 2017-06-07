@@ -466,7 +466,8 @@ Error:
   \todo  what is behavior around limits?
 */
   int C843Stage::setPos( float x, float y, float z, int sleep_ms/*=500*/)
-  { double t[3] = {x,y,z};
+  { getSafeZ(&z);
+	double t[3] = {x,y,z};
     BOOL ontarget[] = {0,0,0};
     { StageTravel t;
       CHKJMP(getTravel(&t));
@@ -513,7 +514,8 @@ Error:
   }
 
   void C843Stage::setPosNoWait( float x, float y, float z )
-  { double t[3] = {x,y,z};
+  { getSafeZ(&z);
+	double t[3] = {x,y,z};
 
     //{ float vx,vy,vz;
     //  getVelocity(&vx,&vy,&vz);
@@ -739,7 +741,7 @@ Error:
   }
 
   int SimulatedStage::setPos( float x, float y, float z,int sleep_ms )
-  {
+  { getSafeZ(&z);
     if( is_in_bounds(*_config,0,x)
       &&is_in_bounds(*_config,1,y)
       &&is_in_bounds(*_config,2,z))
@@ -986,7 +988,7 @@ Error:
   }
 
   int  Stage::setPos(float  x,float  y,float  z,int sleep_ms)
-  {
+  { getSafeZ(&z);
     int out = _istage->setPos(x,y,z);
     _config->mutable_last_target_mm()->set_x(x);
     _config->mutable_last_target_mm()->set_y(y);
@@ -996,7 +998,7 @@ Error:
   }
 
   void Stage::setPosNoWait(float  x,float  y,float  z)
-  {
+  { getSafeZ(&z);
 #if 0
     Config c = get_config();                         // This block performs a "safe" commit
     c.mutable_last_target_mm()->set_x(x);            // of the last position, but will try to
