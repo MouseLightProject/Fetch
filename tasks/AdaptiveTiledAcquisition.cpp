@@ -172,9 +172,8 @@ Error:
 		}
 
 		size_t iplane=dc->stage()->getPosInLattice().z(); //DGA: Get the plane position
-		if(!dc->_agent->is_stopping() && !tiling->didTileDilationForThisSlice()) //DGA: Only dilate active tiles if it is not being stopped if it hasn't already dilated tiles for this slice or explore has been performed
+		if(!dc->_agent->is_stopping()) //DGA: Only dilate active tiles if it is not being stopped if it hasn't already dilated tiles for this slice or explore has been performed
 		{ tiling->dilateActive(iplane);
-		  tiling->markSliceDilated(true);
 		}
 
 		// restore connection between end of pipeline and disk 
@@ -248,7 +247,6 @@ Error:
 
           TS_TOC;          
         } // end loop over tiles
-		if (eflag == 0 && !dc->_agent->is_stopping()) { tiling->markSliceDilated(false);} //DGA: Then completed with the slice and should reset bool for next slice
         eflag |= dc->stopPipeline();           // wait till the  pipeline stops
         TS_CLOSE;
         return eflag;

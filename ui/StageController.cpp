@@ -124,8 +124,16 @@ void
     if( buf.length() != metafile.write(buf.c_str()) )   goto ErrorWriteMetafile;
 	
 	device::StageTiling *tilingUsedForSaving = new device::StageTiling(t->travel(), t->fov(), t->mode_, t->useTwoDimensionalTiling_); //DGA: Dynamically allocate a tiling for saving, which will allow resetting parameters (eg OffsetMeasured = 1024) so it is not outputted but is still stored in original tiling
-	for (int i=0; i<tilingUsedForSaving->attributeArray()->size; i++){ //DGA: Loop through tiling and set the tiling used for saving equal to the original tiling binary anded with 255 (resetting numbers higher than 255), and make sure Dilated state is kept
-		AUINT32(tilingUsedForSaving->attributeArray())[i] = AUINT32(t->attributeArray())[i]&(device::StageTiling::Dilated | 255);
+	for (int i=0; i<tilingUsedForSaving->attributeArray()->size; i++){ //DGA: Loop through tiling and set the tiling used for saving equal to the original tiling binary anded with Active, Done, Explorable, TileError, Explored, Detected, Safe and Dilated to make sure states are kept
+		AUINT32(tilingUsedForSaving->attributeArray())[i] = AUINT32(t->attributeArray())[i]&(device::StageTiling::Addressable 
+																						   | device::StageTiling::Active 
+																						   | device::StageTiling::Done
+																						   | device::StageTiling::Explorable
+																						   | device::StageTiling::TileError
+																						   | device::StageTiling::Explored
+																						   | device::StageTiling::Detected
+																						   | device::StageTiling::Safe
+																						   | device::StageTiling::Dilated);
 	}
 	bool Write_Image_Output = mylib::Write_Image(arrayFileName.toLocal8Bit().data(),tilingUsedForSaving->attributeArray(),mylib::DONT_PRESS); //DGA: Attempt to write out the image
 	delete tilingUsedForSaving; //DGA: Delete the new tiling 
