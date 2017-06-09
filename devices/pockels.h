@@ -151,7 +151,7 @@ class SimulatedPockels:public PockelsBase<cfg::device::SimulatedPockels>
       virtual int isValidOpenVolts(f64 volts);
       virtual int setOpenVolts(f64 volts);
       virtual int setOpenVoltsNoWait(f64 volts);
-      virtual f64 getOpenVolts() {return _config->val();}
+      virtual f64 getOpenVolts() {return _config->v_open();}
 
       virtual void computeVerticalBlankWaveform(float64 *data, int flyback, int n);
 

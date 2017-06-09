@@ -133,7 +133,7 @@ namespace device {
   int SimulatedPockels::setOpenVolts( f64 volts )
   {
     Config c = get_config();
-    c.set_val(volts);
+    c.set_v_open(volts);
     set_config(c);
     return 1;
   }
@@ -141,7 +141,7 @@ namespace device {
   int SimulatedPockels::setOpenVoltsNoWait( f64 volts )
   {
     Config c = get_config();
-    c.set_val(volts);
+    c.set_v_open(volts);
     return set_config_nowait(c);
   }
 

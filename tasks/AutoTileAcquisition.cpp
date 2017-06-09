@@ -249,8 +249,8 @@ Error:
 		CalibrationStack calibration_stack;
 
         while(!dc->_agent->is_stopping() && PlaneInBounds(dc,cfg.maxz_mm()))
-        { calibration_stack.config(dc);
-		  calibration_stack.run(dc);
+        { //calibration_stack.config(dc);
+		  //calibration_stack.run(dc);
           if(cfg.use_explore())
             CHKJMP(explore(dc));       // will return an error if no explorable tiles found on the plane
 		  CHKJMP(tile->config(dc));

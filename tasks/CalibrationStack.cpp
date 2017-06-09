@@ -119,14 +119,20 @@ Error:
 		  device::Pockels pockels2 = dc->scanner._scanner2d._pockels2;
 		  device::Pockels * pockelToTurnOn = &pockels1;
 		  device::Pockels * pockelToTurnOff = &pockels2;
+		  float minXYZ[3] = {0.5, 0.5, 8}, maxXYZ[3] = {0.5, 0.5, 8}; 
 		  if (pockels1.get_config().has_calibration_stack() || pockels2.get_config().has_calibration_stack())
 		  {
 			  if (!(pockels1.get_config().has_calibration_stack())) { pockelToTurnOn = &pockels2; pockelToTurnOff = &pockels1; }
 			  pos[0] = pockelToTurnOn->get_config().calibration_stack().target_mm().x();
 			  pos[1] = pockelToTurnOn->get_config().calibration_stack().target_mm().y();
 			  pos[2] = pockelToTurnOn->get_config().calibration_stack().target_mm().z();
-			 pockelToTurnOn->setOpenPercentNoWait(pockelToTurnOn->get_config().calibration_stack().v_open());
-			 pockelToTurnOff->setOpenPercentNoWait(0);
+			  // DGA: Make sure within appropriate range
+			  for (int i=0; i<3; i++){
+				  pos[i] = (pos[i] < minXYZ[i]) ? minXYZ[i] : (pos[i] > maxXYZ[i] ? maxXYZ[i] : pos[i]);
+			  }
+			  double temp = pockelToTurnOn->get_config().calibration_stack().v_open_percent();
+			  pockelToTurnOn->setOpenPercentNoWait(pockelToTurnOn->get_config().calibration_stack().v_open_percent());
+			  pockelToTurnOff->setOpenPercentNoWait(0);
 			  CHKJMP(dc->__scan_agent.is_runnable());
 			  CHKJMP(dc->stage()->setPos(pos)); // convert um to mm
 			  debug("%s(%d)"ENDL "\t[Calibration Stack Task] tilepos: %5.1f %5.1f %5.1f"ENDL, __FILE__, __LINE__, pos[0], pos[1], pos[2]);
@@ -173,6 +179,8 @@ Error:
 			  eflag |= dc->disk.close();
 			  dc->file_series.inc();               // increment regardless of completion status
 			  eflag |= dc->stopPipeline();         // wait till everything stops
+			  pockels1.setOpenPercent(pockels1.getOpenPercent());
+				  pockels2.setOpenPercent(pockels2.getOpenPercent());
 		  Error:
 			  return 0;
 		  }
