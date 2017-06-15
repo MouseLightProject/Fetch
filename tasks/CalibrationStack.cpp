@@ -1,7 +1,7 @@
 /**
   \file
-  Microscope task.  Acquire stacks for each marked tile in a plane.
-
+  Microscope task.  Take a calibration stack at specific xyz.
+  Copied/modified from AdaptiveTiledAcquisition.cpp by David Ackerman, otherwise:
   \author Nathan Clack <clackn@janelia.hhmi.org>
 
   \copyright
@@ -94,96 +94,96 @@ Error:
           return -1;
       }
 
+	  void reset_to_original_values( device::Microscope *dc, Vector3f curpos, float * original_pockels_v_open){ //DGA: Reset pockel values to their non-calibration-stack values and reset the stage position
+		  device::Pockels * pockels1 = &(dc->scanner._scanner2d._pockels1);
+		  device::Pockels * pockels2 = &(dc->scanner._scanner2d._pockels2);
+		  pockels1->setOpenPercentNoWait(original_pockels_v_open[0]);
+		  pockels2->setOpenPercentNoWait(original_pockels_v_open[1]);
+		  dc->stage()->setPos(curpos);
+	  }
+
+
 	  /**
       calibration_stack
 
-      Preconditions:
-      - tiles to explore have been labelled as such
-
       Parameters to get from configuration:
-      - dz_um:               zpiezo offset
-      - maxz                 stage units(mm)
-      - timeout_ms
-      - ichan:               channel to use for classification, -1 uses all channels
-      - intensity_threshold: use the expected pixel units
-      - area_threshold:      0 to 1. The fraction of pixels that must be brighter than intensity threshold.
+      - calibration_stack --> target --> x,y,z
+	  - calibration_stack --> v_open_percent
 
       \returns 0 if no tiles were targeted for imaging, otherwise 1.
       */
       unsigned int CalibrationStack::run(device::Microscope *dc)
 	  {
-		  Vector3f pos, curpos;
+		  Vector3f pos, curpos, minXYZ = {0.5, 0.5, 8}, maxXYZ = {100, 100, 45};
 		  unsigned int eflag = 0; // success
 		  std::string filename;
-		  device::Pockels pockels1 = dc->scanner._scanner2d._pockels1;
-		  device::Pockels pockels2 = dc->scanner._scanner2d._pockels2;
-		  device::Pockels * pockelToTurnOn = &pockels1;
-		  device::Pockels * pockelToTurnOff = &pockels2;
-		  float minXYZ[3] = {0.5, 0.5, 8}, maxXYZ[3] = {0.5, 0.5, 8}; 
-		  if (pockels1.get_config().has_calibration_stack() || pockels2.get_config().has_calibration_stack())
-		  {
-			  if (!(pockels1.get_config().has_calibration_stack())) { pockelToTurnOn = &pockels2; pockelToTurnOff = &pockels1; }
-			  pos[0] = pockelToTurnOn->get_config().calibration_stack().target_mm().x();
-			  pos[1] = pockelToTurnOn->get_config().calibration_stack().target_mm().y();
-			  pos[2] = pockelToTurnOn->get_config().calibration_stack().target_mm().z();
-			  // DGA: Make sure within appropriate range
-			  for (int i=0; i<3; i++){
-				  pos[i] = (pos[i] < minXYZ[i]) ? minXYZ[i] : (pos[i] > maxXYZ[i] ? maxXYZ[i] : pos[i]);
-			  }
-			  double temp = pockelToTurnOn->get_config().calibration_stack().v_open_percent();
-			  pockelToTurnOn->setOpenPercentNoWait(pockelToTurnOn->get_config().calibration_stack().v_open_percent());
-			  pockelToTurnOff->setOpenPercentNoWait(0);
-			  CHKJMP(dc->__scan_agent.is_runnable());
-			  CHKJMP(dc->stage()->setPos(pos)); // convert um to mm
-			  debug("%s(%d)"ENDL "\t[Calibration Stack Task] tilepos: %5.1f %5.1f %5.1f"ENDL, __FILE__, __LINE__, pos[0], pos[1], pos[2]);
-			  filename = dc->stack_filename();
-			  dc->file_series.ensurePathExists();
-			  dc->disk.set_nchan(dc->scanner.get2d()->digitizer()->nchan());
-			  eflag |= dc->disk.open(filename, "w");
-			  if (eflag)
-			  {
-				  warning("Couldn't open file: %s"ENDL, filename.c_str());
-				  return eflag;
-			  }
-
-			  eflag |= dc->runPipeline();
-			  eflag |= dc->__scan_agent.run() != 1;
-
-			  { // Wait for stack to finish
-				  HANDLE hs[] = {
-					  dc->__scan_agent._thread,
-					  dc->__self_agent._notify_stop };
-				  DWORD res;
-				  int   t;
-
-				  // wait for scan to complete (or cancel)
-				  res = WaitForMultipleObjects(2, hs, FALSE, INFINITE);
-				  t = _handle_wait_for_result(res, "CalibrationStack::run - Wait for scanner to finish.");
-				  switch (t)
-				  {
-				  case 0:                            // in this case, the scanner thread stopped.  Nothing left to do.
-					  eflag |= dc->__scan_agent.last_run_result(); // check the run result
-					  eflag |= dc->__io_agent.last_run_result();
-					  if (eflag == 0) // remove this if statement to mark tiles as "error" tiles.  In practice, it seems it's ok to go back and reimage, so the if statement stays
-						  //DGA: DO I NEED THIS      tiling->markDone(eflag==0);      // only mark the tile done if the scanner task completed normally
-				  case 1:                            // in this case, the stop event triggered and must be propagated.
-					  eflag |= dc->__scan_agent.stop(SCANNER2D_DEFAULT_TIMEOUT) != 1;
-					  break;
-				  default:                           // in this case, there was a timeout or abandoned wait
-					  eflag |= 1;                      // failure
-				  }
-			  } // end waiting block
-
-			  // Output and Increment files
-			  dc->write_stack_metadata();          // write the metadata
-			  eflag |= dc->disk.close();
-			  dc->file_series.inc();               // increment regardless of completion status
-			  eflag |= dc->stopPipeline();         // wait till everything stops
-			  pockels1.setOpenPercent(pockels1.getOpenPercent());
-				  pockels2.setOpenPercent(pockels2.getOpenPercent());
-		  Error:
-			  return 0;
+		  //DGA: Create points for pockelToTurnOn, pockelToTurnOff and pockels1 and pockels2
+		  device::Pockels * pockelToTurnOn, * pockelToTurnOff, * pockels1 = &(dc->scanner._scanner2d._pockels1), * pockels2 = &(dc->scanner._scanner2d._pockels2);
+		  curpos = dc->stage()->getPos();
+		  float original_pockels_v_open[2];
+		  original_pockels_v_open[0] = pockels1->getOpenPercent();
+		  original_pockels_v_open[1] = pockels2->getOpenPercent();
+		  //DGA: If pockels1 has a calibration stack then that one will be turned on
+		  if (!(pockels1->get_config().has_calibration_stack())) { pockelToTurnOn = pockels2; pockelToTurnOff = pockels1; }
+		  else{ pockelToTurnOn = pockels1; pockelToTurnOff = pockels2; }
+		  //DGA: Get position to take calibration stack and ensure it's within appropriate range
+		  pos[0] = pockelToTurnOn->get_config().calibration_stack().target_mm().x();
+		  pos[1] = pockelToTurnOn->get_config().calibration_stack().target_mm().y();
+		  pos[2] = pockelToTurnOn->get_config().calibration_stack().target_mm().z();
+		  for (int i = 0; i < 3; i++){
+			  pos[i] = (pos[i] < minXYZ[i]) ? minXYZ[i] : (pos[i] > maxXYZ[i] ? maxXYZ[i] : pos[i]);
 		  }
+		  //DGA: Set pockel percentages to appropriate values
+		  pockelToTurnOn->setOpenPercentNoWait(pockelToTurnOn->get_config().calibration_stack().v_open_percent());
+		  pockelToTurnOff->setOpenPercentNoWait(0);
+		  CHKJMP(dc->__scan_agent.is_runnable());
+		  CHKJMP(dc->stage()->setPos(pos));
+		  debug("%s(%d)"ENDL "\t[Calibration Stack Task] tilepos: %5.1f %5.1f %5.1f"ENDL, __FILE__, __LINE__, pos[0], pos[1], pos[2]);
+		  filename = dc->stack_filename();
+		  dc->file_series.ensurePathExists();
+		  dc->disk.set_nchan(dc->scanner.get2d()->digitizer()->nchan());
+		  eflag |= dc->disk.open(filename, "w");
+		  if (eflag)
+		  {
+			  warning("Couldn't open file: %s"ENDL, filename.c_str());
+			  return eflag;
+		  }
+
+		  eflag |= dc->runPipeline();
+		  eflag |= dc->__scan_agent.run() != 1;
+
+		  { // Wait for stack to finish
+			  HANDLE hs[] = {
+				  dc->__scan_agent._thread,
+				  dc->__self_agent._notify_stop };
+			  DWORD res;
+			  int   t;
+
+			  // wait for scan to complete (or cancel)
+			  res = WaitForMultipleObjects(2, hs, FALSE, INFINITE);
+			  t = _handle_wait_for_result(res, "CalibrationStack::run - Wait for scanner to finish.");
+			  switch (t)
+			  {
+			  case 0:                            // in this case, the scanner thread stopped.  Nothing left to do.
+				  eflag |= dc->__scan_agent.last_run_result(); // check the run result
+				  eflag |= dc->__io_agent.last_run_result();
+			  case 1:                            // in this case, the stop event triggered and must be propagated.
+				  eflag |= dc->__scan_agent.stop(SCANNER2D_DEFAULT_TIMEOUT) != 1;
+				  break;
+			  default:                           // in this case, there was a timeout or abandoned wait
+				  eflag |= 1;                      // failure
+			  }
+		  } // end waiting block
+
+		  // Output and Increment files
+		  dc->write_stack_metadata();          // write the metadata
+		  eflag |= dc->disk.close();
+		  dc->file_series.inc();               // increment regardless of completion status
+		  eflag |= dc->stopPipeline();         // wait till everything stops
+		  reset_to_original_values(dc, curpos, original_pockels_v_open); //DGA: Reset to original values
+	  Error:
+		  reset_to_original_values(dc, curpos, original_pockels_v_open); //DGA: Reset to original values
+		  return 0;
 	  }
 
     } // namespace microscope

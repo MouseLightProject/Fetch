@@ -244,13 +244,17 @@ Error:
         MicroscopeTask *tile=0;
         Cut cut;
 		device::StageTiling * tiling = dc->stage()->tiling(); //DGA: Pointer to tiling object
+		device::Pockels * pockels1 = &(dc->scanner._scanner2d._pockels1), * pockels2 = &(dc->scanner._scanner2d._pockels2);
 
         tile=cfg.use_adaptive_tiling()?((MicroscopeTask*)&adaptive_tiling):((MicroscopeTask*)&nonadaptive_tiling);
 		CalibrationStack calibration_stack;
-
-        while(!dc->_agent->is_stopping() && PlaneInBounds(dc,cfg.maxz_mm()))
-        { //calibration_stack.config(dc);
-		  //calibration_stack.run(dc);
+		while (!dc->_agent->is_stopping() && PlaneInBounds(dc, cfg.maxz_mm()))
+		{
+		  if (pockels1->get_config().has_calibration_stack() || pockels2->get_config().has_calibration_stack()) //DGA: If one of the pockels has the calibration stack set
+		  {
+			CHKJMP(calibration_stack.config(dc));//DGA: Make sure no errors occur
+			CHKJMP(0==calibration_stack.run(dc));
+		  }
           if(cfg.use_explore())
             CHKJMP(explore(dc));       // will return an error if no explorable tiles found on the plane
 		  CHKJMP(tile->config(dc));

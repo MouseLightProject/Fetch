@@ -100,13 +100,6 @@ scanner3d {
       }
       simulated {
       }
-      calibration_stack {
-      v_open_percent: 0.5
-      target_mm{
-        x: 3
-        y: 3
-        z: 3
-      }
     }
     pockels {
       kind: Simulated
@@ -128,13 +121,12 @@ scanner3d {
       simulated {
       }
       calibration_stack {
-        v_open_percent: 0.5
+        v_open_percent: 0.75
         target_mm{
-          x: 3
-          y: 3
-          z: 3
+         x: 3
+         y: 3
+         z: 3
         }
-
       }
     }
     shutter {
@@ -172,9 +164,9 @@ scanner3d {
     }
     simulated {
     }
-    um_max: 5
+    um_max: 250
     um_min: 0
-    um_step: 0.005
+    um_step: 50
   }
   zref_um: 0
 }
@@ -206,50 +198,89 @@ stage {
     }
     axis {
       min_mm: 0
-      max_mm: 12.5
+      max_mm: 15
     }
   }
   last_target_mm {
     x: 0.5
     y: 0.5
-    z: 8
+    z: 1
   }
   tilemode: PixelAligned
+  tile_z_offset_mm: 0
 }
 vibratome {
   kind: Simulated
   serial {
   }
+  simulated {
+  }
   feed_axis: X
+  cut_thickness_um: 150
+    geometry {
+    dz_mm: 0.123
+  }
+  backup_distance_mm: 1.3
 }
 fov {
-  x_size_um: 500
-  y_size_um: 400
-  z_size_um: 400
+  x_size_um: 256
+  y_size_um: 512
+  z_size_um: 250
   x_overlap_um: 20
   y_overlap_um: 20
-  rotation_radians: 0.2
+  z_overlap_um: 100
+  rotation_radians: 0
 }
 pipeline {
+  frame_average_count: 1
+  downsample_count: 1
+  invert_intensity: false
 }
 file_series {
-  root: "D:\\temp"
-  date: "2017-06-09"
-  seriesno: 29
+  root: "C:\\FetchTemp"
+  date: "2016-08-30"
   pathsep: "\\"
 }
 file_prefix: "derp"
 stack_extension: ".tif"
 config_extension: ".microscope"
 autotile {
+  z_um: 150
+  maxz_mm: 12.5
+  timeout_ms: 15000
+  ichan: 0
+  intensity_threshold: 15700
+  area_threshold: 0.1
+  search_radius: 2
+  use_adaptive_tiling: true
+  use_explore: true
 }
 surface_probe {
+  simulated {
+  }
 }
 surface_scan {
 }
 surface_find {
+  backup_frac: 0.6
+  max_backup_um: 100
+  max_raise_um: 60
+  min_um: 0
+  max_um: 1
+  dz_um: 0.01
+  ichan: 0
+  intensity_threshold: 20000
+  area_threshold: 0.1
+  offset_um: 0
+}
+adaptive_tiling {
+  every: 2
+  mindist: 3
+  initial_distance_from_surface_um: -20
 }
 trip_detect {
 }
 pmt {
+  simulated {
+  }
 }

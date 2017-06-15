@@ -1,7 +1,8 @@
 /** 
   \file
-  Microscope task.  Acquire stacks for each marked tile in a plane.
+  Microscope task.  Take a calibration stack at specific xyz.
 
+  Copied/modified from AdaptiveTiledAcquisition.h by David Ackerman, otherwise:
   \author Nathan Clack <clackn@janelia.hhmi.org> (DGA)
 
   \copyright
@@ -34,8 +35,6 @@ namespace fetch
 
       class CalibrationStack : public MicroscopeTask
       {        
-        typedef device::Stage::TilePosList::iterator TileIterator;
-        TileIterator _cursor;
         public:
           unsigned int config(IDevice *d);
           unsigned int    run(IDevice *d);

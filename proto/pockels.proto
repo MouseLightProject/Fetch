@@ -22,9 +22,9 @@ message SimulatedPockels
 }
 
 message Target3d //DGA added for use as target position
-{ optional float x = 1 [default=1.0];
-  optional float y = 2 [default=1.0];
-  optional float z = 3 [default=1.0];
+{ optional float x = 1 [default=10.0];
+  optional float y = 2 [default=10.0];
+  optional float z = 3 [default=10.0];
 }
 
 message CalibrationStack //DGA added to allow for taking a calibration stack at specific x y and z
