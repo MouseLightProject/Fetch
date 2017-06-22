@@ -27,6 +27,10 @@ namespace ui{
 	scheduleStopAfterNextCutCheckBox->setText("Schedule Stop After Next Cut"); //DGA: Set the text then add the checkbox so that is aligned properly with other widgets
 	form->addRow("", scheduleStopAfterNextCutCheckBox);
 
+	QCheckBox * acquireCalibrationStackCheckBox = parent->_microscopeController->createAcquireCalibrationStackCheckBox(); //DGA: create acquireCalibrationStackCheckBox
+	acquireCalibrationStackCheckBox->setText("Acquire Calibration Stack"); //DGA: Set the text then add the checkbox so that is aligned properly with other widgets
+	form->addRow("", acquireCalibrationStackCheckBox);
+
     AgentControllerButtonPanel *btns = new AgentControllerButtonPanel(&parent->_scope_state_controller,&dc->auto_tile_task);
     form->addRow(btns);
   }

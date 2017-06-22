@@ -169,13 +169,17 @@ namespace fetch
 
 	  bool getScheduleStopAfterNextCut() {return scheduleStopAfterNextCut_;}; //DGA: Getter for scheduleStopAfterNextCut_
 	  void setScheduleStopAfterNextCut(bool setValue); //DGA: Function setter prototype for scheduleStopAfterNextCut_
+
+	  bool getAcquireCalibrationStack() {return acquireCalibrationStack_;}; //DGA: Getter for acquireCalibrationStack_
+	  void setAcquireCalibrationStack(bool setValue); //DGA: Function setter prototype for acquireCalibrationStack_
+
 	  void cutCompletedSoStop()          {cutCompletedSoStopSignaler.signaler();}; //DGA: Function to call signaler which stops the task
     public:
       FileSeries file_series;
 
     public:
       IDevice* _end_of_pipeline;
-	  ui::simpleSignalerClass skipSurfaceFindOnImageResumeCheckBoxUpdater, scheduleStopAfterNextCutCheckBoxUpdater, cutCompletedSoStopSignaler; //DGA: Updater for skipSurfaceFindOnImageResumeCheckBox, scheduleStopAfterNextCutCheckBox and signaler for cutCompletedSoStop
+	  ui::simpleSignalerClass skipSurfaceFindOnImageResumeCheckBoxUpdater, scheduleStopAfterNextCutCheckBoxUpdater, cutCompletedSoStopSignaler, acquireCalibrationStackCheckBoxUpdater; //DGA: Updater for skipSurfaceFindOnImageResumeCheckBox, scheduleStopAfterNextCutCheckBox, acquireCalibrationStackCheckBox and signaler for cutCompletedSoStop
 
       Agent __self_agent;
       Agent __scan_agent;
@@ -183,7 +187,7 @@ namespace fetch
       Agent __vibratome_agent;
 
 	private:
-		bool skipSurfaceFindOnImageResume_, scheduleStopAfterNextCut_; //DGA: Private variables storing whether or not to skip surface find or schedule a stop
+		bool skipSurfaceFindOnImageResume_, scheduleStopAfterNextCut_, acquireCalibrationStack_; //DGA: Private variables storing whether or not to skip surface find or schedule a stop or acquire a calibration stack
     };
     //end namespace fetch::device
   }

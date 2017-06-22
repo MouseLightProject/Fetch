@@ -250,7 +250,7 @@ Error:
 		CalibrationStack calibration_stack;
 		while (!dc->_agent->is_stopping() && PlaneInBounds(dc, cfg.maxz_mm()))
 		{
-		  if (pockels1->get_config().has_calibration_stack() || pockels2->get_config().has_calibration_stack()) //DGA: If one of the pockels has the calibration stack set
+		  if ( (pockels1->get_config().has_calibration_stack() || pockels2->get_config().has_calibration_stack()) && dc->getAcquireCalibrationStack()) //DGA: If one of the pockels has the calibration stack set and a calibration stack should be acquired
 		  {
 			CHKJMP(calibration_stack.config(dc));//DGA: Make sure no errors occur
 			CHKJMP(0==calibration_stack.run(dc));
