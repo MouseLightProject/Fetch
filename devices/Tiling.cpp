@@ -58,8 +58,7 @@ namespace device {
       travel_(travel),
       lock_(0),
       mode_(alignment),
-	  useTwoDimensionalTiling_(useTwoDimensionalTiling), //DGA: Added initialization of useTwoDimensionalTiling_
-	  didTileDilationForThisSlice_(false)				 //DGA: Added initialization of didTileDilationForThisSlice_
+	  useTwoDimensionalTiling_(useTwoDimensionalTiling) //DGA: Added initialization of useTwoDimensionalTiling_
   {
     PANIC(lock_=Mutex_Alloc());
     computeLatticeToStageTransform_(fov,alignment);
@@ -424,7 +423,7 @@ namespace device {
     { unlock(); // FIXME: possible race condition
       fillHoles(iplane,Detected);
       if(ctx->radius)
-        dilate(iplane,ctx->radius,Detected,Explorable,0);
+        dilate(iplane,ctx->radius,Detected,Explorable,0,0,Safe); //DGA: Added Safe to make sure that the tiles aren't dilated into nonsafe regions. Just for aesthetics
       lock();    
       ctx->set_outline_mode(false);
     }
@@ -621,11 +620,12 @@ DoneOutlining:
 
   //  markUserReset  /////////////////////////////////////////////////////
   //
+	
   void StageTiling::markUserReset()
   { uint32_t *m=0;
     { AutoLock lock(lock_);
       m = AUINT32(attr_) + cursor_;
-      *m &= ~( Active|Detected|Explored|Explorable|Safe|Done );
+	  *m &= ~( Active|Detected|Explored|Explorable|Safe|Done|TileError|OffsetMeasured|Dilated); //DGA: Added TileError, OffsetMeasured, Dilated
     }
     notifyDone(cursor_,*m);
   }
@@ -820,7 +820,7 @@ DoneOutlining:
   #define countof(e) (sizeof(e)/sizeof(*e))
   /** Mark tiles as Active if they are 8-connected to an Active tile. */
   void StageTiling::dilateActive(size_t iplane)
-  { dilate(iplane,1,Active,Active,1 /*restrict to explorable */);
+  { dilate(iplane,1,Active|Safe,(Active|Dilated),1 /*restrict to explorable */,Dilated /*DGA: exclude tiles that have alread been dilated*/, Safe /*DGA: make sure to only dilate into safe tiles*/);
   }
 
   // dilate         //////////////////////////////////////////////////////
@@ -829,7 +829,7 @@ DoneOutlining:
   // Optionally restricts dilation to explorable tiles.
   //
   //
-  void StageTiling::dilate(size_t iplane, int n, StageTiling::Flags query_flag, StageTiling::Flags write_flag, int explorable_only)
+  void StageTiling::dilate(size_t iplane, int n,  uint16_t query_flag, uint16_t write_flag, int explorable_only, uint16_t exclude_flag, uint16_t valid_flag)
   {
     setCursorToPlane(iplane); // FIXME: chance for another thread to change the cursor...recursive locks not allowed
     AutoLock lock(lock_);
@@ -849,7 +849,7 @@ DoneOutlining:
                    lblmask  = Addressable|MAYBE_EXPLORABLE;                          // lblmask selects for valid write points
 #undef MAYBE_EXPLORABLE
     for(c=beg;c<end;++c)                             // mark original active tiles as reserved
-      *c |= ((*c&query_flag)==query_flag)*Reserved;  // this way only the originally labelled tiles will be dilated from
+      *c |= ((*c&query_flag)==query_flag && (*c&exclude_flag)==0)*Reserved;  // this way only the originally labelled tiles will be dilated from, DGA: and it excludes any that match the exclude_flag
     while(n-->0)
     { for(y=0;y<h;++y)
       { unsigned rowmask = ((y==0)*top)|((y==h-1)*bot);
@@ -861,7 +861,7 @@ DoneOutlining:
             for(j=0;j<countof(offsets);++j)
               if(  (mask&masks[j])==0              // is neighbor in bounds
                 && (c[offsets[j]]&attrmask)==attr) // query neighbor attribute for match
-              { *c|=(write_flag|Reserved2); break;
+			  { if ((*c&valid_flag)==valid_flag) { *c|=(write_flag|Reserved2); break; } //DGA: Ensure that tiles that are going to be dilated are valid
               }
         }
       }
