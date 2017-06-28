@@ -6,7 +6,7 @@ namespace fetch{
 		struct channelHistogramInformationStruct{
 			double minValue=0, maxValue=65535;
 			bool autoscale=true, displayChannel=true;
-			double undersaturatedPercentile=0.1, oversaturatedPercentile=0.9;
+			double undersaturatedPercentile=0.05, oversaturatedPercentile=0.9999;
 		};
 	}
 }
