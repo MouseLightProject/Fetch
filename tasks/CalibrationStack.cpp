@@ -127,9 +127,10 @@ Error:
 		  if (!(pockels1->get_config().has_calibration_stack())) { pockelToTurnOn = pockels2; pockelToTurnOff = pockels1; }
 		  else{ pockelToTurnOn = pockels1; pockelToTurnOff = pockels2; }
 		  //DGA: Get position to take calibration stack and ensure it's within appropriate range
-		  pos[0] = pockelToTurnOn->get_config().calibration_stack().target_mm().x();
-		  pos[1] = pockelToTurnOn->get_config().calibration_stack().target_mm().y();
-		  pos[2] = pockelToTurnOn->get_config().calibration_stack().target_mm().z();
+		  int target_num_el = pockelToTurnOn->get_config().calibration_stack().target_mm_size();
+		  pos[0] = pockelToTurnOn->get_config().calibration_stack().target_mm(0).x();
+		  pos[1] = pockelToTurnOn->get_config().calibration_stack().target_mm(0).y();
+		  pos[2] = pockelToTurnOn->get_config().calibration_stack().target_mm(0).z();
 		  for (int i = 0; i < 3; i++){
 			  pos[i] = (pos[i] < minXYZ[i]) ? minXYZ[i] : (pos[i] > maxXYZ[i] ? maxXYZ[i] : pos[i]);
 		  }
