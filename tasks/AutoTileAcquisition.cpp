@@ -197,7 +197,7 @@ Error:
       { Vector3f tilepos;
         unsigned any_explorable=0,
                  any_active=0;
-        cfg::tasks::AutoTile cfg=dc->get_config().autotile();
+		cfg::tasks::AutoTile cfg=dc->get_config().autotile();
         size_t iplane=dc->stage()->getPosInLattice().z();
 
         device::StageTiling* tiling = dc->stage()->tiling();
@@ -223,7 +223,6 @@ Error:
 		  }
           mylib::Free_Array(im);
         }
-		any_explorable ? tiling->didTileDilationForThisSlice_ = false : tiling->didTileDilationForThisSlice_ = true; //DGA: Reset didTileDilationForThisSlice_ based on whether any tiles were explorable
         if(!tiling->updateActive(iplane))
         { WARN("No tiles found to image.\n");
           goto Error;
