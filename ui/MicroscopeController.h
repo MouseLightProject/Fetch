@@ -18,10 +18,12 @@ namespace ui {
 
 	 QCheckBox * createSkipSurfaceFindOnImageResumeCheckBox(QWidget * parent=0); //DGA: Function to create skip surface find checkbox, which takes in parent, a pointer to type QWidget, defaulted to 0
 	 QCheckBox * createScheduleStopAfterNextCutCheckBox(QWidget * parent=0); //DGA: Function to create scheduled stop checkbox, which takes in parent, a pointer to type QWidget, defaulted to 0
+	 QCheckBox * createAcquireCalibrationStackCheckBox(QWidget * parent = 0); //DGA: Function to create acquire calibration stack checkbox, which takes in parent, a pointer to type QWidget, defaulted to 0
 
    public slots: 
      void setSkipSurfaceFindOnImageResume(bool); //DGA: slot to be called when need to set skipSurfaceFindOnImageResume_ in microscope_
 	 void setScheduleStopAfterNextCut(bool); //DGA: slot to be called when need to set scheduleStopAfterNextCut_ in microscope_
+	 void setAcquireCalibrationStack(bool); //DGA: slot to be called when need to set acquireCalibrationStack_ in microscope_
   };
 
 }} //end fetch::ui

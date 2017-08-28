@@ -107,9 +107,7 @@ namespace microscope {
 	// get current pos,vel
     CHK( dc->stage()->getTarget(&cx,&cy,&cz));
     CHK( dc->stage()->getVelocity(&vx,&vy,&vz));
-	dc->vibratome()->backupDistanceMm(); //DGA: The desired backup distance, desired because it might not be able to backup that far
-	float backupDistance_mm = (dc->vibratome()->backupDistanceMm() > dc->vibratome()->minimumDropDistance_mm) ? dc->vibratome()->backupDistanceMm() : dc->vibratome()->minimumDropDistance_mm; //DGA: Ensure the stage is dropped by at least the minimum amount
-	float actualZHeightToDropTo_mm = ((cz - backupDistance_mm) > dc->vibratome()->minimumSafeZHeightToDropTo_mm) ? (cz - backupDistance_mm) : dc->vibratome()->minimumSafeZHeightToDropTo_mm ; //DGA: The actual z height to drop to should be at a minimum 8 mm
+	float actualZHeightToDropTo_mm = dc->safeZtoLowerTo_mm(cz); //DGA: The actual z height to drop to is based on the desired backup set in microscope and should be at a minimum 8 mm
 
     // Get parameters
     dc->vibratome()->feed_begin_pos_mm(&ax,&ay);
@@ -121,10 +119,9 @@ namespace microscope {
 	CHK( (v = dc->vibratome()->feed_vel_mm_p_s())>0.0); // must be non-zero
 
     // Move to the start of the cut
-    bz = cz-dz+thick + (thicknessCorrection);		// DGA: cut z position = Current Z - delta Z offset + requested slice thickness ( + thickness correction); the first subtraction gets the blade to the top of the sample
-    CHK( dc->stage()->setPos(cx,cy,actualZHeightToDropTo_mm));           // Drop to safe z first
-    CHK( dc->stage()->setPos(ax,ay,actualZHeightToDropTo_mm));           // Move on safe z plane to cut position
-    CHK( dc->stage()->setPos(ax,ay,bz));            // Move to final plane (bz)
+	bz = cz - dz + thick + (thicknessCorrection);		// DGA: cut z position = Current Z - delta Z offset + requested slice thickness ( + thickness correction); the first subtraction gets the blade to the top of the sample
+	Vector3f finalCutPosition = {ax, ay, bz};
+	CHK(dc->moveToNewPosThroughSafeZ(finalCutPosition));
 
     // do the cut
     unsigned feedaxis=dc->vibratome()->getFeedAxis();

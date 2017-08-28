@@ -120,6 +120,14 @@ scanner3d {
       }
       simulated {
       }
+      calibration_stack {
+        v_open_percent: 0.75
+        target_mm{
+         x: 3
+         y: 3
+         z: 3
+        }
+      }
     }
     shutter {
       kind: Simulated
@@ -212,7 +220,6 @@ vibratome {
     geometry {
     dz_mm: 0.123
   }
-  backup_distance_mm: 1.3
 }
 fov {
   x_size_um: 256
@@ -276,3 +283,4 @@ pmt {
   simulated {
   }
 }
+backup_distance_mm: 1.3

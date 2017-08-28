@@ -94,6 +94,7 @@ Error:
           return -1;
       }
 
+	  
       unsigned int AdaptiveTiledAcquisition::run(device::Microscope *dc)
       {
         SurfaceFind surface_find;
