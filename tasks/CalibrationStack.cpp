@@ -129,59 +129,61 @@ Error:
 		  else{ pockelToTurnOn = pockels1; pockelToTurnOff = pockels2; }
 		  //DGA: Get position to take calibration stack and ensure it's within appropriate range
 		  int target_num_el = pockelToTurnOn->get_config().calibration_stack().target_mm_size();
-		  pos[0] = pockelToTurnOn->get_config().calibration_stack().target_mm(0).x();
-		  pos[1] = pockelToTurnOn->get_config().calibration_stack().target_mm(0).y();
-		  pos[2] = pockelToTurnOn->get_config().calibration_stack().target_mm(0).z();
-		  for (int i = 0; i < 3; i++){
-			  pos[i] = (pos[i] < minXYZ[i]) ? minXYZ[i] : (pos[i] > maxXYZ[i] ? maxXYZ[i] : pos[i]);
-		  }
-		  CHKJMP(dc->__scan_agent.is_runnable());
-		  CHKJMP(dc->moveToNewPosThroughSafeZ(pos));
-		  //DGA: Set pockel percentages to appropriate values
-		  CHKJMP(pockelToTurnOn->setOpenPercentNoWait(pockelToTurnOn->get_config().calibration_stack().v_open_percent()));
-		  CHKJMP(pockelToTurnOff->setOpenPercentNoWait(0));
-		  debug("%s(%d)"ENDL "\t[Calibration Stack Task] tilepos: %5.1f %5.1f %5.1f"ENDL, __FILE__, __LINE__, pos[0], pos[1], pos[2]);
-		  filename = dc->stack_filename();
-		  dc->file_series.ensurePathExists();
-		  dc->disk.set_nchan(dc->scanner.get2d()->digitizer()->nchan());
-		  eflag |= dc->disk.open(filename, "w");
-		  if (eflag)
-		  {
-			  warning("Couldn't open file: %s"ENDL, filename.c_str());
-			  return eflag;
-		  }
-
-		  eflag |= dc->runPipeline();
-		  eflag |= dc->__scan_agent.run() != 1;
-
-		  { // Wait for stack to finish
-			  HANDLE hs[] = {
-				  dc->__scan_agent._thread,
-				  dc->__self_agent._notify_stop };
-			  DWORD res;
-			  int   t;
-
-			  // wait for scan to complete (or cancel)
-			  res = WaitForMultipleObjects(2, hs, FALSE, INFINITE);
-			  t = _handle_wait_for_result(res, "CalibrationStack::run - Wait for scanner to finish.");
-			  switch (t)
-			  {
-			  case 0:                            // in this case, the scanner thread stopped.  Nothing left to do.
-				  eflag |= dc->__scan_agent.last_run_result(); // check the run result
-				  eflag |= dc->__io_agent.last_run_result();
-			  case 1:                            // in this case, the stop event triggered and must be propagated.
-				  eflag |= dc->__scan_agent.stop(SCANNER2D_DEFAULT_TIMEOUT) != 1;
-				  break;
-			  default:                           // in this case, there was a timeout or abandoned wait
-				  eflag |= 1;                      // failure
+		  for (int i = 0; i < target_num_el ; i++){
+			  pos[0] = pockelToTurnOn->get_config().calibration_stack().target_mm(0).x();
+			  pos[1] = pockelToTurnOn->get_config().calibration_stack().target_mm(0).y();
+			  pos[2] = pockelToTurnOn->get_config().calibration_stack().target_mm(0).z();
+			  for (int i = 0; i < 3; i++){
+				  pos[i] = (pos[i] < minXYZ[i]) ? minXYZ[i] : (pos[i] > maxXYZ[i] ? maxXYZ[i] : pos[i]);
 			  }
-		  } // end waiting block
+			  CHKJMP(dc->__scan_agent.is_runnable());
+			  CHKJMP(dc->moveToNewPosThroughSafeZ(pos));
+			  //DGA: Set pockel percentages to appropriate values
+			  CHKJMP(pockelToTurnOn->setOpenPercentNoWait(pockelToTurnOn->get_config().calibration_stack().v_open_percent()));
+			  CHKJMP(pockelToTurnOff->setOpenPercentNoWait(0));
+			  debug("%s(%d)"ENDL "\t[Calibration Stack Task] tilepos: %5.1f %5.1f %5.1f"ENDL, __FILE__, __LINE__, pos[0], pos[1], pos[2]);
+			  filename = dc->stack_filename();
+			  dc->file_series.ensurePathExists();
+			  dc->disk.set_nchan(dc->scanner.get2d()->digitizer()->nchan());
+			  eflag |= dc->disk.open(filename, "w");
+			  if (eflag)
+			  {
+				  warning("Couldn't open file: %s"ENDL, filename.c_str());
+				  return eflag;
+			  }
 
-		  // Output and Increment files
-		  dc->write_stack_metadata();          // write the metadata
-		  eflag |= dc->disk.close();
-		  dc->file_series.inc();               // increment regardless of completion status
-		  eflag |= dc->stopPipeline();         // wait till everything stops
+			  eflag |= dc->runPipeline();
+			  eflag |= dc->__scan_agent.run() != 1;
+
+			  { // Wait for stack to finish
+				  HANDLE hs[] = {
+					  dc->__scan_agent._thread,
+					  dc->__self_agent._notify_stop };
+				  DWORD res;
+				  int   t;
+
+				  // wait for scan to complete (or cancel)
+				  res = WaitForMultipleObjects(2, hs, FALSE, INFINITE);
+				  t = _handle_wait_for_result(res, "CalibrationStack::run - Wait for scanner to finish.");
+				  switch (t)
+				  {
+				  case 0:                            // in this case, the scanner thread stopped.  Nothing left to do.
+					  eflag |= dc->__scan_agent.last_run_result(); // check the run result
+					  eflag |= dc->__io_agent.last_run_result();
+				  case 1:                            // in this case, the stop event triggered and must be propagated.
+					  eflag |= dc->__scan_agent.stop(SCANNER2D_DEFAULT_TIMEOUT) != 1;
+					  break;
+				  default:                           // in this case, there was a timeout or abandoned wait
+					  eflag |= 1;                      // failure
+				  }
+			  } // end waiting block
+
+			  // Output and Increment files
+			  dc->write_stack_metadata();          // write the metadata
+			  eflag |= dc->disk.close();
+			  dc->file_series.inc();               // increment regardless of completion status
+			  eflag |= dc->stopPipeline();         // wait till everything stops
+		  }
 		  CHKJMP(reset_to_original_values(dc, curpos, original_pockels_v_open)); //DGA: Reset to original values
 		  return eflag;
 	  Error:
