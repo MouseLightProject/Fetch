@@ -220,7 +220,6 @@ vibratome {
     geometry {
     dz_mm: 0.123
   }
-  backup_distance_mm: 1.3
 }
 fov {
   x_size_um: 256
@@ -284,3 +283,4 @@ pmt {
   simulated {
   }
 }
+backup_distance_mm: 1.3

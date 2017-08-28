@@ -41,6 +41,9 @@ namespace fetch
 
           unsigned int config(device::Microscope *agent);
           unsigned int    run(device::Microscope *agent);
+
+	  private:
+		  Vector3f minXYZ = {0.5, 0.5, 8}, maxXYZ = {100, 100, 45};
       };
 
     }  // namespace microscope

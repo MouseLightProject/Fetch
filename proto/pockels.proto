@@ -29,7 +29,7 @@ message Target3d //DGA added for use as target position
 
 message CalibrationStack //DGA added to allow for taking a calibration stack at specific x y and z
 {
-  optional  double    v_open_percent      = 1 [default=0.0];          // control voltage when pockels is maximally transmissive
+  optional double    v_open_percent      = 1 [default=0.0];          // control voltage when pockels is maximally transmissive
   repeated Target3d  target_mm   = 2;                        // DGA used as the target x,y and z postion      
 }
 message Pockels

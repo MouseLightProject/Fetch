@@ -94,14 +94,15 @@ Error:
           return -1;
       }
 
-	  void reset_to_original_values( device::Microscope *dc, Vector3f curpos, float * original_pockels_v_open){ //DGA: Reset pockel values to their non-calibration-stack values and reset the stage position
+	  unsigned int reset_to_original_values( device::Microscope *dc, Vector3f curpos, float * original_pockels_v_open){ //DGA: Reset pockel values to their non-calibration-stack values and reset the stage position
 		  device::Pockels * pockels1 = &(dc->scanner._scanner2d._pockels1);
 		  device::Pockels * pockels2 = &(dc->scanner._scanner2d._pockels2);
-		  pockels1->setOpenPercentNoWait(original_pockels_v_open[0]);
-		  pockels2->setOpenPercentNoWait(original_pockels_v_open[1]);
-		  dc->stage()->setPos(curpos);
+		  CHKJMP(pockels1->setOpenPercentNoWait(original_pockels_v_open[0]));
+		  CHKJMP(pockels2->setOpenPercentNoWait(original_pockels_v_open[1]));
+		  dc->moveToNewPosThroughSafeZ(curpos);
+	  Error:
+		  return 0;
 	  }
-
 
 	  /**
       calibration_stack
@@ -113,8 +114,8 @@ Error:
       \returns 0 if no tiles were targeted for imaging, otherwise 1.
       */
       unsigned int CalibrationStack::run(device::Microscope *dc)
-	  {
-		  Vector3f pos, curpos, minXYZ = {0.5, 0.5, 8}, maxXYZ = {100, 100, 45};
+	  {   
+		  Vector3f pos, curpos;
 		  unsigned int eflag = 0; // success
 		  std::string filename;
 		  //DGA: Create points for pockelToTurnOn, pockelToTurnOff and pockels1 and pockels2
@@ -134,11 +135,11 @@ Error:
 		  for (int i = 0; i < 3; i++){
 			  pos[i] = (pos[i] < minXYZ[i]) ? minXYZ[i] : (pos[i] > maxXYZ[i] ? maxXYZ[i] : pos[i]);
 		  }
-		  //DGA: Set pockel percentages to appropriate values
-		  pockelToTurnOn->setOpenPercentNoWait(pockelToTurnOn->get_config().calibration_stack().v_open_percent());
-		  pockelToTurnOff->setOpenPercentNoWait(0);
 		  CHKJMP(dc->__scan_agent.is_runnable());
-		  CHKJMP(dc->stage()->setPos(pos));
+		  CHKJMP(dc->moveToNewPosThroughSafeZ(pos));
+		  //DGA: Set pockel percentages to appropriate values
+		  CHKJMP(pockelToTurnOn->setOpenPercentNoWait(pockelToTurnOn->get_config().calibration_stack().v_open_percent()));
+		  CHKJMP(pockelToTurnOff->setOpenPercentNoWait(0));
 		  debug("%s(%d)"ENDL "\t[Calibration Stack Task] tilepos: %5.1f %5.1f %5.1f"ENDL, __FILE__, __LINE__, pos[0], pos[1], pos[2]);
 		  filename = dc->stack_filename();
 		  dc->file_series.ensurePathExists();
@@ -181,9 +182,10 @@ Error:
 		  eflag |= dc->disk.close();
 		  dc->file_series.inc();               // increment regardless of completion status
 		  eflag |= dc->stopPipeline();         // wait till everything stops
-		  reset_to_original_values(dc, curpos, original_pockels_v_open); //DGA: Reset to original values
+		  CHKJMP(reset_to_original_values(dc, curpos, original_pockels_v_open)); //DGA: Reset to original values
+		  return eflag;
 	  Error:
-		  reset_to_original_values(dc, curpos, original_pockels_v_open); //DGA: Reset to original values
+		  CHKJMP(reset_to_original_values(dc, curpos, original_pockels_v_open)); //DGA: Reset to original values
 		  return 0;
 	  }
 
