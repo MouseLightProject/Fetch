@@ -102,6 +102,12 @@ namespace microscope {
 
   unsigned int Cut::run(device::Microscope* dc)
   {
+    if(dc->cutButtonWasPressed) {
+		if (dc->vibratome()->verticalOffset() != 0){
+			warning("[Vibratome] [Task: Cut] Offset is not 0"ENDL);
+		}
+	}
+
     float cx,cy,cz,vx,vy,vz,ax,ay,bx,by,bz,v,dz,thick, thicknessCorrection; //DGA: Added thicknessCorrection float
 	
 	// get current pos,vel

@@ -108,6 +108,7 @@ public: // semi-private
   // Property controllers
   ResonantTurnController       *_resonant_turn_controller;
   LinesController              *_vlines_controller;
+  FrameAverageCountController  *_frame_average_count_controller;
   LSMVerticalRangeController   *_lsm_vert_range_controller;
   PockelsController            *_pockels_controllers[2];
   VibratomeAmplitudeController *_vibratome_amp_controller;
@@ -134,6 +135,8 @@ public: // semi-private
   AutoTileTimeoutMsController          *_autotile_timeoutms_control;
   AutoTileChanController               *_autotile_chan_control;
   AutoTileIntensityThresholdController *_autotile_intensity_thresh_control;
+  SurfaceFindIntensityThresholdController *_surface_find_intensity_thresh_control;
+
   AutoTileAreaThresholdController      *_autotile_area_thresh_control;
 
   QFileSystemWatcher           *_config_watcher;

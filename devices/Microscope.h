@@ -192,6 +192,7 @@ namespace fetch
       Agent __io_agent;
       Agent __vibratome_agent;
 	  float    minimumBackupDistance_mm = 0.5, minimumSafeZHeightToDropTo_mm = 8;
+	  bool cutButtonWasPressed = true;
 
 	private:
 		bool skipSurfaceFindOnImageResume_, scheduleStopAfterNextCut_, acquireCalibrationStack_; //DGA: Private variables storing whether or not to skip surface find or schedule a stop or acquire a calibration stack

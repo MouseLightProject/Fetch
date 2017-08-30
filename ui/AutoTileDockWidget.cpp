@@ -17,6 +17,7 @@ namespace ui{
     parent->_autotile_timeoutms_control->createLineEditAndAddToLayout(form);
     parent->_autotile_chan_control->createLineEditAndAddToLayout(form);
     parent->_autotile_intensity_thresh_control->createLineEditAndAddToLayout(form);
+	parent->_surface_find_intensity_thresh_control->createLineEditAndAddToLayout(form); //DGA: Added this new field
     parent->_autotile_area_thresh_control->createLineEditAndAddToLayout(form);
 
 	QCheckBox * skipSurfaceFindOnImageResumeCheckBox = parent->_microscopeController->createSkipSurfaceFindOnImageResumeCheckBox(); //DGA: create skipSurfaceFindOnImageResumeCheckBox

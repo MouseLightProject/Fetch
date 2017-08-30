@@ -119,8 +119,8 @@ QTimer * AgentController::createPollingTimer()
 QDockWidget* AgentController::createTaskDockWidget(const QString & title, Task *task, QWidget* parent)
 { QDockWidget*      d = new QDockWidget(title,parent);
   QWidget*          w = new QWidget(d);  
-  QFormLayout* layout = new QFormLayout;    
-  layout->addRow(new AgentControllerButtonPanel(this,task));
+  QFormLayout* layout = new QFormLayout;
+  layout->addRow(new AgentControllerButtonPanel(this, task));
   w->setLayout(layout);
   d->setWidget(w);
   return d;

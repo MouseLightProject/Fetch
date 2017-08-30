@@ -418,9 +418,10 @@ namespace ui {
     void 
       VibratomeGeometryDockWidget::
       commitOffset()
-    { if( is_set__cut_plane_ && is_set__image_plane_ )      
+    { if( is_set__cut_plane_ && is_set__image_plane_ ){      
         dc_->vibratome()->setVerticalOffsetNoWait(cut_plane_mm_,image_plane_mm_);
       emit delta(image_plane_mm_-cut_plane_mm_);
+	}
     }
 
     void 

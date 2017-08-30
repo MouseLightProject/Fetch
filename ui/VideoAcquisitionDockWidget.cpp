@@ -20,6 +20,7 @@ namespace ui {
     parent->_lsm_vert_range_controller->createLineEditAndAddToLayout(form);
     parent->_pockels_controllers[0]->createLineEditAndAddToLayout(form);
     parent->_pockels_controllers[1]->createLineEditAndAddToLayout(form);
+	parent->_frame_average_count_controller->createLineEditAndAddToLayout(form);
 
     AgentControllerButtonPanel *btns = new AgentControllerButtonPanel(&parent->_scope_state_controller,&dc->interaction_task);
     form->addRow(btns);      
