@@ -257,7 +257,7 @@ Error:
 		device::Pockels * pockels1 = &(dc->scanner._scanner2d._pockels1), * pockels2 = &(dc->scanner._scanner2d._pockels2);
         tile=cfg.use_adaptive_tiling()?((MicroscopeTask*)&adaptive_tiling):((MicroscopeTask*)&nonadaptive_tiling);
 		CalibrationStack calibration_stack;
-		CHKJMP(0==sanity_checks(dc));
+		//CHKJMP(0==sanity_checks(dc));
 		while (!dc->_agent->is_stopping() && PlaneInBounds(dc, cfg.maxz_mm()))
 		{
 		  if ( (pockels1->get_config().has_calibration_stack() || pockels2->get_config().has_calibration_stack()) && dc->getAcquireCalibrationStack()) //DGA: If one of the pockels has the calibration stack set and a calibration stack should be acquired
