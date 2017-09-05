@@ -135,7 +135,7 @@ fetch::ui::MainWindow::MainWindow(device::Microscope *dc)
   _lsm_vert_range_controller= new LSMVerticalRangeController(dc->LSM(),"&Y Range (Vpp)",this);
   _pockels_controllers[0]    = new PockelsController(dc->pockels("Chameleon"),"&Chameleon Pockels (%)",this);
   _pockels_controllers[1]    = new PockelsController(dc->pockels("Fianium"),"&Fianium Pockels (%)",this);
-  _frame_average_count_controller = new FrameAverageCountController(dc, "Frame Average Count", this);
+  _frame_average_count_controller = new FrameAverageCountController(dc, "Frame Average Count", this); //DGA: Dynamically allocate _frame_average_count_controller to point to instance of FrameAverageCountController
 
   _zpiezo_max_control       = new ZPiezoMaxController(dc->zpiezo(), "Z Ma&x (um)",this);
   _zpiezo_min_control       = new ZPiezoMinController(dc->zpiezo(), "Z Mi&n (um)",this);
@@ -166,8 +166,8 @@ fetch::ui::MainWindow::MainWindow(device::Microscope *dc)
   _autotile_zmaxmm_control           = new AutoTileZMaxController(dc,"Cut to Max Z (mm)",this);
   _autotile_timeoutms_control        = new AutoTileTimeoutMsController(dc,"Timeout (ms)",this);
   _autotile_chan_control             = new AutoTileChanController(dc,"Channel to threshold",this);
-  _autotile_intensity_thresh_control = new AutoTileIntensityThresholdController(dc,"Autotile threshold",this);
-  _surface_find_intensity_thresh_control = new SurfaceFindIntensityThresholdController(dc, "Surface Find threshold", this);
+  _autotile_intensity_thresh_control = new AutoTileIntensityThresholdController(dc,"Autotile threshold",this); //DGA: Changed the name to Autotile threshold
+  _surface_find_intensity_thresh_control = new SurfaceFindIntensityThresholdController(dc, "Surface Find threshold", this); //DGA: Dynamically allocate _surface_find_intensity_thresh_control to point to instance of SurfaceFindIntensityThresholdController 
   _autotile_area_thresh_control      = new AutoTileAreaThresholdController(dc,"Area threshold (0-1)",this);
   
   connect(_stageController,SIGNAL(moved()),          _stage_pos_x_control,SIGNAL(configUpdated()));

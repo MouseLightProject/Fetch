@@ -164,9 +164,9 @@ scanner3d {
     }
     simulated {
     }
-    um_max: 250
+    um_max: 5
     um_min: 0
-    um_step: 50
+    um_step: 1
   }
   zref_um: 0
 }
@@ -224,7 +224,7 @@ vibratome {
 fov {
   x_size_um: 256
   y_size_um: 512
-  z_size_um: 250
+  z_size_um: 5
   x_overlap_um: 20
   y_overlap_um: 20
   z_overlap_um: 100

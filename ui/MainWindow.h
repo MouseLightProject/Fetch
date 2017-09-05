@@ -101,14 +101,14 @@ public: // semi-private
 
   QTimer _poller;
   AgentController               _scope_state_controller;
-  MicroscopeController		   *_microscopeController; //DGA: _microscopeController is a pointer to a an instance of MicroscopeController
+  MicroscopeController		   *_microscopeController; //DGA: _microscopeController is a pointer to an instance of MicroscopeController
   PlanarStageController        *_stageController;
-  VibratomeController		   *_vibratomeController; //DGA: _vibratomeController is a pointer to a an instance of VibratomeController
+  VibratomeController		   *_vibratomeController; //DGA: _vibratomeController is a pointer to an instance of VibratomeController
 
   // Property controllers
   ResonantTurnController       *_resonant_turn_controller;
   LinesController              *_vlines_controller;
-  FrameAverageCountController  *_frame_average_count_controller;
+  FrameAverageCountController  *_frame_average_count_controller; //DGA: _frame_average_count_controller is a pointer to an instance of FrameAverageCountController
   LSMVerticalRangeController   *_lsm_vert_range_controller;
   PockelsController            *_pockels_controllers[2];
   VibratomeAmplitudeController *_vibratome_amp_controller;
@@ -135,7 +135,7 @@ public: // semi-private
   AutoTileTimeoutMsController          *_autotile_timeoutms_control;
   AutoTileChanController               *_autotile_chan_control;
   AutoTileIntensityThresholdController *_autotile_intensity_thresh_control;
-  SurfaceFindIntensityThresholdController *_surface_find_intensity_thresh_control;
+  SurfaceFindIntensityThresholdController *_surface_find_intensity_thresh_control; //DGA: _surface_find_intensity_thresh_control is a pointer to an instance of SurfaceFindIntensityThresholdController
 
   AutoTileAreaThresholdController      *_autotile_area_thresh_control;
 
@@ -215,7 +215,8 @@ namespace internal
     }
   private:
     void run()
-    { w_->_dc->set_config(cfg_);
+    { (*w_->_dc->cfg_as_set_by_file).CopyFrom(cfg_); //DGA: Copy configuration when it is set within the file
+	  w_->_dc->set_config(cfg_);
       emit done();
     }
 

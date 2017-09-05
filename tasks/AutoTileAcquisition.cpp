@@ -235,13 +235,14 @@ Error:
         return 0;
       }
 
-	  static bool sanity_checks(device::Microscope *dc){
+	  static bool sanity_checks(device::Microscope *dc){//DGA: Sanity checks regarding z max, z step, frame average count, vibratome offset and vibratome geometry
 		  bool eflag = false;
-		  device::Microscope::Config c = dc->get_config();
-		  if (c.scanner3d().zpiezo().um_max() != c.fov().z_size_um()) {warning(ENDL"\tzpiezo's um_max (Stack Acquisition --> Z Max) does not equal fov's z_size_um"ENDL); eflag = true;}
-		  if (c.scanner3d().zpiezo().um_step() > 1) {warning(ENDL"\tzpiezo's um_step (Stack Acquisition --> Z Step) is greater than 1"ENDL); eflag = true;}
-		  if (c.pipeline().frame_average_count() != 1) {warning(ENDL"\tpipeline's frame_average_count (Video Acquisition --> Frame Average Count) does not equal 1"ENDL); eflag = true;};
-		  if (dc->vibratome()->verticalOffset() != c.vibratome().geometry().dz_mm()){warning(ENDL"\tVibratome's offset does not equal vibratome geometry's dz_mm"ENDL); eflag = true;};
+		  device::Microscope::Config current_cfg = dc->get_config(); //DGA: current state of cfg
+		  device::Microscope::Config cfg_as_set_by_file = *dc->cfg_as_set_by_file; //DGA: cfg state from file
+		  if (current_cfg.scanner3d().zpiezo().um_max() != current_cfg.fov().z_size_um()) {warning(ENDL"\tzpiezo's um_max (Stack Acquisition --> Z Max) does not equal fov's z_size_um"ENDL); eflag = true;}
+		  if (current_cfg.scanner3d().zpiezo().um_step() > 1) {warning(ENDL"\tzpiezo's um_step (Stack Acquisition --> Z Step) is greater than 1"ENDL); eflag = true;}
+		  if (current_cfg.pipeline().frame_average_count() != 1) {warning(ENDL"\tpipeline's frame_average_count (Video Acquisition --> Frame Average Count) does not equal 1"ENDL); eflag = true;};
+		  if (dc->vibratome()->verticalOffset() != cfg_as_set_by_file.vibratome().geometry().dz_mm()){warning(ENDL"\tVibratome's offset does not equal vibratome geometry's dz_mm"ENDL); eflag = true;};
 		  if (dc->vibratome()->verticalOffset()<1 || dc->vibratome()->verticalOffset()>2) {warning(ENDL"\tgeometry's dz_mm (Vibratome Geometry) is not between 1 and 2"ENDL); eflag = true;}
 		  return eflag;
 	  }
@@ -257,7 +258,7 @@ Error:
 		device::Pockels * pockels1 = &(dc->scanner._scanner2d._pockels1), * pockels2 = &(dc->scanner._scanner2d._pockels2);
         tile=cfg.use_adaptive_tiling()?((MicroscopeTask*)&adaptive_tiling):((MicroscopeTask*)&nonadaptive_tiling);
 		CalibrationStack calibration_stack;
-		//CHKJMP(0==sanity_checks(dc));
+		CHKJMP(0==sanity_checks(dc)); //DGA: Perform sanity checks
 		while (!dc->_agent->is_stopping() && PlaneInBounds(dc, cfg.maxz_mm()))
 		{
 		  if ( (pockels1->get_config().has_calibration_stack() || pockels2->get_config().has_calibration_stack()) && dc->getAcquireCalibrationStack()) //DGA: If one of the pockels has the calibration stack set and a calibration stack should be acquired
@@ -277,7 +278,7 @@ Error:
           CHKJMP(dc->trip_detect.ok());
 		  
           CHKJMP(   cut.config(dc));
-		  dc->cutButtonWasPressed = false;
+		  dc->cutButtonWasPressed = false; //DGA: Before a cut, set cutButtonWasPressed to false
           CHKJMP(0==cut.run(dc));
 		  if(tiling->useTwoDimensionalTiling_) //DGA: If using two dimensional tiling
 		  {
@@ -293,7 +294,7 @@ Error:
         }
 
 	Finalize:
-		dc->cutButtonWasPressed = true;
+		dc->cutButtonWasPressed = true; //DGA: Make sure that cutButtonWasPressed is true unless otherwise specified (above)
         return eflag;
 	Error:
         eflag=1;
