@@ -45,5 +45,5 @@ message Microscope
   optional tasks.TimeSeries            time_series           =17;  
   optional tasks.SurfaceFind           surface_find          =18;
   optional tasks.AdaptiveTiling        adaptive_tiling       =19;
-  optional double	                   backup_distance_mm    =22 [default=15.0]; //DGA: Distance to back up stage to get to a safe z plane during cut, defaulted to 15 mm.  
+  optional double	                   backup_distance_mm    =22 [default=2.5]; //DGA: Distance to back up stage to get to a safe z plane during cut, defaulted to 2.5 mm.  
 }

@@ -242,8 +242,8 @@ Error:
 		  if (current_cfg.scanner3d().zpiezo().um_max() != current_cfg.fov().z_size_um()) {warning(ENDL"\tzpiezo's um_max (Stack Acquisition --> Z Max) does not equal fov's z_size_um"ENDL); eflag = true;}
 		  if (current_cfg.scanner3d().zpiezo().um_step() > 1) {warning(ENDL"\tzpiezo's um_step (Stack Acquisition --> Z Step) is greater than 1"ENDL); eflag = true;}
 		  if (current_cfg.pipeline().frame_average_count() != 1) {warning(ENDL"\tpipeline's frame_average_count (Video Acquisition --> Frame Average Count) does not equal 1"ENDL); eflag = true;};
-		  if (dc->vibratome()->verticalOffset() != cfg_as_set_by_file.vibratome().geometry().dz_mm()){warning(ENDL"\tVibratome's offset does not equal vibratome geometry's dz_mm"ENDL); eflag = true;};
-		  if (dc->vibratome()->verticalOffset()<1 || dc->vibratome()->verticalOffset()>2) {warning(ENDL"\tgeometry's dz_mm (Vibratome Geometry) is not between 1 and 2"ENDL); eflag = true;}
+		  if (dc->vibratome()->verticalOffset() != cfg_as_set_by_file.vibratome().geometry().dz_mm()){warning(ENDL"\tvibratome geometry's dz_mm does not equal Vibratome Geometry-->Offset"ENDL); eflag = true;};
+		  if (dc->vibratome()->verticalOffset()<1 || dc->vibratome()->verticalOffset()>2) {warning(ENDL"\tvibratome geometry's dz_mm (Vibratome Geometry-->Offset) is not between 1 and 2"ENDL); eflag = true;}
 		  return eflag;
 	  }
 
