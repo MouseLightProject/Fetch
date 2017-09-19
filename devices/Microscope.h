@@ -147,7 +147,6 @@ namespace fetch
       task::microscope::TimeSeries          time_series_task;
       int _cut_count;
 
-
       mylib::Array* snapshot(float dz_um,unsigned timeout_ms);
 
       inline Chan*  getVideoChannel()    {if(_end_of_pipeline && _end_of_pipeline->_out) return _end_of_pipeline->_out->contents[0]; else return NULL;}
@@ -179,7 +178,6 @@ namespace fetch
 	  void setAcquireCalibrationStack(bool setValue); //DGA: Function setter prototype for acquireCalibrationStack_
 
 	  void cutCompletedSoStop()          {cutCompletedSoStopSignaler.signaler();}; //DGA: Function to call signaler which stops the task
-
     public:
       FileSeries file_series;
 
@@ -192,7 +190,8 @@ namespace fetch
       Agent __io_agent;
       Agent __vibratome_agent;
 	  float    minimumBackupDistance_mm = 0.5, minimumSafeZHeightToDropTo_mm = 8;
-
+	  bool cutButtonWasPressed = true; //DGA: By default, set cutButtonWasPressed to true so that when it is pressed, this is correct; if the cut occurs during autotile cutBottonWasPressed will have been set to false
+	  fetch::cfg::device::Microscope*      cfg_as_set_by_file; //DGA: Keep track of configuration as set by file
 	private:
 		bool skipSurfaceFindOnImageResume_, scheduleStopAfterNextCut_, acquireCalibrationStack_; //DGA: Private variables storing whether or not to skip surface find or schedule a stop or acquire a calibration stack
     };

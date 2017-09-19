@@ -601,6 +601,9 @@ bool fetch::ui::TilingController::markUserReset(const QPainterPath& path)
       |device::StageTiling::Detected
       |device::StageTiling::Explored
       |device::StageTiling::Done
+	  |device::StageTiling::TileError//DGA: Had to add TileError, OffsetMeasured and Dilated for when user does it
+	  |device::StageTiling::OffsetMeasured
+	  |device::StageTiling::Dilated
     ,
     QPainter::RasterOp_NotSourceAndDestination) 
     &&

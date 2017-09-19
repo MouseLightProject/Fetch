@@ -154,11 +154,16 @@ namespace ui {
   DECL_GETSET_CLASS(GetSetResonantTurn,device::Microscope,f64);
   DECL_GETSET_CLASS(GetSetLines,device::Microscope,i32);
   DECL_GETSET_CLASS(GetSetLSMVerticalRange,device::LinearScanMirror,f64);
-  DECL_GETSET_CLASS(GetSetPockels,device::Pockels,u32);  
+  DECL_GETSET_CLASS(GetSetPockels,device::Pockels,u32);
+
   typedef DevicePropController<device::Microscope,f64,GetSetResonantTurn>           ResonantTurnController;
-  typedef DevicePropController<device::Microscope,i32,GetSetLines>                  LinesController;
+  typedef DevicePropController<device::Microscope, i32, GetSetLines>                  LinesController;
   typedef DevicePropController<device::LinearScanMirror,f64,GetSetLSMVerticalRange> LSMVerticalRangeController;
   typedef DevicePropController<device::Pockels,u32,GetSetPockels>                   PockelsController;
+
+  //Pipeline
+  DECL_GETSET_CLASS(GetSetFrameAverageCount, device::Microscope, unsigned int); //DGA: Added to get/set the frame average count
+  typedef DevicePropController<device::Microscope, unsigned int, GetSetFrameAverageCount>      FrameAverageCountController; //DGA: Added to get/set the frame average count
 
   // Vibratome
   DECL_GETSET_CLASS(GetSetVibratomeAmplitude,device::Vibratome,u32);
@@ -204,6 +209,10 @@ namespace ui {
   DECL_GETSET_CLASS(GetSetOverlapZ,device::FieldOfViewGeometry,float);
   typedef DevicePropController<device::FieldOfViewGeometry,float,GetSetOverlapZ> FOVOverlapZController;
   
+  //DGA: Surface Find
+  DECL_GETSET_CLASS(GetSetSurfaceFindIntesityThreshold, device::Microscope, float);
+  typedef DevicePropController<device::Microscope, float, GetSetSurfaceFindIntesityThreshold> SurfaceFindIntensityThresholdController;
+
   // AutoTile
   DECL_GETSET_CLASS(GetSetAutoTileZOff             ,device::Microscope,float);
   DECL_GETSET_CLASS(GetSetAutoTileZMax             ,device::Microscope,float);

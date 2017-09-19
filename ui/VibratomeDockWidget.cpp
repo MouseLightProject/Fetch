@@ -322,7 +322,7 @@ namespace ui {
 		QStateMachine *lockmachine = new QStateMachine(this); //DGA: create state machine
 		QState *locked = new QState(), //DGA: Two states, locked and unlocked
 			*unlocked = new QState();
-		locked->addTransition(checkBox, SIGNAL(stateChanged(int)), unlocked); //DGA: The following define the transition between locked and unlocked states (namely, when the checkbox state changes, the state transitions
+		locked->addTransition(checkBox, SIGNAL(stateChanged(int)), unlocked); //DGA: The following define the transition between locked and unlocked states (namely, when the checkbox state changes, the state transitions)
 		unlocked->addTransition(checkBox, SIGNAL(stateChanged(int)), locked);
 		locked->assignProperty(sliceThicknessCorrectionUmLineEdit, "readOnly", true);//DGA: When locked, the editor is read only
 		unlocked->assignProperty(sliceThicknessCorrectionUmLineEdit, "readOnly", false); //DGA: When unlocked, the edit box can be edited
@@ -418,9 +418,10 @@ namespace ui {
     void 
       VibratomeGeometryDockWidget::
       commitOffset()
-    { if( is_set__cut_plane_ && is_set__image_plane_ )      
+    { if( is_set__cut_plane_ && is_set__image_plane_ ){      
         dc_->vibratome()->setVerticalOffsetNoWait(cut_plane_mm_,image_plane_mm_);
-      emit delta(image_plane_mm_-cut_plane_mm_);
+      emit delta(image_plane_mm_-cut_plane_mm_); //DGA: Inlcuded this within if statement because don't want it updated unless cut plane and image plane have been set
+	}
     }
 
     void 

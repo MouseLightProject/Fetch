@@ -102,6 +102,12 @@ namespace microscope {
 
   unsigned int Cut::run(device::Microscope* dc)
   {
+    if(dc->cutButtonWasPressed) { //DGA: If the cut button is pressed and the vertical offset is not 0, then send out a warning
+		if (dc->vibratome()->verticalOffset() != 0){ 
+			warning("[Vibratome] [Task: Cut] Offset is not 0"ENDL);
+		}
+	}
+
     float cx,cy,cz,vx,vy,vz,ax,ay,bx,by,bz,v,dz,thick, thicknessCorrection; //DGA: Added thicknessCorrection float
 	
 	// get current pos,vel
@@ -120,8 +126,8 @@ namespace microscope {
 
     // Move to the start of the cut
 	bz = cz - dz + thick + (thicknessCorrection);		// DGA: cut z position = Current Z - delta Z offset + requested slice thickness ( + thickness correction); the first subtraction gets the blade to the top of the sample
-	Vector3f finalCutPosition = {ax, ay, bz};
-	CHK(dc->moveToNewPosThroughSafeZ(finalCutPosition));
+	Vector3f startCutPosition = {ax, ay, bz};
+	CHK(dc->moveToNewPosThroughSafeZ(startCutPosition)); //DGA: Make sure moving to the final cut position is through a safe z
 
     // do the cut
     unsigned feedaxis=dc->vibratome()->getFeedAxis();
