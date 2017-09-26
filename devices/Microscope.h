@@ -164,9 +164,9 @@ namespace fetch
       int updateFovFromStackDepth(int nowait=0);  // These also account for cut thickness, returns 0 if overlap is not positive.
       int updateStackDepthFromFov(int nowait=0);
 	  
-	  unsigned int moveToNewPosThroughSafeZ(Vector3f pos); //DGA: Move to a new position by first moving the stage to a safe z location
+	  unsigned int moveToNewPosThroughSafeZ(Vector3f pos, float desiredBackupDistance); //DGA: Move to a new position by first moving the stage to a safe z location
 
-	  float safeZtoLowerTo_mm(float current_z); //DGA: This will output the z height for the stage to be lowered to based on the minimum z stage height and the desired backup distance
+	  float safeZtoLowerTo_mm(float current_z, float newBackupDistance); //DGA: This will output the z height for the stage to be lowered to based on the minimum z stage height and the desired backup distance
 
 	  bool getSkipSurfaceFindOnImageResume() {return skipSurfaceFindOnImageResume_;}; //DGA: Getter for skipSurfaceFindOnImageResume_
 	  void setSkipSurfaceFindOnImageResume(bool setValue); //DGA: Function setter prototype for skipSurfaceFindOnImageResume_

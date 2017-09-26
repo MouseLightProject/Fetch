@@ -100,6 +100,7 @@ Error:
 		  CHKJMP(pockels1->setOpenPercentNoWait(original_pockels_v_open[0]));
 		  CHKJMP(pockels2->setOpenPercentNoWait(original_pockels_v_open[1]));
 		  dc->moveToNewPosThroughSafeZ(curpos);
+		  return 1;
 	  Error:
 		  return 0;
 	  }
@@ -116,12 +117,13 @@ Error:
       unsigned int CalibrationStack::run(device::Microscope *dc)
 	  {   
 		  Vector3f pos, curpos;
+		  cfg::device::Microscope c = dc->get_config();
 		  unsigned int eflag = 0; // success
 		  std::string filename;
 		  //DGA: Create points for pockelToTurnOn, pockelToTurnOff and pockels1 and pockels2
 		  device::Pockels * pockelToTurnOn, * pockelToTurnOff, * pockels1 = &(dc->scanner._scanner2d._pockels1), * pockels2 = &(dc->scanner._scanner2d._pockels2);
 		  curpos = dc->stage()->getPos();
-		  float original_pockels_v_open[2];
+		  float original_pockels_v_open[2], newBackupDistance, maxOfZpos;
 		  original_pockels_v_open[0] = pockels1->getOpenPercent();
 		  original_pockels_v_open[1] = pockels2->getOpenPercent();
 		  //DGA: If pockels1 has a calibration stack then that one will be turned on
@@ -136,8 +138,10 @@ Error:
 			  for (int i = 0; i < 3; i++){
 				  pos[i] = (pos[i] < minXYZ[i]) ? minXYZ[i] : (pos[i] > maxXYZ[i] ? maxXYZ[i] : pos[i]);
 			  }
+			  maxOfZpos = curpos[2]>pos[2] ? curpos[2] : pos[2];
+			  newBackupDistance = (maxOfZpos-curpos[2])+c.backup_distance_mm;
 			  CHKJMP(dc->__scan_agent.is_runnable());
-			  CHKJMP(dc->moveToNewPosThroughSafeZ(pos));
+			  CHKJMP(dc->moveToNewPosThroughSafeZ(pos,newBackupDistance));
 			  //DGA: Set pockel percentages to appropriate values
 			  CHKJMP(pockelToTurnOn->setOpenPercentNoWait(pockelToTurnOn->get_config().calibration_stack().v_open_percent()));
 			  CHKJMP(pockelToTurnOff->setOpenPercentNoWait(0));

@@ -263,8 +263,8 @@ Error:
 		{
 		  if ( (pockels1->get_config().has_calibration_stack() || pockels2->get_config().has_calibration_stack()) && dc->getAcquireCalibrationStack()) //DGA: If one of the pockels has the calibration stack set and a calibration stack should be acquired
 		  {
-			//CHKJMP(calibration_stack.config(dc));//DGA: Make sure no errors occur
-			//CHKJMP(0==calibration_stack.run(dc));
+			CHKJMP(calibration_stack.config(dc));//DGA: Make sure no errors occur
+			CHKJMP(0==calibration_stack.run(dc));
 		  }
           if(cfg.use_explore())
             CHKJMP(explore(dc));       // will return an error if no explorable tiles found on the plane

@@ -457,10 +457,10 @@ Error:
       return 0;
     }
 
-	unsigned int Microscope::moveToNewPosThroughSafeZ(Vector3f pos){ //DGA: Move to a new position by first moving the stage to a safe z location
+	unsigned int Microscope::moveToNewPosThroughSafeZ(Vector3f pos, float desiredBackupDistance){ //DGA: Move to a new position by first moving the stage to a safe z location
 		float cx, cy, cz; //DGA: Current x,y and z
 		CHKJMP(stage()->getTarget(&cx, &cy, &cz), Error);
-		float actualZHeightToDropTo_mm = safeZtoLowerTo_mm(cz); //DGA: The actual z height to drop to is based on the desired backup set in microscope and should be at a minimum 8 mm
+		float actualZHeightToDropTo_mm = safeZtoLowerTo_mm(cz, desiredBackupDistance); //DGA: The actual z height to drop to is based on the desired backup set in microscope and should be at a minimum 8 mm
 		CHKJMP(stage()->setPos(cx, cy, actualZHeightToDropTo_mm), Error);           // Drop to safe z first
 		CHKJMP(stage()->setPos(pos[0], pos[1], actualZHeightToDropTo_mm), Error);           //DGA: Move to appropriate x,y
 		CHKJMP(stage()->setPos(pos), Error); //DGA: Move to appropriate z
@@ -469,9 +469,10 @@ Error:
 		  return 0;
 	}
 
-	float Microscope::safeZtoLowerTo_mm(float currentZ){ //DGA: This will output the z height for the stage to be lowered to based on the minimum z stage height and the desired backup distance
+	float Microscope::safeZtoLowerTo_mm(float currentZ, float newBackupDistance){ //DGA: This will output the z height for the stage to be lowered to based on the minimum z stage height and the desired backup distance
 		Config c = get_config();
-		float desiredBackupDistance = c.backup_distance_mm();
+		float desiredBackupDistance;
+		newBackupDistance ==-1 ? desiredBackupDistance = c.backup_distance_mm() : desiredBackupDistance = newBackupDistance; //DGA: Use newBackupDistance if provided, else just use the one from the config file
 		float backupDistance_mm = (desiredBackupDistance > minimumBackupDistance_mm) ? desiredBackupDistance : minimumBackupDistance_mm; //DGA: Ensure the stage is dropped by at least the minimum amount
 		float actualZHeightToDropTo_mm = ((currentZ - backupDistance_mm) > minimumSafeZHeightToDropTo_mm) ? (currentZ - backupDistance_mm) : minimumSafeZHeightToDropTo_mm; //DGA: The actual z height to drop to should be at a minimum 8 mm
 		return actualZHeightToDropTo_mm;
