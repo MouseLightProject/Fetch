@@ -35,7 +35,7 @@ QCheckBox *
 {	QCheckBox *acquireCalibrationStackCheckBox = new QCheckBox(parent);  //DGA: Dynamically allocates check box
 	connect(acquireCalibrationStackCheckBox, SIGNAL(clicked(bool)), this, SLOT(setAcquireCalibrationStack(bool)),Qt::QueuedConnection); //DGA: Connects check box's clicked signal to the acquireCalibrationStack slot of this class instance, so that acquireCalibrationStack_ of microscope_ will be updated when the checkbox is clicked
 	connect(&(microscope_->acquireCalibrationStackCheckBoxUpdater), SIGNAL(signaler(bool)),acquireCalibrationStackCheckBox, SLOT(setChecked(bool)),Qt::QueuedConnection); //DGA: Connect signaler of microscope_'s acquireCalibrationStackUpdater to setChecked slot so that changing acquireCalibrationStack_ will update the checkbox
-	acquireCalibrationStackCheckBox->clicked(true);//DGA: Initialize the checkbox to on
+	acquireCalibrationStackCheckBox->clicked(false);//DGA: Initialize the checkbox to off
 	return acquireCalibrationStackCheckBox; //DGA: Returns the checkbox
 }
 

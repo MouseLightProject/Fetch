@@ -183,6 +183,7 @@ Error:
 		tiling->resetCursor();
         while(eflag==0 && !dc->_agent->is_stopping() && tiling->nextInPlanePosition(tilepos))
         { TS_TIC;
+		  dc->file_series.inc(false);               // DGA: check to make sure correct date and seriesno
           debug("%s(%d)"ENDL "\t[Adaptive Tiling Task] tilepos: %5.1f %5.1f %5.1f"ENDL,__FILE__,__LINE__,tilepos[0],tilepos[1],tilepos[2]);
           filename = dc->stack_filename();
           dc->file_series.ensurePathExists();
