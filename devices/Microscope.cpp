@@ -502,8 +502,7 @@ Error:
 #define VALIDATE
 #endif
 
-
-    FileSeries& FileSeries::inc( void )
+    FileSeries& FileSeries::inc( bool increment ) //DGA: Added increment which sets whether to increment seriesno, or just check if it needs to be reset.
 	{ QSettings settings;
       
 	  VALIDATE;
@@ -523,7 +522,9 @@ Error:
 			  lastpath = seriespath; //DGA: Reset lastpath
 		  }
 		  else{
-			  seriesno = (seriesno + 1);// increment
+			  if (increment){
+				  seriesno = (seriesno + 1);// increment
+			  }
 		  }
 	  }
 

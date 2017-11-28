@@ -66,7 +66,7 @@ namespace fetch
 	  FileSeries() :_desc(&__default_desc), _is_valid(false) {};
 	  FileSeries(cfg::FileSeries *desc) :_desc(desc), _is_valid(false) { Guarded_Assert(_desc != NULL);}
 
-      FileSeries& inc(void);
+      FileSeries& inc(bool increment = true); //DGA: Added boolean for setting whether or not to increment seriesno; if not, then just checking date for resetting seriesno
       const std::string getFullPath(const std::string& prefix, const std::string& ext);
       const std::string getPath();
       bool updateDesc(cfg::FileSeries *desc);
