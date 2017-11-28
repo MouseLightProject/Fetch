@@ -127,6 +127,11 @@ scanner3d {
          y: 3
          z: 3
         }
+        target_mm{
+         x: 10
+         y: 15
+         z: 20
+        }
       }
     }
     shutter {

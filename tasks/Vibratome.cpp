@@ -113,7 +113,7 @@ namespace microscope {
 	// get current pos,vel
     CHK( dc->stage()->getTarget(&cx,&cy,&cz));
     CHK( dc->stage()->getVelocity(&vx,&vy,&vz));
-	float actualZHeightToDropTo_mm = dc->safeZtoLowerTo_mm(cz); //DGA: The actual z height to drop to is based on the desired backup set in microscope and should be at a minimum 8 mm
+	float actualZHeightToDropTo_mm = dc->safeZtoLowerTo_mm(cz,-1); //DGA: The actual z height to drop to is based on the desired backup set in microscope and should be at a minimum 8 mm
 
     // Get parameters
     dc->vibratome()->feed_begin_pos_mm(&ax,&ay);
@@ -127,7 +127,7 @@ namespace microscope {
     // Move to the start of the cut
 	bz = cz - dz + thick + (thicknessCorrection);		// DGA: cut z position = Current Z - delta Z offset + requested slice thickness ( + thickness correction); the first subtraction gets the blade to the top of the sample
 	Vector3f startCutPosition = {ax, ay, bz};
-	CHK(dc->moveToNewPosThroughSafeZ(startCutPosition)); //DGA: Make sure moving to the final cut position is through a safe z
+	CHK(dc->moveToNewPosThroughSafeZ(startCutPosition,-1)); //DGA: Make sure moving to the final cut position is through a safe z
 
     // do the cut
     unsigned feedaxis=dc->vibratome()->getFeedAxis();

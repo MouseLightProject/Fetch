@@ -94,12 +94,16 @@ Error:
           return -1;
       }
 
-	  unsigned int reset_to_original_values( device::Microscope *dc, Vector3f curpos, float * original_pockels_v_open){ //DGA: Reset pockel values to their non-calibration-stack values and reset the stage position
+	  unsigned int reset_to_original_values( device::Microscope *dc, Vector3f originalpos, float * original_pockels_v_open){ //DGA: Reset pockel values to their non-calibration-stack values and reset the stage position
 		  device::Pockels * pockels1 = &(dc->scanner._scanner2d._pockels1);
 		  device::Pockels * pockels2 = &(dc->scanner._scanner2d._pockels2);
+		  cfg::device::Microscope c = dc->get_config();
 		  CHKJMP(pockels1->setOpenPercentNoWait(original_pockels_v_open[0]));
 		  CHKJMP(pockels2->setOpenPercentNoWait(original_pockels_v_open[1]));
-		  dc->moveToNewPosThroughSafeZ(curpos);
+		  Vector3f curpos = dc->stage()->getPos();
+		  float minOfZpos = curpos[2]<originalpos[2] ? curpos[2] : originalpos[2]; //DGA: Because things are measured from bottom so a higher z meanshe stage is higher
+		  float newBackupDistance = (curpos[2]-minOfZpos)+c.backup_distance_mm();
+		  dc->moveToNewPosThroughSafeZ(curpos,newBackupDistance);
 		  return 1;
 	  Error:
 		  return 0;
@@ -116,14 +120,14 @@ Error:
       */
       unsigned int CalibrationStack::run(device::Microscope *dc)
 	  {   
-		  Vector3f pos, curpos;
+		  Vector3f pos, originalpos, curpos;
 		  cfg::device::Microscope c = dc->get_config();
+		  originalpos = dc->stage()->getPos();
 		  unsigned int eflag = 0; // success
 		  std::string filename;
 		  //DGA: Create points for pockelToTurnOn, pockelToTurnOff and pockels1 and pockels2
 		  device::Pockels * pockelToTurnOn, * pockelToTurnOff, * pockels1 = &(dc->scanner._scanner2d._pockels1), * pockels2 = &(dc->scanner._scanner2d._pockels2);
-		  curpos = dc->stage()->getPos();
-		  float original_pockels_v_open[2], newBackupDistance, maxOfZpos;
+		  float original_pockels_v_open[2], newBackupDistance_mm, minOfZpos;
 		  original_pockels_v_open[0] = pockels1->getOpenPercent();
 		  original_pockels_v_open[1] = pockels2->getOpenPercent();
 		  //DGA: If pockels1 has a calibration stack then that one will be turned on
@@ -131,17 +135,18 @@ Error:
 		  else{ pockelToTurnOn = pockels1; pockelToTurnOff = pockels2; }
 		  //DGA: Get position to take calibration stack and ensure it's within appropriate range
 		  int target_num_el = pockelToTurnOn->get_config().calibration_stack().target_mm_size();
-		  for (int i = 0; i < target_num_el ; i++){
-			  pos[0] = pockelToTurnOn->get_config().calibration_stack().target_mm(0).x();
-			  pos[1] = pockelToTurnOn->get_config().calibration_stack().target_mm(0).y();
-			  pos[2] = pockelToTurnOn->get_config().calibration_stack().target_mm(0).z();
+		  for (int current_target = 0; current_target < target_num_el ; current_target++){
+			  curpos = dc->stage()->getPos();
+			  pos[0] = pockelToTurnOn->get_config().calibration_stack().target_mm(current_target).x();
+			  pos[1] = pockelToTurnOn->get_config().calibration_stack().target_mm(current_target).y();
+			  pos[2] = pockelToTurnOn->get_config().calibration_stack().target_mm(current_target).z();
 			  for (int i = 0; i < 3; i++){
 				  pos[i] = (pos[i] < minXYZ[i]) ? minXYZ[i] : (pos[i] > maxXYZ[i] ? maxXYZ[i] : pos[i]);
 			  }
-			  maxOfZpos = curpos[2]>pos[2] ? curpos[2] : pos[2];
-			  newBackupDistance = (maxOfZpos-curpos[2])+c.backup_distance_mm;
+			  minOfZpos = curpos[2]<pos[2] ? curpos[2] : pos[2]; //DGA: Because things are measured from bottom so a higher z meanshe stage is higher
+			  newBackupDistance_mm = (curpos[2]-minOfZpos)+c.backup_distance_mm();
 			  CHKJMP(dc->__scan_agent.is_runnable());
-			  CHKJMP(dc->moveToNewPosThroughSafeZ(pos,newBackupDistance));
+			  CHKJMP(dc->moveToNewPosThroughSafeZ(pos,newBackupDistance_mm));
 			  //DGA: Set pockel percentages to appropriate values
 			  CHKJMP(pockelToTurnOn->setOpenPercentNoWait(pockelToTurnOn->get_config().calibration_stack().v_open_percent()));
 			  CHKJMP(pockelToTurnOff->setOpenPercentNoWait(0));
@@ -188,10 +193,10 @@ Error:
 			  dc->file_series.inc();               // increment regardless of completion status
 			  eflag |= dc->stopPipeline();         // wait till everything stops
 		  }
-		  CHKJMP(reset_to_original_values(dc, curpos, original_pockels_v_open)); //DGA: Reset to original values
+		  CHKJMP(reset_to_original_values(dc, originalpos, original_pockels_v_open)); //DGA: Reset to original values
 		  return eflag;
 	  Error:
-		  CHKJMP(reset_to_original_values(dc, curpos, original_pockels_v_open)); //DGA: Reset to original values
+		  CHKJMP(reset_to_original_values(dc, originalpos, original_pockels_v_open)); //DGA: Reset to original values
 		  return 0;
 	  }
 
