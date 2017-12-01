@@ -62,6 +62,7 @@ namespace fetch
       set_config(_config);
       pipeline.set_scan_rate_Hz(_config->scanner3d().scanner2d().frequency_hz());
       pipeline.set_sample_rate_MHz(scanner.get2d()->_digitizer.sample_rate_MHz());
+	  stage_.setVelocity(_config->stage().default_velocity_mm_per_sec()); //DGA: Update default velocity
 
       __common_setup();
     }
@@ -89,6 +90,8 @@ namespace fetch
       set_config(cfg);
       pipeline.set_scan_rate_Hz(_config->scanner3d().scanner2d().frequency_hz());
       pipeline.set_sample_rate_MHz(scanner.get2d()->_digitizer.sample_rate_MHz());
+	  stage_.setVelocity(_config->stage().default_velocity_mm_per_sec()); //DGA: Update default velocity
+
       __common_setup();
     }
 
@@ -114,6 +117,8 @@ namespace fetch
     {
       pipeline.set_scan_rate_Hz(_config->scanner3d().scanner2d().frequency_hz());
       pipeline.set_sample_rate_MHz(scanner.get2d()->_digitizer.sample_rate_MHz());
+      stage_.setVelocity(_config->stage().default_velocity_mm_per_sec()); //DGA: Update default velocity
+
       __common_setup();
     }
 
