@@ -1,7 +1,7 @@
 scanner3d {
   scanner2d {
     frequency_hz: 7920
-    nscans:128
+    nscans: 128
     line_duty_cycle: 0.95
     daq {
       kind: Simulated
@@ -122,10 +122,10 @@ scanner3d {
       }
       calibration_stack {
         v_open_percent: 0.75
-        target_mm{
-         x: 3
-         y: 3
-         z: 3
+        target_mm {
+          x: 3
+          y: 3
+          z: 3
         }
       }
     }
@@ -201,10 +201,15 @@ stage {
       max_mm: 15
     }
   }
+  default_velocity_mm_per_sec {
+    x: -1
+    y: 4
+    z: 0.8
+  }
   last_target_mm {
     x: 0.5
     y: 0.5
-    z: 1
+    z: 8
   }
   tilemode: PixelAligned
   tile_z_offset_mm: 0
@@ -216,10 +221,10 @@ vibratome {
   simulated {
   }
   feed_axis: X
-  cut_thickness_um: 150
-    geometry {
+  geometry {
     dz_mm: 1
   }
+  cut_thickness_um: 150
 }
 fov {
   x_size_um: 256
@@ -237,7 +242,8 @@ pipeline {
 }
 file_series {
   root: "C:\\FetchTemp"
-  date: "2016-08-30"
+  date: "2017-11-30"
+  seriesno: 17
   pathsep: "\\"
 }
 file_prefix: "derp"
