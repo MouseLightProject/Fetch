@@ -79,6 +79,11 @@ namespace device {
       virtual bool doneWithCut       ( unsigned axis)=0;                    ///< Return axis to normal. \returns true on success, otherwise false.
 
 	  inline void  getSafeZ          ( float *z )                           { (*z) = ((*z)>8) ? (*z) : 8;} // DGA: Make sure the z that is used is greater than 8 mm
+	  inline void  getSafeVelocity(float *vx, float *vy, float *vz)      { getSafeVelocityX(vx); getSafeVelocityY(vy); getSafeVelocityZ(vz); }
+	  inline void  getSafeVelocityX(float *vx)							{ if (*vx<0.1){ *vx = 0.1; } if (*vx>10.0){ *vx = 10.0; } }
+	  inline void  getSafeVelocityY(float *vy)							{ if (*vy<0.1){ *vy = 0.1; } if (*vy>10.0){ *vy = 10.0; } }
+	  inline void  getSafeVelocityZ(float *vz)							{ if (*vz<0.1){ *vz = 0.1; } if (*vz>1.0){ *vz = 1.0; } }
+
   };
 
   template<class T>

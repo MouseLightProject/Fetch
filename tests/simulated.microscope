@@ -202,9 +202,9 @@ stage {
     }
   }
   default_velocity_mm_per_sec {
-    x: -1
-    y: 4
-    z: 0.8
+    x: -0.3
+    y: -7
+    z: 1.1
   }
   last_target_mm {
     x: 0.5
@@ -242,8 +242,8 @@ pipeline {
 }
 file_series {
   root: "C:\\FetchTemp"
-  date: "2017-11-30"
-  seriesno: 17
+  date: "2017-12-01"
+  seriesno: 27
   pathsep: "\\"
 }
 file_prefix: "derp"

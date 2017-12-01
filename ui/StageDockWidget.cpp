@@ -150,11 +150,6 @@ namespace ui {
     w[0]=parent->_stage_pos_x_control->createDoubleSpinBox();
     w[1]=parent->_stage_pos_y_control->createDoubleSpinBox();
     w[2]=parent->_stage_pos_z_control->createDoubleSpinBox();
-    w[0]->setRange(0.5,100.0); // set safe ranges
-    w[1]->setRange(0.5,100.0); // - normally this should be handled by DevicePropController
-    w[2]->setRange(8,45.0);    //   but API's not right...validator doesn't accomidate non-lineedit controls well
-                               //   need to explicitly set min-max or something   
-							   //   DGA: Changed Z to start 8
 
     row = new QGridLayout();
     row->addWidget(new QLabel("X")   ,irow,1,Qt::AlignCenter);
@@ -222,6 +217,12 @@ namespace ui {
     w[2]->setRange(0.1,1.0);   //   but API's not right...validator doesn't accomidate non-lineedit controls well
                                //   need to explicitly set min-max or something
     
+	//DGA: Put the stage position setRanges here so that the velocities would be updated before the positions
+	ps_[0]->setRange(0.5, 100.0); // set safe ranges
+	ps_[1]->setRange(0.5, 100.0); // - normally this should be handled by DevicePropController
+	ps_[2]->setRange(8, 45.0);    //   but API's not right...validator doesn't accomidate non-lineedit controls well
+								  //   need to explicitly set min-max or something   
+								  //   DGA: Changed Z to start 8
     row->addWidget(   s=new QDoubleSpinBox(),irow,4);
     irow++;
     for(int i=0;i<3;++i) w[i]->setDecimals(4);

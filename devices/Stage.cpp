@@ -411,7 +411,8 @@ Error:
   }
 
   int C843Stage::setVelocity( float vx, float vy, float vz )
-  { const double t[3] = {vx,vy,vz};
+  { getSafeVelocity(&vx, &vy, &vz);
+	const double t[3] = {vx,vy,vz};
     C843JMP( C843_VEL(handle_,"123",t) );
     return 1; // success
 Error:
@@ -725,7 +726,8 @@ Error:
   }
 
   int SimulatedStage::setVelocity( float vx, float vy, float vz )
-  { vx_=vx;vy_=vy;vz_=vz;
+  { getSafeVelocity(&vx, &vy, &vz);
+	vx_=vx;vy_=vy;vz_=vz;
     return 1;
   }
 
@@ -840,7 +842,7 @@ Error:
     if(_simulated) _simulated->_set_config(cfg->mutable_simulated());
     _config = cfg;
 
-    setVelocity(_config->default_velocity_mm_per_sec());
+	setVelocity(_config->default_velocity_mm_per_sec());
     set_tiling_z_offset_mm(_config->tile_z_offset_mm());
   }
 
