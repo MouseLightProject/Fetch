@@ -411,7 +411,7 @@ Error:
   }
 
   int C843Stage::setVelocity( float vx, float vy, float vz )
-  { getSafeVelocity(&vx, &vy, &vz);
+  { getSafeVelocity(&vx, &vy, &vz); //DGA: Ensure velocities are in acceptable range
 	const double t[3] = {vx,vy,vz};
     C843JMP( C843_VEL(handle_,"123",t) );
     return 1; // success
@@ -726,7 +726,7 @@ Error:
   }
 
   int SimulatedStage::setVelocity( float vx, float vy, float vz )
-  { getSafeVelocity(&vx, &vy, &vz);
+  { getSafeVelocity(&vx, &vy, &vz); //DGA: Ensure velocities are in acceptable range
 	vx_=vx;vy_=vy;vz_=vz;
     return 1;
   }
