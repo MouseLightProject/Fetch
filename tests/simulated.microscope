@@ -202,9 +202,9 @@ stage {
     }
   }
   default_velocity_mm_per_sec {
-    x: -0.3
-    y: -7
-    z: 1.1
+    x: 1.5
+    y: 1.5
+    z: 0.2
   }
   last_target_mm {
     x: 0.5
