@@ -132,7 +132,7 @@ int main(int argc, char *argv[])
   QApplication app(argc,argv);  
   Init();
   fetch::ui::MainWindow mainwindow(gp_microscope);
-  mainwindow.setWindowTitle("Fetch V1.22BetaForJohan"); //DGA: Window title now includes version number.
+  mainwindow.setWindowTitle("Fetch V1.23BetaForJohan"); //DGA: Window title now includes version number.
   gp_microscope->onUpdate(); // force update so gui gets notified - have to do this mostly for stage listeners ...
   mainwindow.show();
 
