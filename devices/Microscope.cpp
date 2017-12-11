@@ -201,11 +201,13 @@ ESCAN:
 
     void Microscope::write_stack_metadata()
     {
+		device::FieldOfViewGeometry current_fov; //DGA: current field of view geometry
       { std::ofstream fout(config_filename().c_str(),std::ios::out|std::ios::trunc);
         std::string s;
         Config c = get_config();
         google::protobuf::TextFormat::PrintToString(c,&s);
         fout << s;
+		current_fov = c.fov();
       }
       { float x,y,z;
         std::ofstream fout(metadata_filename().c_str(),std::ios::out|std::ios::trunc);
@@ -217,6 +219,15 @@ ESCAN:
         data.set_y_mm(y);
         data.set_z_mm(z);
         
+		//DGA: Add fov fields to acquisition file
+		data.set_fov_x_size_um(current_fov.field_size_um_.x());
+		data.set_fov_y_size_um(current_fov.field_size_um_.y());
+		data.set_fov_z_size_um(current_fov.field_size_um_.z());
+		data.set_fov_x_overlap_um(current_fov.overlap_um_.x());
+		data.set_fov_y_overlap_um(current_fov.overlap_um_.y());
+		data.set_fov_z_overlap_um(current_fov.overlap_um_.z());
+
+
         #if 0 // one method -- the last cursor position
         {
             int x,y,z;
@@ -231,7 +242,6 @@ ESCAN:
         data.mutable_current_lattice_position()->set_y(r(1));
         data.mutable_current_lattice_position()->set_z(_cut_count); //DGA: Replace z lattice position with cut count since that is the most useful metric
         #endif
-        
         data.set_cut_count(_cut_count);
         std::string s;
         google::protobuf::TextFormat::PrintToString(data,&s);
