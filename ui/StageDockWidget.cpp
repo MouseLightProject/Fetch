@@ -223,7 +223,10 @@ namespace ui {
     w[1]->setRange(0.1,10.0);  // - normally this should be handled by DevicePropController
     w[2]->setRange(0.1,1.0);   //   but API's not right...validator doesn't accomidate non-lineedit controls well
                                //   need to explicitly set min-max or something
-    
+	for(int i=0;i<3;++i) //DGA: Lock velocity
+    { locked->assignProperty(w[i]  ,"readOnly",true);
+      unlocked->assignProperty(w[i],"readOnly",false);
+    }
     row->addWidget(   s=new QDoubleSpinBox(),irow,4);
     irow++;
     for(int i=0;i<3;++i) w[i]->setDecimals(4);

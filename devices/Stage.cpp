@@ -475,9 +475,9 @@ Error:
       CHKJMP(is_in_bounds(&t,x,y,z));
     }
 
-    { float vx,vy,vz;
+    { float vx,vy,vz; //DGA: Added this back to see if the stage somehow gets a weird velocity
       getVelocity(&vx,&vy,&vz);
-      //debug("(%s:%d): C843 Velocity %f %f %f"ENDL,__FILE__,__LINE__,vx,vy,vz);
+      debug("(%s:%d): C843 Velocity %f %f %f"ENDL,__FILE__,__LINE__,vx,vy,vz);
     }
     C843JMP( C843_HLT(handle_,"123") );              // Stop any motion in progress
     C843JMP( C843_MOV(handle_,"123",t) );            // Move!
@@ -518,10 +518,10 @@ Error:
   { getSafeZ(&z); //DGA: Ensure z is at least 8 mm
 	double t[3] = {x,y,z};
 
-    //{ float vx,vy,vz;
-    //  getVelocity(&vx,&vy,&vz);
-    //  debug("(%s:%d): C843 Velocity %f %f %f"ENDL,__FILE__,__LINE__,vx,vy,vz);
-    //}
+    { float vx,vy,vz; //DGA: Added this back to see if the stage somehow gets a weird velocity
+      getVelocity(&vx,&vy,&vz);
+      debug("(%s:%d): C843 Velocity %f %f %f"ENDL,__FILE__,__LINE__,vx,vy,vz);
+    }
     C843JMP( C843_HLT(handle_,"123") );              // Stop any motion in progress
     C843JMP( C843_MOV(handle_,"123",t) );            // Move!
 Error:
@@ -748,6 +748,10 @@ Error:
       &&is_in_bounds(*_config,1,y)
       &&is_in_bounds(*_config,2,z))
     { x_=x;y_=y;z_=z;
+	    { float vx,vy,vz; //DGA: Added this back to see if the stage somehow gets a weird velocity
+		getVelocity(&vx, &vy, &vz);
+		debug("(%s:%d): Simulated Velocity %f %f %f"ENDL, __FILE__, __LINE__, vx, vy, vz);
+		}
     } else
     { WARN("Position out of bounds.");
       return 0;
