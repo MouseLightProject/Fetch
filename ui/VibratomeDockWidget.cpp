@@ -3,6 +3,7 @@
 #include "AgentController.h"
 #include "google\protobuf\descriptor.h"
 #include "ui\StageDockWidget.h"
+#include "tasks\Vibratome.h" //DGA: Added this header to be able to call save_cut_count function
 
 namespace fetch {
 namespace ui {
@@ -332,6 +333,10 @@ namespace ui {
 		lockmachine->setInitialState(locked); //DGA: Set the inital state of the state machine to locked
 		lockmachine->start(); //DGA: The state machine is started
 		form->addRow("", checkBox); //DGA: Adds the row to the form, where the "" mean that the check box will be properly aligned with other fields in the widget
+
+		b = new MarkButton("Reset Cut Count to 0"); //DGA: Added button to reset cut count to 0
+		form->addRow(b);
+		connect(b, SIGNAL(clicked()), this, SLOT(confirmResetCutCount()));
       }
 
 #if 0 // turns out this tableview is completely useless.
@@ -430,4 +435,16 @@ namespace ui {
     { emit delta(dc_->vibratome()->verticalOffset());
     }
 
+	void 
+	  VibratomeGeometryDockWidget::
+		confirmResetCutCount() //DGA: To confirm that we want to reset the cut count
+	{
+		QMessageBox::StandardButton reply;
+		reply = QMessageBox::question(this, "Confirm", "Are you sure you want to reset the cut count to 0?", QMessageBox::Yes | QMessageBox::No);
+		if (reply == QMessageBox::Yes) {
+			dc_->_cut_count = 0;
+			task::microscope::save_cut_count(dc_->_cut_count);
+			qDebug() << "Reset cut count to 0";
+		}
+	}
 }} //end namespace fetch::ui

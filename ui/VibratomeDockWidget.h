@@ -76,6 +76,8 @@ namespace fetch{
 
       void updateFromConfig();
 
+	  void confirmResetCutCount(); //DGA: Added a slot to produce a dialog box to confirm resetting of cut count to 0
+
     signals:
       void imagePlane(float z_mm);
       void cutPlane(float z_mm);

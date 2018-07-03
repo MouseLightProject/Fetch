@@ -30,6 +30,15 @@ namespace microscope {
     virtual unsigned int run(device::Microscope* dc);
   };
 
+  static void save_cut_count(const int cut_count) { //DGA: Moved from Vibratome.cpp to here so that it can be accessible in VibratomeDockWidget.cpp
+	  const char *path[] = { "Software","Howard Hughes Medical Institute","Fetch","Microscope" };
+	  HKEY key = HKEY_CURRENT_USER;
+	  for (int i = 0; i<_countof(path); ++i)
+		  RegCreateKey(key, path[i], &key);
+	  Guarded_Assert_WinErr(ERROR_SUCCESS == (
+		  RegSetValueEx(key, "cut_count", 0, REG_DWORD,
+		  (const BYTE*)&cut_count, sizeof(cut_count))));
+  }
 } // fetch::task::microscope
 
 }}
