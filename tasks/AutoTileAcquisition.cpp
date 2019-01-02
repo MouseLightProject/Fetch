@@ -243,7 +243,7 @@ Error:
 		  if (current_cfg.scanner3d().zpiezo().um_step() > 1) {warning(ENDL"\tzpiezo's um_step (Stack Acquisition --> Z Step) is greater than 1"ENDL); eflag = true;}
 		  if (current_cfg.pipeline().frame_average_count() != 1) {warning(ENDL"\tpipeline's frame_average_count (Video Acquisition --> Frame Average Count) does not equal 1"ENDL); eflag = true;};
 		  if (dc->vibratome()->verticalOffset() != cfg_as_set_by_file.vibratome().geometry().dz_mm()){warning(ENDL"\tvibratome geometry's dz_mm does not equal Vibratome Geometry-->Offset"ENDL); eflag = true;};
-		  if (dc->vibratome()->verticalOffset()<0.5 || dc->vibratome()->verticalOffset()>2.5) {warning(ENDL"\tvibratome geometry's dz_mm (Vibratome Geometry-->Offset) is not between 0.5 and 2.5"ENDL); eflag = true;}
+		  if (dc->vibratome()->verticalOffset()<0.5 || dc->vibratome()->verticalOffset()>3.5) {warning(ENDL"\tvibratome geometry's dz_mm (Vibratome Geometry-->Offset) is not between 0.5 and 3.5"ENDL); eflag = true;}
 		  return eflag;
 	  }
 
