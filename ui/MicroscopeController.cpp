@@ -29,16 +29,33 @@ QCheckBox *
 	return scheduleStopAfterNextCutCheckBox; //DGA: Returns the checkbox
 }
 
+QCheckBox *
+  fetch::ui::MicroscopeController::
+  createAcquireCalibrationStackCheckBox(QWidget *parent) //DGA: Definition of function from header
+{	QCheckBox *acquireCalibrationStackCheckBox = new QCheckBox(parent);  //DGA: Dynamically allocates check box
+	connect(acquireCalibrationStackCheckBox, SIGNAL(clicked(bool)), this, SLOT(setAcquireCalibrationStack(bool)),Qt::QueuedConnection); //DGA: Connects check box's clicked signal to the acquireCalibrationStack slot of this class instance, so that acquireCalibrationStack_ of microscope_ will be updated when the checkbox is clicked
+	connect(&(microscope_->acquireCalibrationStackCheckBoxUpdater), SIGNAL(signaler(bool)),acquireCalibrationStackCheckBox, SLOT(setChecked(bool)),Qt::QueuedConnection); //DGA: Connect signaler of microscope_'s acquireCalibrationStackUpdater to setChecked slot so that changing acquireCalibrationStack_ will update the checkbox
+	acquireCalibrationStackCheckBox->clicked(false);//DGA: Initialize the checkbox to off
+	return acquireCalibrationStackCheckBox; //DGA: Returns the checkbox
+}
+
 void 
   fetch::ui::MicroscopeController::
   setSkipSurfaceFindOnImageResume(bool setValue) //DGA: setSkipSurfaceFindOnImageResume slot that takes in the setValue bool
 {	
-  microscope_->setSkipSurfaceFindOnImageResume(setValue); //DGA: sets micrsocope_->skipSurfaceFindOnImageResume_ to setValue
+  microscope_->setSkipSurfaceFindOnImageResume(setValue); //DGA: sets microscope_->skipSurfaceFindOnImageResume_ to setValue
 }
 
 void 
   fetch::ui::MicroscopeController::
   setScheduleStopAfterNextCut(bool setValue) //DGA: setScheduleStopAfterNextCut slot that takes in the setValue bool
 {	
-  microscope_->setScheduleStopAfterNextCut(setValue); //DGA: sets micrsocope_->scheduleStopAfterNextCut_ to setValue
+  microscope_->setScheduleStopAfterNextCut(setValue); //DGA: sets microscope_->scheduleStopAfterNextCut_ to setValue
+}
+
+void 
+  fetch::ui::MicroscopeController::
+  setAcquireCalibrationStack(bool setValue) //DGA: setScheduleStopAfterNextCut slot that takes in the setValue bool
+{	
+  microscope_->setAcquireCalibrationStack(setValue); //DGA: sets microscope_->acquireCalibrationStack_ to setValue
 }

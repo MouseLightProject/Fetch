@@ -62,7 +62,7 @@ void Init(void)
   QSettings settings;
   gp_microscope = NULL;
   fetch::cfg::device::Microscope* g_config=new fetch::cfg::device::Microscope();  // Don't free, should have application lifetime
-
+  fetch::cfg::device::Microscope* cfg_as_set_by_file = new fetch::cfg::device::Microscope();  //DGA: Use this to keep track of cfg as it is in the file Don't free, should have application lifetime
   //Shutdown
   Register_New_Shutdown_Callback(KillMicroscopeCallback);
   Register_New_Shutdown_Callback(QtShutdownCallback);
@@ -95,7 +95,7 @@ void Init(void)
     if(  cfgfile.open(QIODevice::ReadOnly) && cfgfile.isReadable() )
     { QByteArray contents=cfgfile.readAll();      
       qDebug() << contents;
-      if(parser.ParseFromString(contents.constData(),g_config))
+      if(parser.ParseFromString(contents.constData(),g_config) && parser.ParseFromString(contents.constData(),cfg_as_set_by_file)) //DGA: Added cfg_as_set_by_file part to load in data
       { QByteArray buf=cfgfile.fileName().toLocal8Bit();
         debug("Config file loaded from %s\n",buf.data());
         goto Success;
@@ -109,6 +109,7 @@ void Init(void)
     Guarded_Assert(cfgfile.open(QIODevice::ReadOnly));
     Guarded_Assert(cfgfile.isReadable());
     Guarded_Assert(parser.ParseFromString(cfgfile.readAll().constData(),g_config));
+	Guarded_Assert(parser.ParseFromString(cfgfile.readAll().constData(),cfg_as_set_by_file)); //DGA: Added cfg_as_set_by_file part to load in data
     { QByteArray buf=cfgfile.fileName().toLocal8Bit();
       debug("Config file loaded from %s\n",buf.data());
     }
@@ -118,6 +119,7 @@ void Init(void)
 
 Success:
   gp_microscope = new fetch::device::Microscope(g_config);
+  gp_microscope->cfg_as_set_by_file = cfg_as_set_by_file; //DGA: Set the microscope variable cfg_as_set_by_file to store the current state of the cfg as it is in the file
 }
 
 int main(int argc, char *argv[])
@@ -130,7 +132,7 @@ int main(int argc, char *argv[])
   QApplication app(argc,argv);  
   Init();
   fetch::ui::MainWindow mainwindow(gp_microscope);
-  mainwindow.setWindowTitle("Fetch V1.2"); //DGA: Window title now includes version number.
+  mainwindow.setWindowTitle("Fetch V1.27Beta"); //DGA: Window title now includes version number.
   gp_microscope->onUpdate(); // force update so gui gets notified - have to do this mostly for stage listeners ...
   mainwindow.show();
 

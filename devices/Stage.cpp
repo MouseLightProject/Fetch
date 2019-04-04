@@ -411,7 +411,8 @@ Error:
   }
 
   int C843Stage::setVelocity( float vx, float vy, float vz )
-  { const double t[3] = {vx,vy,vz};
+  { getSafeVelocity(&vx, &vy, &vz); //DGA: Ensure velocities are in acceptable range
+	const double t[3] = {vx,vy,vz};
     C843JMP( C843_VEL(handle_,"123",t) );
     return 1; // success
 Error:
@@ -466,16 +467,17 @@ Error:
   \todo  what is behavior around limits?
 */
   int C843Stage::setPos( float x, float y, float z, int sleep_ms/*=500*/)
-  { double t[3] = {x,y,z};
+  { getSafeZ(&z); //DGA: Ensure z is at least 8 mm
+	double t[3] = {x,y,z};
     BOOL ontarget[] = {0,0,0};
     { StageTravel t;
       CHKJMP(getTravel(&t));
       CHKJMP(is_in_bounds(&t,x,y,z));
     }
 
-    { float vx,vy,vz;
+    { float vx,vy,vz; //DGA: Added this back to see if the stage somehow gets a weird velocity
       getVelocity(&vx,&vy,&vz);
-      //debug("(%s:%d): C843 Velocity %f %f %f"ENDL,__FILE__,__LINE__,vx,vy,vz);
+      debug("(%s:%d): C843 Velocity %f %f %f"ENDL,__FILE__,__LINE__,vx,vy,vz);
     }
     C843JMP( C843_HLT(handle_,"123") );              // Stop any motion in progress
     C843JMP( C843_MOV(handle_,"123",t) );            // Move!
@@ -513,12 +515,13 @@ Error:
   }
 
   void C843Stage::setPosNoWait( float x, float y, float z )
-  { double t[3] = {x,y,z};
+  { getSafeZ(&z); //DGA: Ensure z is at least 8 mm
+	double t[3] = {x,y,z};
 
-    //{ float vx,vy,vz;
-    //  getVelocity(&vx,&vy,&vz);
-    //  debug("(%s:%d): C843 Velocity %f %f %f"ENDL,__FILE__,__LINE__,vx,vy,vz);
-    //}
+    { float vx,vy,vz; //DGA: Added this back to see if the stage somehow gets a weird velocity
+      getVelocity(&vx,&vy,&vz);
+      debug("(%s:%d): C843 Velocity %f %f %f"ENDL,__FILE__,__LINE__,vx,vy,vz);
+    }
     C843JMP( C843_HLT(handle_,"123") );              // Stop any motion in progress
     C843JMP( C843_MOV(handle_,"123",t) );            // Move!
 Error:
@@ -723,7 +726,8 @@ Error:
   }
 
   int SimulatedStage::setVelocity( float vx, float vy, float vz )
-  { vx_=vx;vy_=vy;vz_=vz;
+  { getSafeVelocity(&vx, &vy, &vz); //DGA: Ensure velocities are in acceptable range
+	vx_=vx;vy_=vy;vz_=vz;
     return 1;
   }
 
@@ -739,11 +743,15 @@ Error:
   }
 
   int SimulatedStage::setPos( float x, float y, float z,int sleep_ms )
-  {
+  { getSafeZ(&z); //DGA: Ensure z is at least 8 mm
     if( is_in_bounds(*_config,0,x)
       &&is_in_bounds(*_config,1,y)
       &&is_in_bounds(*_config,2,z))
     { x_=x;y_=y;z_=z;
+	    { float vx,vy,vz; //DGA: Added this back to see if the stage somehow gets a weird velocity
+		getVelocity(&vx, &vy, &vz);
+		debug("(%s:%d): Simulated Velocity %f %f %f"ENDL, __FILE__, __LINE__, vx, vy, vz);
+		}
     } else
     { WARN("Position out of bounds.");
       return 0;
@@ -838,7 +846,7 @@ Error:
     if(_simulated) _simulated->_set_config(cfg->mutable_simulated());
     _config = cfg;
 
-    setVelocity(_config->default_velocity_mm_per_sec());
+	setVelocity(_config->default_velocity_mm_per_sec());
     set_tiling_z_offset_mm(_config->tile_z_offset_mm());
   }
 
@@ -986,7 +994,7 @@ Error:
   }
 
   int  Stage::setPos(float  x,float  y,float  z,int sleep_ms)
-  {
+  { getSafeZ(&z); //DGA: Ensure z is at least 8 mm
     int out = _istage->setPos(x,y,z);
     _config->mutable_last_target_mm()->set_x(x);
     _config->mutable_last_target_mm()->set_y(y);
@@ -996,7 +1004,7 @@ Error:
   }
 
   void Stage::setPosNoWait(float  x,float  y,float  z)
-  {
+  { getSafeZ(&z); //DGA: Ensure z is at least 8 mm
 #if 0
     Config c = get_config();                         // This block performs a "safe" commit
     c.mutable_last_target_mm()->set_x(x);            // of the last position, but will try to

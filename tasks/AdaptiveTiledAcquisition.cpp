@@ -172,9 +172,8 @@ Error:
 		}
 
 		size_t iplane=dc->stage()->getPosInLattice().z(); //DGA: Get the plane position
-		if(!dc->_agent->is_stopping() && !tiling->didTileDilationForThisSlice_) //DGA: Only dilate active tiles if it is not being stopped if it hasn't already dilated tiles for this slice or explore has been performed
+		if(!dc->_agent->is_stopping()) //DGA: Only dilate active tiles if it is not being stopped if it hasn't already dilated tiles for this slice or explore has been performed
 		{ tiling->dilateActive(iplane);
-		  tiling->didTileDilationForThisSlice_=true;
 		}
 
 		// restore connection between end of pipeline and disk 
@@ -184,6 +183,7 @@ Error:
 		tiling->resetCursor();
         while(eflag==0 && !dc->_agent->is_stopping() && tiling->nextInPlanePosition(tilepos))
         { TS_TIC;
+		  dc->file_series.inc(false);               // DGA: check to make sure correct date and seriesno
           debug("%s(%d)"ENDL "\t[Adaptive Tiling Task] tilepos: %5.1f %5.1f %5.1f"ENDL,__FILE__,__LINE__,tilepos[0],tilepos[1],tilepos[2]);
           filename = dc->stack_filename();
           dc->file_series.ensurePathExists();
@@ -248,7 +248,6 @@ Error:
 
           TS_TOC;          
         } // end loop over tiles
-		if (eflag == 0 && !dc->_agent->is_stopping()) { tiling->didTileDilationForThisSlice_ = false;} //DGA: Then completed with the slice and should reset bool for next slice
         eflag |= dc->stopPipeline();           // wait till the  pipeline stops
         TS_CLOSE;
         return eflag;

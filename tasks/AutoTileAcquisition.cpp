@@ -21,6 +21,7 @@
 #include "devices\Microscope.h"
 #include "devices\tiling.h"
 #include "AdaptiveTiledAcquisition.h"
+#include "CalibrationStack.h"
 
 #define CHKJMP(expr) if(!(expr)) {warning("%s(%d)"ENDL"\tExpression indicated failure:"ENDL"\t%s"ENDL,__FILE__,__LINE__,#expr); goto Error;}
 #define WARN(msg)    warning("%s(%d)"ENDL"\t%s"ENDL,__FILE__,__LINE__,msg)
@@ -71,7 +72,7 @@ namespace fetch
       */
 
       //Upcasting
-      unsigned int AutoTileAcquisition::config(IDevice *d) {return config(dynamic_cast<device::Microscope*>(d));}
+      unsigned int AutoTileAcquisition::config(IDevice *d) {return config(dynamic_cast<device::Microscope*>(d));} 
       unsigned int AutoTileAcquisition::run   (IDevice *d) {return run   (dynamic_cast<device::Microscope*>(d));}
 
       unsigned int AutoTileAcquisition::config(device::Microscope *d)
@@ -196,7 +197,7 @@ Error:
       { Vector3f tilepos;
         unsigned any_explorable=0,
                  any_active=0;
-        cfg::tasks::AutoTile cfg=dc->get_config().autotile();
+		cfg::tasks::AutoTile cfg=dc->get_config().autotile();
         size_t iplane=dc->stage()->getPosInLattice().z();
 
         device::StageTiling* tiling = dc->stage()->tiling();
@@ -215,14 +216,13 @@ Error:
           CHKJMP(dc->stage()->setPos(tilepos*0.001)); // convert um to mm
           CHKJMP(im=dc->snapshot(cfg.z_um(),cfg.timeout_ms()));
           tiling->markExplored();
-
+		  
           tiling->markDetected(classify(im,cfg.ichan(),cfg.intensity_threshold(),cfg.area_threshold()));
 		  if (digcfg.kind() == cfg::device::Digitizer_DigitizerType_Simulated){	//DGA: If digitizer is simulated, then simulate an ellipsoidal volume
 			  if (!insideSimulationOfEllipse(cfg.maxz_mm()*1000, dc->stage()->getTarget().z()*1000.0, tilepos)) tiling->markDetected(false); //DGA: If the tile is outside the simulated volume, mark as undetected (by default, simulation mode marks everything as detected)
 		  }
           mylib::Free_Array(im);
         }
-		any_explorable ? tiling->didTileDilationForThisSlice_ = false : tiling->didTileDilationForThisSlice_ = true; //DGA: Reset didTileDilationForThisSlice_ based on whether any tiles were explorable
         if(!tiling->updateActive(iplane))
         { WARN("No tiles found to image.\n");
           goto Error;
@@ -235,22 +235,40 @@ Error:
         return 0;
       }
 
+	  static bool sanity_checks(device::Microscope *dc){//DGA: Sanity checks regarding z max, z step, frame average count, vibratome offset and vibratome geometry
+		  bool eflag = false;
+		  device::Microscope::Config current_cfg = dc->get_config(); //DGA: current state of cfg
+		  device::Microscope::Config cfg_as_set_by_file = *dc->cfg_as_set_by_file; //DGA: cfg state from file
+		  if (current_cfg.scanner3d().zpiezo().um_max() != current_cfg.fov().z_size_um()) {warning(ENDL"\tzpiezo's um_max (Stack Acquisition --> Z Max) does not equal fov's z_size_um"ENDL); eflag = true;}
+		  if (current_cfg.scanner3d().zpiezo().um_step() > 1) {warning(ENDL"\tzpiezo's um_step (Stack Acquisition --> Z Step) is greater than 1"ENDL); eflag = true;}
+		  if (current_cfg.pipeline().frame_average_count() != 1) {warning(ENDL"\tpipeline's frame_average_count (Video Acquisition --> Frame Average Count) does not equal 1"ENDL); eflag = true;};
+		  if (dc->vibratome()->verticalOffset() != cfg_as_set_by_file.vibratome().geometry().dz_mm()){warning(ENDL"\tvibratome geometry's dz_mm does not equal Vibratome Geometry-->Offset"ENDL); eflag = true;};
+		  if (dc->vibratome()->verticalOffset()<0.5 || dc->vibratome()->verticalOffset()>3.5) {warning(ENDL"\tvibratome geometry's dz_mm (Vibratome Geometry-->Offset) is not between 0.5 and 3.5"ENDL); eflag = true;}
+		  return eflag;
+	  }
+
       unsigned int AutoTileAcquisition::run(device::Microscope *dc)
       { unsigned eflag=0; //success
         cfg::tasks::AutoTile cfg=dc->get_config().autotile();
-        TiledAcquisition         nonadaptive_tiling;
+		TiledAcquisition         nonadaptive_tiling;
         AdaptiveTiledAcquisition adaptive_tiling;
         MicroscopeTask *tile=0;
         Cut cut;
 		device::StageTiling * tiling = dc->stage()->tiling(); //DGA: Pointer to tiling object
-
+		device::Pockels * pockels1 = &(dc->scanner._scanner2d._pockels1), * pockels2 = &(dc->scanner._scanner2d._pockels2);
         tile=cfg.use_adaptive_tiling()?((MicroscopeTask*)&adaptive_tiling):((MicroscopeTask*)&nonadaptive_tiling);
-
-        while(!dc->_agent->is_stopping() && PlaneInBounds(dc,cfg.maxz_mm()))
-        { 
+		CalibrationStack calibration_stack;
+		CHKJMP(0==sanity_checks(dc)); //DGA: Perform sanity checks
+		while (!dc->_agent->is_stopping() && PlaneInBounds(dc, cfg.maxz_mm()))
+		{
+		  if ( (pockels1->get_config().has_calibration_stack() || pockels2->get_config().has_calibration_stack()) && dc->getAcquireCalibrationStack()) //DGA: If one of the pockels has the calibration stack set and a calibration stack should be acquired
+		  {
+			//CHKJMP(calibration_stack.config(dc));//DGA: Make sure no errors occur
+			//CHKJMP(0==calibration_stack.run(dc));
+		  }
           if(cfg.use_explore())
             CHKJMP(explore(dc));       // will return an error if no explorable tiles found on the plane
-          CHKJMP(   tile->config(dc));
+		  CHKJMP(tile->config(dc));
           CHKJMP(0==tile->run(dc));
 
           /* Assert the trip detector hasn't gone off.  
@@ -260,6 +278,7 @@ Error:
           CHKJMP(dc->trip_detect.ok());
 		  
           CHKJMP(   cut.config(dc));
+		  dc->cutButtonWasPressed = false; //DGA: Before a cut, set cutButtonWasPressed to false
           CHKJMP(0==cut.run(dc));
 		  if(tiling->useTwoDimensionalTiling_) //DGA: If using two dimensional tiling
 		  {
@@ -274,9 +293,10 @@ Error:
 		  }
         }
 
-Finalize:
+	Finalize:
+		dc->cutButtonWasPressed = true; //DGA: Make sure that cutButtonWasPressed is true unless otherwise specified (above)
         return eflag;
-Error:
+	Error:
         eflag=1;
         goto Finalize;
       }

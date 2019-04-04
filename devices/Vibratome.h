@@ -204,12 +204,9 @@ namespace fetch
 
               float    thickness_um()             { return (float)_config->cut_thickness_um();}
               int      setThicknessUmNoWait(float um);
-			  float    backupDistanceMm()		  { return (float)_config->backup_distance_mm();} //DGA: Get the desired backup distance to get to safe z plane, in mm.
 			  void     setSliceThicknessCorrectionUm(float um) ; //DGA: Function declaration of slice thickness correction setter
 			  float	   getSliceThicknessCorrectionUm(){return sliceThicknessCorrectionUm_;} //DGA: Getter of slice thickness correction
 			  ui::simpleSignalerClass sliceThicknessCorrectionUmLineEditUpdater, sliceThicknessCorrectionUmLabelUpdater; //DGA: Instances of simpleSignalerClass so that changes to sliceThicknessCorrectionUm_ can be transmitted to the UI
-
-			  float    minimumDropDistance_mm = 0.5, minimumSafeZHeightToDropTo_mm = 8;
     };
   
   } // end namespace device

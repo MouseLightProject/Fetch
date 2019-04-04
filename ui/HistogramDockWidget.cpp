@@ -211,9 +211,9 @@ namespace ui {
 	  QHBoxLayout* percentileRow = new QHBoxLayout(); //DGA: Percentile row for changing cutoffs
 	  //DGA: Labels and default values for under/oversaturated percentages (10/90 respectively)
 	  QLabel * undersaturatedPercentileLabel = new QLabel("Undersaturated %:"); 
-	  undersaturatedPercentile_ = new QLineEdit("10");
+	  undersaturatedPercentile_ = new QLineEdit("5");
 	  QLabel * oversaturatedPercentileLabel = new QLabel("Oversaturated %:");
-	  oversaturatedPercentile_ = new QLineEdit("90");
+	  oversaturatedPercentile_ = new QLineEdit("99.99");
 	  //DGA: connect the editing finished signals of the under/oversaturated percentiles to the signal mapper's map slot, mapping the signals respectively
 	  PANIC(connect(undersaturatedPercentile_, SIGNAL(editingFinished()),
 		    percentileSignalMapper_, SLOT(map())));

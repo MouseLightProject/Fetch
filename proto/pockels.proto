@@ -18,9 +18,20 @@ message NIDAQPockels
 
 message SimulatedPockels
 {
-  optional double val = 1 [default=0.0];
+  optional double v_open = 1 [default=0.0];
 }
 
+message Target3d //DGA added for use as target position
+{ optional float x = 1 [default=10.0];
+  optional float y = 2 [default=10.0];
+  optional float z = 3 [default=10.0];
+}
+
+message CalibrationStack //DGA added to allow for taking a calibration stack at specific x y and z
+{
+  optional double    v_open_percent      = 1 [default=0.0];          // control voltage when pockels is maximally transmissive
+  repeated Target3d  target_mm   = 2;                        // DGA used as the target x,y and z postion      
+}
 message Pockels
 { enum PockelsType
   {
@@ -39,4 +50,6 @@ message Pockels
 
   optional NIDAQPockels        nidaq       = 5;
   optional SimulatedPockels    simulated   = 6;
+
+  optional CalibrationStack    calibration_stack = 7;
 }
