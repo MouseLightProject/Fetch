@@ -4,10 +4,11 @@ Fetch is a program developed to image entire mouse brains by repeatedly alternat
 
 
 ## System Requirements
-64-bit Windows 7
-Microsoft Visual Studio 12 2013
+64-bit Windows 7 or Higher
+Microsoft Visual Studio 12 2013 or higher (but still need Microsoft Visual Studio 12 2013 for Cmake Generator)
 QT 5.5
 NVIDIA CUDA 7.0 and higher
+NI MAX
 CMAKE
 Currently, only the src directory is located in this repository; other directories are required but are too large to include in github.
 
@@ -15,7 +16,7 @@ Currently, only the src directory is located in this repository; other directori
 ## Installation Instructions
 1.	Download opensource qt5.5 WITH tools selected as well, nvidia 7.5, visual studio 12 2013, protoc.exe and replace the old protoc.exe in C:\Users\ackermand\Google Drive\Janelia\ScientificComputing\src\3rdParty\protobuf-2.6.1\vsprojects\Debug
 2.	Open cmake, turn off developer warnings CHECK ADVANCED BOX.
-3.	Select source as /src/fetch/
+3.	Select source as /path/to/src/fetch/
 4.	Select a clean directory to build the binaries
 5.	Add below, by clicking add entry. Put the desired path etc in the value section after you enter the name.
 	*	PROTOBUF_INCLUDE_DIR:PATH=/path/to/src/3rdParty/protobuf-2.6.1/src
@@ -31,10 +32,12 @@ Currently, only the src directory is located in this repository; other directori
 	*	MYLIB_MYLIB_LIBRARY_R:STRING=/path/to/src/mylib/Visual Studio 10 Win64/Release/mylib.lib
 	*	MYLIB_MYTIFF_LIBRARY_D:FILEPATH=/path/to/src/mylib/Visual Studio 10 Win64/Debug/mytiff.lib
 	*	MYLIB_MYTIFF_LIBRARY_R:STRING=/path/to/src/mylib/Visual Studio 10 Win64/Release/mytiff.lib
-	*	CUDA_TOOLKIT_INCLUDE:PATH=C:/
+	*	CUDA_TOOLKIT_INCLUDE:PATH=C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v7.5/include
 8.	Press configure again (it will find more directories). Then press it again. Then click generate.
 9.	Open fetch.sln, and change fetch to startup project and build.
 10.	Copy glew32.dll (can be from parent directory or build2/debug/ etc.) into Debug, and Qt5Cored.dll, Qt5Guid.dll, Qt5Networkd.dll, Qt5OpenGLd.dll, Qt5PrintSupportd.dll, Qt5Widgetsd.dll from C:\Qt\5.5\msvc2013_64\bin into Debug
+11. 	Run Fetch
+	* If no external devices are detected, Fetch will run in simulation mode. In this mode, Fetch will use noise to simulate data in order to cycle through the different steps in the pipeline. 
 
 ## Authors
 Fetch was developed at the HHMI Janelia Research Campus. It was written by Nathan Clack, and the original repository can be found on his github:(https://github.com/TeravoxelTwoPhotonTomography/fetch).
