@@ -36,12 +36,12 @@ Currently, only the src directory is located in this repository; other directori
 9.	Open fetch.sln, and change fetch to startup project and build.
 10.	Copy glew32.dll (can be from parent directory or build2/debug/ etc.) into Debug, and Qt5Cored.dll, Qt5Guid.dll, Qt5Networkd.dll, Qt5OpenGLd.dll, Qt5PrintSupportd.dll, Qt5Widgetsd.dll from C:\Qt\5.5\msvc2013_64\bin into Debug
 
-### Authors
+## Authors
 Fetch was developed at the HHMI Janelia Research Campus. It was written by Nathan Clack, and the original repository can be found on his github:(https://github.com/TeravoxelTwoPhotonTomography/fetch).
 
 Fetch is currently developed by David Ackerman.
 
-### Version History
+## Version History
 
 * 1.0    Aug 5, 2016:    Initial commit, based on fully functional code from local
 		      microscope machine, written by Nathan Clack.
