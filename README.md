@@ -4,8 +4,6 @@ Fetch is a program developed to image entire mouse brains by repeatedly alternat
 
 
 ## System Requirements
-___________________
-
 64-bit Windows 7
 Microsoft Visual Studio 12 2013
 QT 5.5
@@ -15,8 +13,6 @@ Currently, only the src directory is located in this repository; other directori
 
 
 ## Installation Instructions
-________
-
 1.	Download opensource qt5.5 WITH tools selected as well, nvidia 7.5, visual studio 12 2013, protoc.exe and replace the old protoc.exe in C:\Users\ackermand\Google Drive\Janelia\ScientificComputing\src\3rdParty\protobuf-2.6.1\vsprojects\Debug
 2.	Open cmake, turn off developer warnings CHECK ADVANCED BOX.
 3.	Select source as /src/fetch/
@@ -41,14 +37,11 @@ ________
 10.	Copy glew32.dll (can be from parent directory or build2/debug/ etc.) into Debug, and Qt5Cored.dll, Qt5Guid.dll, Qt5Networkd.dll, Qt5OpenGLd.dll, Qt5PrintSupportd.dll, Qt5Widgetsd.dll from C:\Qt\5.5\msvc2013_64\bin into Debug
 
 ### Authors
-_______
-
 Fetch was developed at the HHMI Janelia Research Campus. It was written by Nathan Clack, and the original repository can be found on his github:(https://github.com/TeravoxelTwoPhotonTomography/fetch).
 
 Fetch is currently developed by David Ackerman.
 
 ### Version History
-_______________
 
 * 1.0    Aug 5, 2016:    Initial commit, based on fully functional code from local
 		      microscope machine, written by Nathan Clack.
