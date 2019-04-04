@@ -17,6 +17,7 @@ namespace ui{
     parent->_autotile_timeoutms_control->createLineEditAndAddToLayout(form);
     parent->_autotile_chan_control->createLineEditAndAddToLayout(form);
     parent->_autotile_intensity_thresh_control->createLineEditAndAddToLayout(form);
+	parent->_surface_find_intensity_thresh_control->createLineEditAndAddToLayout(form); //DGA: Added this new field
     parent->_autotile_area_thresh_control->createLineEditAndAddToLayout(form);
 
 	QCheckBox * skipSurfaceFindOnImageResumeCheckBox = parent->_microscopeController->createSkipSurfaceFindOnImageResumeCheckBox(); //DGA: create skipSurfaceFindOnImageResumeCheckBox
@@ -26,6 +27,10 @@ namespace ui{
 	QCheckBox * scheduleStopAfterNextCutCheckBox = parent->_microscopeController->createScheduleStopAfterNextCutCheckBox(); //DGA: create scheduleStopAfterNextCutCheckBox
 	scheduleStopAfterNextCutCheckBox->setText("Schedule Stop After Next Cut"); //DGA: Set the text then add the checkbox so that is aligned properly with other widgets
 	form->addRow("", scheduleStopAfterNextCutCheckBox);
+
+	QCheckBox * acquireCalibrationStackCheckBox = parent->_microscopeController->createAcquireCalibrationStackCheckBox(); //DGA: create acquireCalibrationStackCheckBox
+	acquireCalibrationStackCheckBox->setText("Acquire Calibration Stack"); //DGA: Set the text then add the checkbox so that is aligned properly with other widgets
+	form->addRow("", acquireCalibrationStackCheckBox);
 
     AgentControllerButtonPanel *btns = new AgentControllerButtonPanel(&parent->_scope_state_controller,&dc->auto_tile_task);
     form->addRow(btns);

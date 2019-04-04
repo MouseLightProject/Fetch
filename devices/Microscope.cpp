@@ -62,6 +62,7 @@ namespace fetch
       set_config(_config);
       pipeline.set_scan_rate_Hz(_config->scanner3d().scanner2d().frequency_hz());
       pipeline.set_sample_rate_MHz(scanner.get2d()->_digitizer.sample_rate_MHz());
+	  stage_.setVelocity(_config->stage().default_velocity_mm_per_sec()); //DGA: Update default velocity
 
       __common_setup();
     }
@@ -89,6 +90,8 @@ namespace fetch
       set_config(cfg);
       pipeline.set_scan_rate_Hz(_config->scanner3d().scanner2d().frequency_hz());
       pipeline.set_sample_rate_MHz(scanner.get2d()->_digitizer.sample_rate_MHz());
+	  stage_.setVelocity(_config->stage().default_velocity_mm_per_sec()); //DGA: Update default velocity
+
       __common_setup();
     }
 
@@ -114,6 +117,8 @@ namespace fetch
     {
       pipeline.set_scan_rate_Hz(_config->scanner3d().scanner2d().frequency_hz());
       pipeline.set_sample_rate_MHz(scanner.get2d()->_digitizer.sample_rate_MHz());
+      stage_.setVelocity(_config->stage().default_velocity_mm_per_sec()); //DGA: Update default velocity
+
       __common_setup();
     }
 
@@ -151,7 +156,6 @@ ESTAGE:
       __scan_agent.detach();
 ESCAN:
       return 1;
-
 
     }
 
@@ -197,11 +201,13 @@ ESCAN:
 
     void Microscope::write_stack_metadata()
     {
+		device::FieldOfViewGeometry current_fov; //DGA: current field of view geometry
       { std::ofstream fout(config_filename().c_str(),std::ios::out|std::ios::trunc);
         std::string s;
         Config c = get_config();
         google::protobuf::TextFormat::PrintToString(c,&s);
         fout << s;
+		current_fov = c.fov();
       }
       { float x,y,z;
         std::ofstream fout(metadata_filename().c_str(),std::ios::out|std::ios::trunc);
@@ -213,6 +219,15 @@ ESCAN:
         data.set_y_mm(y);
         data.set_z_mm(z);
         
+		//DGA: Add fov fields to acquisition file
+		data.set_fov_x_size_um(current_fov.field_size_um_.x());
+		data.set_fov_y_size_um(current_fov.field_size_um_.y());
+		data.set_fov_z_size_um(current_fov.field_size_um_.z());
+		data.set_fov_x_overlap_um(current_fov.overlap_um_.x());
+		data.set_fov_y_overlap_um(current_fov.overlap_um_.y());
+		data.set_fov_z_overlap_um(current_fov.overlap_um_.z());
+
+
         #if 0 // one method -- the last cursor position
         {
             int x,y,z;
@@ -227,7 +242,6 @@ ESCAN:
         data.mutable_current_lattice_position()->set_y(r(1));
         data.mutable_current_lattice_position()->set_z(_cut_count); //DGA: Replace z lattice position with cut count since that is the most useful metric
         #endif
-        
         data.set_cut_count(_cut_count);
         std::string s;
         google::protobuf::TextFormat::PrintToString(data,&s);
@@ -458,14 +472,39 @@ Error:
       return 0;
     }
 
+	unsigned int Microscope::moveToNewPosThroughSafeZ(Vector3f pos){ //DGA: Move to a new position by first moving the stage to a safe z location
+		float cx, cy, cz; //DGA: Current x,y and z
+		CHKJMP(stage()->getTarget(&cx, &cy, &cz), Error);
+		float actualZHeightToDropTo_mm = safeZtoLowerTo_mm(cz); //DGA: The actual z height to drop to is based on the desired backup set in microscope and should be at a minimum 8 mm
+		CHKJMP(stage()->setPos(cx, cy, actualZHeightToDropTo_mm), Error);           // Drop to safe z first
+		CHKJMP(stage()->setPos(pos[0], pos[1], actualZHeightToDropTo_mm), Error);           //DGA: Move to appropriate x,y
+		CHKJMP(stage()->setPos(pos), Error); //DGA: Move to appropriate z
+		return 1;
+	  Error:
+		  return 0;
+	}
+
+	float Microscope::safeZtoLowerTo_mm(float currentZ){ //DGA: This will output the z height for the stage to be lowered to based on the minimum z stage height and the desired backup distance
+		Config c = get_config();
+		float desiredBackupDistance = c.backup_distance_mm();
+		float backupDistance_mm = (desiredBackupDistance > minimumBackupDistance_mm) ? desiredBackupDistance : minimumBackupDistance_mm; //DGA: Ensure the stage is dropped by at least the minimum amount
+		float actualZHeightToDropTo_mm = ((currentZ - backupDistance_mm) > minimumSafeZHeightToDropTo_mm) ? (currentZ - backupDistance_mm) : minimumSafeZHeightToDropTo_mm; //DGA: The actual z height to drop to should be at a minimum 8 mm
+		return actualZHeightToDropTo_mm;
+	}
+
 	void Microscope::setSkipSurfaceFindOnImageResume(bool setValue){ //DGA: Defintion of setSkipSurfaceFindOnImageResume function
 		skipSurfaceFindOnImageResume_ = setValue; //DGA: set value of skipSurfaceFindOnImageResume_ equal to setValue
 		skipSurfaceFindOnImageResumeCheckBoxUpdater.signaler(setValue); //DGA: Signal signal_valueSet(setValue) so that the skipSurfaceFindOnImageResume checkbox will be updated
 	}
 
-	void Microscope::setScheduleStopAfterNextCut(bool setValue){ //DGA: Defintion of scheduleStopAfterNextCut function
+	void Microscope::setScheduleStopAfterNextCut(bool setValue){ //DGA: Defintion of setScheduleStopAfterNextCut function
 		scheduleStopAfterNextCut_ = setValue; //DGA: set value of scheduleStopAfterNextCut_ equal to setValue
 		scheduleStopAfterNextCutCheckBoxUpdater.signaler(setValue); //DGA: Signal signal_valueSet(setValue) so that the scheduleStopAfterNextCut checkbox will be updated
+	}
+
+	void Microscope::setAcquireCalibrationStack(bool setValue){ //DGA: Defintion of setAcquireCalibrationStack function
+		acquireCalibrationStack_ = setValue; //DGA: set value of acquireCalibrationStack_ equal to setValue
+		acquireCalibrationStackCheckBoxUpdater.signaler(setValue); //DGA: Signal signal_valueSet(setValue) so that the acquireCalibrationStack checkbox will be updated
 	}
 
     ///////////////////////////////////////////////////////////////////////
@@ -478,8 +517,7 @@ Error:
 #define VALIDATE
 #endif
 
-
-    FileSeries& FileSeries::inc( void )
+    FileSeries& FileSeries::inc( bool increment ) //DGA: Added increment which sets whether to increment seriesno, or just check if it needs to be reset.
 	{ QSettings settings;
       
 	  VALIDATE;
@@ -499,7 +537,9 @@ Error:
 			  lastpath = seriespath; //DGA: Reset lastpath
 		  }
 		  else{
-			  seriesno = (seriesno + 1);// increment
+			  if (increment){
+				  seriesno = (seriesno + 1);// increment
+			  }
 		  }
 	  }
 

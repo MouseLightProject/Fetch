@@ -35,7 +35,6 @@ namespace device {
     mylib::Indx_Type           current_plane_offset_;                      ///< marks the current plane
     mylib::Indx_Type           sz_plane_nelem_;                            ///< the size of a plane in the tile database
 	bool					   useTwoDimensionalTiling_;				   ///< whether or not to use two dimensional tiling
-	bool					   didTileDilationForThisSlice_;				   ///< DGA: To keep track of whether tile dilation occured in a slice
     TTransform                 latticeToStage_;                            ///< Transforms lattice coordinates to the tiles anchor point on the stage
     TListeners                 listeners_;                                 ///< set of objects to be notified of tiling events
     FieldOfViewGeometry        fov_;                                       ///< the geometry used to generate the tiling
@@ -57,7 +56,8 @@ namespace device {
       Safe        = 128,                                                   ///< indicates a tile is safe to image; it is within the allowed travel of the stages
       Reserved    = 512,                                                   ///< used internally to temporarily mark tiles
       Reserved2   = 256,                                                   ///< used internally to temporarily mark tiles
-	  OffsetMeasured = 1024												   ///< used internally to temporarily mark tiles when their offset has been measured 
+	  OffsetMeasured = 1024,											   ///< DGA: used internally to temporarily mark tiles when their offset has been measured 
+	  Dilated     = 2048												   ///< DGA: used  internally to mark a section as having been dilated
     };
 
              StageTiling(const device::StageTravel& travel,
@@ -90,7 +90,7 @@ namespace device {
     void     markSafe(bool tf=true);
     void     markExplored(bool tf=true);
     void     markDetected(bool tf=true);
-	void	 markOffsetMeasured(bool tf=true); ///< Marks a tile if its offset has been measured, with the default being to set it to true
+	void	 markOffsetMeasured(bool tf=true); ///< DGA: Marks a tile if its offset has been measured, with the default being to set it to true
     void     markAddressable(size_t iplane); ///< Marks the indicated plane as addressable according to the travel.
     void     markUserReset(); ///< Resets user-settable flags to default
 	void	 markResetGivenAttributeCombinationForTilesInCurrentPlane(uint32_t query_mask); //DGA: Resets given attributes combination for the tiles in the current plane
@@ -101,7 +101,7 @@ namespace device {
     void     dilateActive(size_t iplane);                                  //   2d
 
     void     fillHoles(size_t iplane, StageTiling::Flags flag);            //   2d
-    void     dilate(size_t iplane, int ntimes, StageTiling::Flags query_flag, StageTiling::Flags write_flag, int explorable_only); // 2d
+    void     dilate(size_t iplane, int ntimes, uint16_t query_flag, uint16_t write_flag, int explorable_only, uint16_t exclude_flag = 0, uint16_t valid_flag = 0); // 2d, DGA: Added exclude flag for excluding some tiles from being dilatable, as well as a valid flag so dilation only occurs in valid regions
 
     inline mylib::Array*     attributeArray()                              {return attr_;}
     inline const TTransform& latticeToStageTransform()                     {return latticeToStage_; }
@@ -117,7 +117,6 @@ namespace device {
     void unlock()                                                          {Mutex_Unlock(lock_);}
 	
     bool on_plane(uint32_t *p); //used by TileSearch    
-	
     int minDistTo( // used by adaptive tiling
     uint32_t search_mask,uint32_t search_flags,   // area to search 
     uint32_t query_mask ,uint32_t query_flags);  // tile to find

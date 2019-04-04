@@ -71,16 +71,6 @@ namespace microscope {
     goto Error;     \
   }
 
-  static void save_cut_count(const int cut_count) {
-      const char *path[]={"Software","Howard Hughes Medical Institute","Fetch","Microscope"};
-      HKEY key=HKEY_CURRENT_USER;
-      for(int i=0;i<_countof(path);++i)
-        RegCreateKey(key,path[i],&key);      
-      Guarded_Assert_WinErr(ERROR_SUCCESS==(
-        RegSetValueEx(key,"cut_count",0,REG_DWORD,
-                      (const BYTE*)&cut_count,sizeof(cut_count))));
-  }
-
   /* MOTION
      ======                            (c*)<-- New Image Plane -----
      In-Plane:  (c)        Vertical:                               |
@@ -102,14 +92,18 @@ namespace microscope {
 
   unsigned int Cut::run(device::Microscope* dc)
   {
+    if(dc->cutButtonWasPressed) { //DGA: If the cut button is pressed and the vertical offset is not 0, then send out a warning
+		if (dc->vibratome()->verticalOffset() != 0){ 
+			warning("[Vibratome] [Task: Cut] Offset is not 0"ENDL);
+		}
+	}
+
     float cx,cy,cz,vx,vy,vz,ax,ay,bx,by,bz,v,dz,thick, thicknessCorrection; //DGA: Added thicknessCorrection float
 	
 	// get current pos,vel
     CHK( dc->stage()->getTarget(&cx,&cy,&cz));
     CHK( dc->stage()->getVelocity(&vx,&vy,&vz));
-	dc->vibratome()->backupDistanceMm(); //DGA: The desired backup distance, desired because it might not be able to backup that far
-	float backupDistance_mm = (dc->vibratome()->backupDistanceMm() > dc->vibratome()->minimumDropDistance_mm) ? dc->vibratome()->backupDistanceMm() : dc->vibratome()->minimumDropDistance_mm; //DGA: Ensure the stage is dropped by at least the minimum amount
-	float actualZHeightToDropTo_mm = ((cz - backupDistance_mm) > dc->vibratome()->minimumSafeZHeightToDropTo_mm) ? (cz - backupDistance_mm) : dc->vibratome()->minimumSafeZHeightToDropTo_mm ; //DGA: The actual z height to drop to should be at a minimum 8 mm
+	float actualZHeightToDropTo_mm = dc->safeZtoLowerTo_mm(cz); //DGA: The actual z height to drop to is based on the desired backup set in microscope and should be at a minimum 8 mm
 
     // Get parameters
     dc->vibratome()->feed_begin_pos_mm(&ax,&ay);
@@ -121,10 +115,9 @@ namespace microscope {
 	CHK( (v = dc->vibratome()->feed_vel_mm_p_s())>0.0); // must be non-zero
 
     // Move to the start of the cut
-    bz = cz-dz+thick + (thicknessCorrection);		// DGA: cut z position = Current Z - delta Z offset + requested slice thickness ( + thickness correction); the first subtraction gets the blade to the top of the sample
-    CHK( dc->stage()->setPos(cx,cy,actualZHeightToDropTo_mm));           // Drop to safe z first
-    CHK( dc->stage()->setPos(ax,ay,actualZHeightToDropTo_mm));           // Move on safe z plane to cut position
-    CHK( dc->stage()->setPos(ax,ay,bz));            // Move to final plane (bz)
+	bz = cz - dz + thick + (thicknessCorrection);		// DGA: cut z position = Current Z - delta Z offset + requested slice thickness ( + thickness correction); the first subtraction gets the blade to the top of the sample
+	Vector3f startCutPosition = {ax, ay, bz};
+	CHK(dc->moveToNewPosThroughSafeZ(startCutPosition)); //DGA: Make sure moving to the final cut position is through a safe z
 
     // do the cut
     unsigned feedaxis=dc->vibratome()->getFeedAxis();

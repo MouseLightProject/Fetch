@@ -152,6 +152,20 @@ QValidator* GetSetPockels::createValidator_(QObject* parent)
 { return new QIntValidator(0,100,parent);
 }
 
+//DGA: Pipeline, Set the getter, setter and validator for frame average count
+void GetSetFrameAverageCount::Set_(device::Microscope *dc, unsigned int &v)
+{ device::Microscope::Config c = dc->get_config();
+  c.mutable_pipeline()->set_frame_average_count(v);
+  Guarded_Assert(dc->set_config_nowait(c));
+}
+unsigned int GetSetFrameAverageCount::Get_(device::Microscope *dc)
+{ device::Microscope::Config c = dc->get_config(); 
+  return c.pipeline().frame_average_count();
+}          
+QValidator* GetSetFrameAverageCount::createValidator_(QObject* parent)
+{ return new QIntValidator(1,10000,parent);
+}
+
 // Vibratome
 
 void GetSetVibratomeAmplitude::Set_(device::Vibratome *dc, u32 &v)
@@ -393,7 +407,9 @@ f64 GetSetZPiezoMax::Get_(device::ZPiezo *dc)
 { return dc->getMax();
 }
 QValidator* GetSetZPiezoMax::createValidator_(QObject* parent)
-{ return new QDoubleValidator (0.0, 400.0, 1, parent);
+{  QDoubleValidator *newValidator = new QDoubleValidator(0.0, 400.0, 1, parent); //DGA: Added standard notation so that the user can only enter valid fields
+   newValidator->setNotation(QDoubleValidator::StandardNotation); 
+   return newValidator;
 }
 
 void GetSetZPiezoStep::Set_(device::ZPiezo *dc, f64 &v)
@@ -403,7 +419,9 @@ f64 GetSetZPiezoStep::Get_(device::ZPiezo *dc)
 { return dc->getStep();
 }
 QValidator* GetSetZPiezoStep::createValidator_(QObject* parent)
-{ return new QDoubleValidator (0.0, 400.0, 3, parent);
+{  QDoubleValidator *newValidator = new QDoubleValidator(0.0, 400.0, 3, parent); //DGA: Added standard notation so that the user can only enter valid values
+   newValidator->setNotation(QDoubleValidator::StandardNotation); 
+   return newValidator;
 }
 
 // Field of View
@@ -416,6 +434,21 @@ float GetSetOverlapZ::Get_(device::FieldOfViewGeometry *dc)
 }
 QValidator* GetSetOverlapZ::createValidator_(QObject* parent)
 { return new QDoubleValidator (-400.0, 400.0, 1, parent);
+}
+
+//DGA: Surface find getter, setter and validator copied from analagous field of autotile
+void GetSetSurfaceFindIntesityThreshold::Set_(device::Microscope *dc, float &v)
+{ device::Microscope::Config c = dc->get_config();
+  c.mutable_surface_find()->set_intensity_threshold(v);
+  dc->set_config(c);
+}
+float GetSetSurfaceFindIntesityThreshold::Get_(device::Microscope *dc)
+{ return dc->get_config().surface_find().intensity_threshold();
+}
+QValidator* GetSetSurfaceFindIntesityThreshold::createValidator_(QObject* parent)
+{ QDoubleValidator *newValidator = new QDoubleValidator(-5e9,5e9,1,parent); //DGA: Added standard notation so that the user can only enter valid values
+   newValidator->setNotation(QDoubleValidator::StandardNotation); 
+   return newValidator;
 }
 
 // AutoTile
@@ -476,7 +509,9 @@ float GetSetAutoTileIntesityThreshold::Get_(device::Microscope *dc)
 { return dc->get_config().autotile().intensity_threshold();
 }
 QValidator* GetSetAutoTileIntesityThreshold::createValidator_(QObject* parent)
-{ return new QDoubleValidator(-5e9,5e9,1,parent);
+{ QDoubleValidator *newValidator = new QDoubleValidator(-5e9,5e9,1,parent); //DGA: Added standard notation so that the user can only enter valid values
+   newValidator->setNotation(QDoubleValidator::StandardNotation); 
+   return newValidator;
 }
 
 void GetSetAutoTileAreaThreshold::Set_(device::Microscope *dc, float &v)
