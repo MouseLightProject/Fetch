@@ -39,6 +39,16 @@ namespace microscope {
 		  RegSetValueEx(key, "cut_count", 0, REG_DWORD,
 		  (const BYTE*)&cut_count, sizeof(cut_count))));
   }
+
+  static void save_cut_count_since_scheduled_stop(const int cut_count_since_scheduled_stop) { //DGA: Added this to save cut count since scheduled stop
+	  const char *path[] = { "Software","Howard Hughes Medical Institute","Fetch","Microscope" };
+	  HKEY key = HKEY_CURRENT_USER;
+	  for (int i = 0; i<_countof(path); ++i)
+		  RegCreateKey(key, path[i], &key);
+	  Guarded_Assert_WinErr(ERROR_SUCCESS == (
+		  RegSetValueEx(key, "cut_count_since_scheduled_stop", 0, REG_DWORD,
+		  (const BYTE*)&cut_count_since_scheduled_stop, sizeof(cut_count_since_scheduled_stop))));
+  }
 } // fetch::task::microscope
 
 }}

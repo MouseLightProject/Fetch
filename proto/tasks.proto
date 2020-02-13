@@ -12,6 +12,9 @@ message AutoTile
   optional int32  search_radius       = 7 [default = 3];    // search radius in tiles
   optional bool   use_adaptive_tiling = 8 [default = false];
   optional bool   use_explore         = 9 [default = true];
+
+  optional bool   schedule_stop_after_nth_cut = 10 [default = false];
+  optional uint32 nth_cut_to_stop_after		  = 11 [default = 1];
 }
 
 message TimeSeries

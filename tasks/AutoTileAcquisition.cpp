@@ -286,12 +286,10 @@ Error:
 		  }
 		  else tiling->useCurrentDoneTilesAsNextExplorableTiles(); //DGA: After imaging tiles, set the next explorable tiles equal to the current done tiles
 
-		  if(dc->getScheduleStopAfterNextCut()) //DGA: if a stop is scheduled
-		  {
-			dc->cutCompletedSoStop(); //DGA: Call function to stop autotile
-			dc->setScheduleStopAfterNextCut(false); //DGA: Uncheck stop after next cut checkbox
-		  }
+		  if(cfg.schedule_stop_after_nth_cut() && dc->_cut_count_since_scheduled_stop == cfg.nth_cut_to_stop_after()) //DGA: if a stop is scheduled
+			 dc->cutCompletedSoStop(); //DGA: Call function to stop autotile
         }
+
 
 	Finalize:
 		dc->cutButtonWasPressed = true; //DGA: Make sure that cutButtonWasPressed is true unless otherwise specified (above)

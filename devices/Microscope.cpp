@@ -243,6 +243,7 @@ ESCAN:
         data.mutable_current_lattice_position()->set_z(_cut_count); //DGA: Replace z lattice position with cut count since that is the most useful metric
         #endif
         data.set_cut_count(_cut_count);
+		data.set_cut_count_since_scheduled_stop(_cut_count_since_scheduled_stop); //DGA: Update cut count since scheduled stop
         std::string s;
         google::protobuf::TextFormat::PrintToString(data,&s);
         fout << s;
@@ -320,6 +321,29 @@ ESCAN:
         }
     }
 
+	static void load_cut_count_since_scheduled_stop(int* cut_count_since_scheduled_stop) //DGA: copied from above
+	{
+		LONG ecode;
+		DWORD nbytes = sizeof(*cut_count_since_scheduled_stop);
+		const char *path[] = { "Software","Howard Hughes Medical Institute","Fetch","Microscope" };
+		HKEY key = HKEY_CURRENT_USER;
+		for (int i = 0; i<_countof(path); ++i)
+			RegCreateKey(key, path[i], &key);
+
+		ecode = RegQueryValueEx(key, "cut_count_since_scheduled_stop", 0, 0, (BYTE*)cut_count_since_scheduled_stop, &nbytes);
+		if (ecode == ERROR_FILE_NOT_FOUND)
+		{
+			*cut_count_since_scheduled_stop = 0;
+			Guarded_Assert_WinErr(ERROR_SUCCESS == (
+				RegSetValueEx(key, "cut_count_since_scheduled_stop", 0, REG_DWORD,
+				(const BYTE*)cut_count_since_scheduled_stop, nbytes)));
+		}
+		else
+		{
+			Guarded_Assert_WinErr(ecode == ERROR_SUCCESS);
+		}
+	}
+
     void Microscope::__common_setup()
     {
       __self_agent._owner = this;
@@ -327,6 +351,7 @@ ESCAN:
       CHKJMP(_agent->attach()==0,Error);
       CHKJMP(_agent->arm(&interaction_task,this,INFINITE)==0,Error);
       load_cut_count(&this->_cut_count);
+	  load_cut_count_since_scheduled_stop(&this->_cut_count_since_scheduled_stop); //DGA: Copied from above
     Error:
       return;
     }
@@ -492,14 +517,17 @@ Error:
 		return actualZHeightToDropTo_mm;
 	}
 
+	void Microscope::updateScheduleStopAfterNthCutProperties(bool setValue) { //DGA: Defintion of updateScheduleStopAfterNthCutProperties function
+		if(setValue)
+			_cut_count_since_scheduled_stop = 0; //DGA: Then stop has just been scheduled and need to set _cut_count_since_scheduled_stop to 0
+		device::Microscope::Config c = get_config();
+		c.mutable_autotile()->set_schedule_stop_after_nth_cut(setValue); //DGA: Uncheck stop after next cut checkbox
+		set_config(c);
+	}
+
 	void Microscope::setSkipSurfaceFindOnImageResume(bool setValue){ //DGA: Defintion of setSkipSurfaceFindOnImageResume function
 		skipSurfaceFindOnImageResume_ = setValue; //DGA: set value of skipSurfaceFindOnImageResume_ equal to setValue
 		skipSurfaceFindOnImageResumeCheckBoxUpdater.signaler(setValue); //DGA: Signal signal_valueSet(setValue) so that the skipSurfaceFindOnImageResume checkbox will be updated
-	}
-
-	void Microscope::setScheduleStopAfterNextCut(bool setValue){ //DGA: Defintion of setScheduleStopAfterNextCut function
-		scheduleStopAfterNextCut_ = setValue; //DGA: set value of scheduleStopAfterNextCut_ equal to setValue
-		scheduleStopAfterNextCutCheckBoxUpdater.signaler(setValue); //DGA: Signal signal_valueSet(setValue) so that the scheduleStopAfterNextCut checkbox will be updated
 	}
 
 	void Microscope::setAcquireCalibrationStack(bool setValue){ //DGA: Defintion of setAcquireCalibrationStack function

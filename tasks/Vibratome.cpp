@@ -136,7 +136,15 @@ namespace microscope {
     CHK( dc->stage()->setPos(cx,cy,cz+thick)); //DGA: Moves the stage back to cz+thick (the desired thickness)
     
     dc->_cut_count++;
+	if (dc->get_config().autotile().schedule_stop_after_nth_cut()) { //DGA: update count since scheduled stop was initiated
+		dc->_cut_count_since_scheduled_stop++; 
+	}
+	else {
+		dc->_cut_count_since_scheduled_stop = 0; //DGA: If stop isn't scheduled, set to 0
+	}
+
     save_cut_count(dc->_cut_count);
+	save_cut_count_since_scheduled_stop(dc->_cut_count_since_scheduled_stop); //DGA: save cut count since scheduled stop
 
     return 0;
 Error:
