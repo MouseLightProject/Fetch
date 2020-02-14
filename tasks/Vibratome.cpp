@@ -99,7 +99,8 @@ namespace microscope {
 	}
 
     float cx,cy,cz,vx,vy,vz,ax,ay,bx,by,bz,v,dz,thick, thicknessCorrection; //DGA: Added thicknessCorrection float
-	
+	device::Microscope::Config c;
+
 	// get current pos,vel
     CHK( dc->stage()->getTarget(&cx,&cy,&cz));
     CHK( dc->stage()->getVelocity(&vx,&vy,&vz));
@@ -136,15 +137,22 @@ namespace microscope {
     CHK( dc->stage()->setPos(cx,cy,cz+thick)); //DGA: Moves the stage back to cz+thick (the desired thickness)
     
     dc->_cut_count++;
-	if (dc->get_config().autotile().schedule_stop_after_nth_cut()) { //DGA: update count since scheduled stop was initiated
-		dc->_cut_count_since_scheduled_stop++; 
+	/*c = dc->get_config();
+	if (c.autotile().schedule_stop_after_nth_cut()) { //DGA: update count since scheduled stop was initiated
+		c.mutable_autotile()->set_cut_count_since_scheduled_stop(c.autotile().cut_count_since_scheduled_stop() + 1);
 	}
 	else {
-		dc->_cut_count_since_scheduled_stop = 0; //DGA: If stop isn't scheduled, set to 0
+		c.mutable_autotile()->set_cut_count_since_scheduled_stop(0); //DGA: If stop isn't scheduled, set to 0
 	}
-
+	dc->set_config_nowait(c);*/
+	int currentCutCountSinceScheduledStop = dc->get_config().autotile().cut_count_since_scheduled_stop();
+	if (dc->cutButtonWasPressed) {//DGA: only update if it was cut via autotile
+		dc->cutCountChanged(dc->_cut_count, currentCutCountSinceScheduledStop); //DGA: Signal cut count changed so can update button label
+	}
+	else {
+		dc->cutCountChanged(dc->_cut_count, currentCutCountSinceScheduledStop+1); //DGA: Signal cut count changed so can update button label
+	}
     save_cut_count(dc->_cut_count);
-	save_cut_count_since_scheduled_stop(dc->_cut_count_since_scheduled_stop); //DGA: save cut count since scheduled stop
 
     return 0;
 Error:

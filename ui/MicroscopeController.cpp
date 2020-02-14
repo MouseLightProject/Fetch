@@ -31,9 +31,16 @@ QCheckBox *
 
 void
 fetch::ui::MicroscopeController::
-updateScheduleStopAfterNthCutProperties(bool setValue) //DGA: updateScheduleStopAfterNthCutProperties slot that takes in the setValue bool
+scheduleStopCheckBoxToggledSoUpdateConfig(bool setValue) //DGA: scheduleStopCheckBoxToggledSoUpdateConfig slot that takes in the setValue bool
 {
-	microscope_->updateScheduleStopAfterNthCutProperties(setValue); //DGA: updates schedule stop after nth cut properties
+	microscope_->scheduleStopCheckBoxToggledSoUpdateConfig(setValue); //DGA: updates schedule stop after nth cut properties
+}
+
+void
+fetch::ui::MicroscopeController::
+cutCountSinceScheduledStopChangedSoUpdateConfig(int setValue) //DGA: scheduleStopCheckBoxToggledSoUpdateConfig slot that takes in the setValue bool
+{ 
+	microscope_->cutCountSinceScheduledStopChangedSoUpdateConfig(setValue); //DGA: updates schedule stop after nth cut properties
 }
 
 void 

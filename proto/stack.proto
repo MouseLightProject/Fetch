@@ -20,5 +20,4 @@ message Acquisition
   optional float fov_x_overlap_um = 9;
   optional float fov_y_overlap_um = 10;
   optional float fov_z_overlap_um = 11;
-  optional uint32 cut_count_since_scheduled_stop = 12 [default = 0];
 }

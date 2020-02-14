@@ -146,7 +146,6 @@ namespace fetch
       task::microscope::TiledSurfacescan    surface_scan_task;
       task::microscope::TimeSeries          time_series_task;
 	  int _cut_count;
-	  int _cut_count_since_scheduled_stop; //DGA: Added cut count since scheduled stop
 
       mylib::Array* snapshot(float dz_um,unsigned timeout_ms);
 
@@ -169,7 +168,8 @@ namespace fetch
 
 	  float safeZtoLowerTo_mm(float current_z); //DGA: This will output the z height for the stage to be lowered to based on the minimum z stage height and the desired backup distance
 
-	  void updateScheduleStopAfterNthCutProperties(bool setChecked); //DGA: Function setter prototype for updating schedule stop after nth cut properties
+	  void scheduleStopCheckBoxToggledSoUpdateConfig(bool setChecked); //DGA: Function setter prototype for updating schedule stop after nth cut properties
+	  void cutCountSinceScheduledStopChangedSoUpdateConfig(int cutCountSinceScheduledStop); //DGA: Function setter prototype for cut count since scheduled stop changed
 
 	  bool getSkipSurfaceFindOnImageResume() {return skipSurfaceFindOnImageResume_;}; //DGA: Getter for skipSurfaceFindOnImageResume_
 	  void setSkipSurfaceFindOnImageResume(bool setValue); //DGA: Function setter prototype for skipSurfaceFindOnImageResume_
@@ -178,12 +178,14 @@ namespace fetch
 	  void setAcquireCalibrationStack(bool setValue); //DGA: Function setter prototype for acquireCalibrationStack_
 
 	  void cutCompletedSoStop() { cutCompletedSoStopSignaler.signaler(); cutCompletedSoStopSignaler.signaler(false); }; //DGA: Function to call signaler which stops the task
+	  void cutCountChanged(int cutCount, int cutCountSinceScheduledStop) { cutCountChangedSignaler.signaler(QString("Current Cut Count: %1. Reset Cut Count To 0?").arg(cutCount)); if (cutCountSinceScheduledStop > 0) { cutCountChangedSignaler.signaler(cutCountSinceScheduledStop); } }; //DGA: Function to call signaler when vibratome completes cut
+
     public:
       FileSeries file_series;
 
     public:
       IDevice* _end_of_pipeline;
-	  ui::simpleSignalerClass skipSurfaceFindOnImageResumeCheckBoxUpdater, cutCompletedSoStopSignaler, acquireCalibrationStackCheckBoxUpdater; //DGA: Updater for skipSurfaceFindOnImageResumeCheckBox, acquireCalibrationStackCheckBox and signaler for cutCompletedSoStop
+	  ui::simpleSignalerClass skipSurfaceFindOnImageResumeCheckBoxUpdater, cutCompletedSoStopSignaler, acquireCalibrationStackCheckBoxUpdater, cutCountChangedSignaler, updateScheduledStopCutCountProgressSignaler; //DGA: Updater for skipSurfaceFindOnImageResumeCheckBox, acquireCalibrationStackCheckBox and signaler for cutCompletedSoStop and cutCountChangedSignaler
 	
       Agent __self_agent;
       Agent __scan_agent;

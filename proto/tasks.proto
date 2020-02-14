@@ -15,6 +15,7 @@ message AutoTile
 
   optional bool   schedule_stop_after_nth_cut = 10 [default = false];
   optional uint32 nth_cut_to_stop_after		  = 11 [default = 1];
+  optional uint32 cut_count_since_scheduled_stop = 12 [default = 0];
 }
 
 message TimeSeries

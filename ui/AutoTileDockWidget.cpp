@@ -24,14 +24,23 @@ namespace ui{
 	skipSurfaceFindOnImageResumeCheckBox->setText("Skip Surface Find On Image Resume"); //DGA: Set the text then add the checkbox so that is aligned properly with other widgets
 	form->addRow("",skipSurfaceFindOnImageResumeCheckBox);
 
-	QHBoxLayout* autotileScheduleStopAfterNthCutRow = new QHBoxLayout(); //DGA: Row for setting schedule stop
 	QCheckBox * scheduleStopAfterNthCutCheckBox = parent->_autotile_schedule_stop_after_nth_cut_control->createCheckBox();
 	connect(&(dc->cutCompletedSoStopSignaler), SIGNAL(signaler(bool)), scheduleStopAfterNthCutCheckBox, SLOT(setChecked(bool)), Qt::QueuedConnection); //DGA: toggle checkbox off, since cutCompletedSoStop is only called when a cut was scheduled.
-	connect(scheduleStopAfterNthCutCheckBox, SIGNAL(clicked(bool)), parent->_microscopeController, SLOT(updateScheduleStopAfterNthCutProperties(bool)), Qt::QueuedConnection); //DGA: When checkbox is clicked, update properties relevant to schedule stop
-
+	connect(scheduleStopAfterNthCutCheckBox, SIGNAL(clicked(bool)), parent->_microscopeController, SLOT(scheduleStopCheckBoxToggledSoUpdateConfig(bool)), Qt::QueuedConnection); //DGA: When checkbox is clicked, update properties relevant to schedule stop
 	scheduleStopAfterNthCutCheckBox->setText("Schedule stop after cut number: ");
+
+	QLineEdit * nthCutToStopAfterLineEdit = parent->_autotile_nth_cut_to_stop_after_control->createLineEdit(); //DGA: Create line edit that is disabled when stop is scheduled
+	connect(scheduleStopAfterNthCutCheckBox, SIGNAL(clicked(bool)), nthCutToStopAfterLineEdit, SLOT(setDisabled(bool)), Qt::QueuedConnection);
+
+	connect(&(dc->cutCountChangedSignaler), SIGNAL(signaler(int)), parent->_microscopeController, SLOT(cutCountSinceScheduledStopChangedSoUpdateConfig(int)));
+
+	QLabel * cutsLeft = new QLabel("");//update cuts left
+	bool test = connect(&(dc->updateScheduledStopCutCountProgressSignaler), SIGNAL(signaler(QString)), cutsLeft, SLOT(setText(QString)));//settext????
+
+	QHBoxLayout* autotileScheduleStopAfterNthCutRow = new QHBoxLayout(); //DGA: Row for setting schedule stop
 	autotileScheduleStopAfterNthCutRow->addWidget(scheduleStopAfterNthCutCheckBox);
-	autotileScheduleStopAfterNthCutRow->addWidget(parent->_autotile_nth_cut_to_stop_after_control->createLineEdit());
+	autotileScheduleStopAfterNthCutRow->addWidget(nthCutToStopAfterLineEdit);
+	autotileScheduleStopAfterNthCutRow->addWidget(cutsLeft);
 	form->addRow("", autotileScheduleStopAfterNthCutRow);
 
 	QCheckBox * acquireCalibrationStackCheckBox = parent->_microscopeController->createAcquireCalibrationStackCheckBox(); //DGA: create acquireCalibrationStackCheckBox
