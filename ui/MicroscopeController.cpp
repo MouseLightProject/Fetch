@@ -6,7 +6,7 @@
   QObject(parent), 
   microscope_(microscope)
 { //DGA: MicroscopeController constructor which initializes microscope_ to microscope and QObject with argument parent
-    connect(&(microscope_->cutCompletedSoStopSignaler),SIGNAL(signaler()),ac,SLOT(stop()), Qt::BlockingQueuedConnection); //DGA: Connects signal_setValue() of cutCompletedSoStopSignaler to ac
+    connect(&(microscope_->scheduledStopReachedSignaler),SIGNAL(signaler()),ac,SLOT(stop()), Qt::BlockingQueuedConnection); //DGA: Connects signal_setValue() of cutCompletedSoStopSignaler to ac
 } 
 
 QCheckBox *
@@ -31,6 +31,13 @@ QCheckBox *
 
 void
 fetch::ui::MicroscopeController::
+checkCutCountParametersAfterConfigUpdated() //DGA: checkCutCountParametersAfterConfigUpdated slot that is called when config is updated
+{
+	microscope_->cutCountSinceScheduledStopChangedSoUpdateConfig(microscope_->get_config().autotile().cut_count_since_scheduled_stop()); //DGA: updates schedule stop after nth cut properties
+}
+
+void
+fetch::ui::MicroscopeController::
 scheduleStopCheckBoxToggledSoUpdateConfig(bool setValue) //DGA: scheduleStopCheckBoxToggledSoUpdateConfig slot that takes in the setValue bool
 {
 	microscope_->scheduleStopCheckBoxToggledSoUpdateConfig(setValue); //DGA: updates schedule stop after nth cut properties
@@ -38,7 +45,7 @@ scheduleStopCheckBoxToggledSoUpdateConfig(bool setValue) //DGA: scheduleStopChec
 
 void
 fetch::ui::MicroscopeController::
-cutCountSinceScheduledStopChangedSoUpdateConfig(int setValue) //DGA: scheduleStopCheckBoxToggledSoUpdateConfig slot that takes in the setValue bool
+cutCountSinceScheduledStopChangedSoUpdateConfig(int setValue) //DGA: cutCountSinceScheduledStopChangedSoUpdateConfig slot that takes in the setValue bool
 { 
 	microscope_->cutCountSinceScheduledStopChangedSoUpdateConfig(setValue); //DGA: updates schedule stop after nth cut properties
 }

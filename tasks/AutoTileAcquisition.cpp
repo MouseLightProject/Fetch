@@ -287,7 +287,7 @@ Error:
 		  else tiling->useCurrentDoneTilesAsNextExplorableTiles(); //DGA: After imaging tiles, set the next explorable tiles equal to the current done tiles
 		  
 		  if(dc->get_config().autotile().schedule_stop_after_nth_cut() && dc->get_config().autotile().cut_count_since_scheduled_stop() == dc->get_config().autotile().nth_cut_to_stop_after()-1) //DGA: if a stop is scheduled. TODO: NOTE! UPDATING CFG SEEMS TO CAUSE BOUNCING INTO AND OUT OF FINALIZE/ERROR below, WHICH MEANS THAT THINGS AREN'T AS UP TO DATE AS THEY SHOULD BE, HENCE THE -1 HERE
-			 dc->cutCompletedSoStop(); //DGA: Call function to stop autotile
+			 dc->scheduledStopReached(); //DGA: Call function to stop autotile
         }
 
 

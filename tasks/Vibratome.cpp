@@ -152,6 +152,7 @@ namespace microscope {
 	else {
 		dc->cutCountChanged(dc->_cut_count, currentCutCountSinceScheduledStop+1); //DGA: Signal cut count changed so can update button label
 	}
+
     save_cut_count(dc->_cut_count);
 
     return 0;

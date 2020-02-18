@@ -492,23 +492,42 @@ Error:
 		return actualZHeightToDropTo_mm;
 	}
 
-	void Microscope::scheduleStopCheckBoxToggledSoUpdateConfig(bool setValue) { //DGA: Defintion of updateScheduleStopAfterNthCutProperties function
+	void Microscope::scheduleStopCheckBoxToggledSoUpdateConfig(bool setValue) { //DGA: Defintion of scheduleStopCheckBoxToggledSoUpdateConfig function
 		device::Microscope::Config c = get_config();
 		if(setValue)
 			c.mutable_autotile()->set_cut_count_since_scheduled_stop(0); //DGA: Then stop has just been scheduled and need to set _cut_count_since_scheduled_stop to 0
+	
 		c.mutable_autotile()->set_schedule_stop_after_nth_cut(setValue); //DGA: Uncheck stop after next cut checkbox
 		set_config_nowait(c);
+
+		updateScheduleStopCutCountProgress();
 	}
+
 
 	void Microscope::cutCountSinceScheduledStopChangedSoUpdateConfig(int setValue) { //DGA: Defintion of updateScheduleStopAfterNthCutProperties function
 		device::Microscope::Config c = get_config();
-		c.mutable_autotile()->set_cut_count_since_scheduled_stop(setValue); //DGA: Then stop has just been scheduled and need to set _cut_count_since_scheduled_stop to 0
-		set_config_nowait(c);
-		QString setString;
-		if (c.autotile().schedule_stop_after_nth_cut() ) {
-			setString = QString("(%1/%2)").arg(setValue).arg(c.autotile().nth_cut_to_stop_after());			
+
+		if (setValue >= c.autotile().nth_cut_to_stop_after()) { //Then cut was performed outside autotile, eg via cut cycle and we need to reset
+			setValue = 0;
+			c.mutable_autotile()->set_schedule_stop_after_nth_cut(false);
+			scheduledStopReachedSignaler.signaler(false); //Need to signal to update checkbox
 		}
-		else{
+
+		c.mutable_autotile()->set_cut_count_since_scheduled_stop(setValue); //DGA: Then stop has just been scheduled and need to set _cut_count_since_scheduled_stop to 0
+
+		set_config_nowait(c);
+		updateScheduleStopCutCountProgress();
+	}
+
+	void Microscope::updateScheduleStopCutCountProgress() { //DGA: Definition of updateScheduleStopCutCountProgress function
+		device::Microscope::Config c = get_config();
+		QString setString;
+		if (c.autotile().schedule_stop_after_nth_cut()) {
+			setString = QString("(%1/%2)")
+				.arg(c.autotile().cut_count_since_scheduled_stop())
+				.arg(c.autotile().nth_cut_to_stop_after());
+		}
+		else {
 			setString = ""; //DGA: then it is done
 		}
 		emit updateScheduledStopCutCountProgressSignaler.signaler(setString);

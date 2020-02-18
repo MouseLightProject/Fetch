@@ -170,6 +170,7 @@ namespace fetch
 
 	  void scheduleStopCheckBoxToggledSoUpdateConfig(bool setChecked); //DGA: Function setter prototype for updating schedule stop after nth cut properties
 	  void cutCountSinceScheduledStopChangedSoUpdateConfig(int cutCountSinceScheduledStop); //DGA: Function setter prototype for cut count since scheduled stop changed
+	  void updateScheduleStopCutCountProgress(); //DGA: Change cut count progress text
 
 	  bool getSkipSurfaceFindOnImageResume() {return skipSurfaceFindOnImageResume_;}; //DGA: Getter for skipSurfaceFindOnImageResume_
 	  void setSkipSurfaceFindOnImageResume(bool setValue); //DGA: Function setter prototype for skipSurfaceFindOnImageResume_
@@ -177,7 +178,7 @@ namespace fetch
 	  bool getAcquireCalibrationStack() {return acquireCalibrationStack_;}; //DGA: Getter for acquireCalibrationStack_
 	  void setAcquireCalibrationStack(bool setValue); //DGA: Function setter prototype for acquireCalibrationStack_
 
-	  void cutCompletedSoStop() { cutCompletedSoStopSignaler.signaler(); cutCompletedSoStopSignaler.signaler(false); }; //DGA: Function to call signaler which stops the task
+	  void scheduledStopReached() { scheduledStopReachedSignaler.signaler(); scheduledStopReachedSignaler.signaler(false); }; //DGA: Function to call signaler which stops the task
 	  void cutCountChanged(int cutCount, int cutCountSinceScheduledStop) { cutCountChangedSignaler.signaler(QString("Current Cut Count: %1. Reset Cut Count To 0?").arg(cutCount)); if (cutCountSinceScheduledStop > 0) { cutCountChangedSignaler.signaler(cutCountSinceScheduledStop); } }; //DGA: Function to call signaler when vibratome completes cut
 
     public:
@@ -185,7 +186,7 @@ namespace fetch
 
     public:
       IDevice* _end_of_pipeline;
-	  ui::simpleSignalerClass skipSurfaceFindOnImageResumeCheckBoxUpdater, cutCompletedSoStopSignaler, acquireCalibrationStackCheckBoxUpdater, cutCountChangedSignaler, updateScheduledStopCutCountProgressSignaler; //DGA: Updater for skipSurfaceFindOnImageResumeCheckBox, acquireCalibrationStackCheckBox and signaler for cutCompletedSoStop and cutCountChangedSignaler
+	  ui::simpleSignalerClass skipSurfaceFindOnImageResumeCheckBoxUpdater, scheduledStopReachedSignaler, acquireCalibrationStackCheckBoxUpdater, cutCountChangedSignaler, updateScheduledStopCutCountProgressSignaler; //DGA: Updater for skipSurfaceFindOnImageResumeCheckBox, acquireCalibrationStackCheckBox and signaler for scheduledStopReachedSignaler and cutCountChangedSignaler
 	
       Agent __self_agent;
       Agent __scan_agent;
