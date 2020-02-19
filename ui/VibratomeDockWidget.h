@@ -56,6 +56,15 @@ namespace fetch{
       void setValue(float v) {setText(QString("%1 mm").arg(v,5,'f',3));}
     };
 
+	class UpdateableButton : public QPushButton //DGA: Created this to allow for button label to update
+	{
+		Q_OBJECT
+	public:
+		UpdateableButton(const QString& lbl, QWidget *parent = 0) : QPushButton(lbl, parent) {}
+	public slots:
+		void setValue(QString v) { setText(v); }
+	};
+
     class VibratomeGeometryDockWidget:public QDockWidget
     {
       Q_OBJECT

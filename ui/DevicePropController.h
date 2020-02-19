@@ -220,12 +220,16 @@ namespace ui {
   DECL_GETSET_CLASS(GetSetAutoTileChan             ,device::Microscope,unsigned);
   DECL_GETSET_CLASS(GetSetAutoTileIntesityThreshold,device::Microscope,float);
   DECL_GETSET_CLASS(GetSetAutoTileAreaThreshold    ,device::Microscope,float);
+  DECL_GETSET_CLASS(GetSetAutoTileScheduleStopAfterNthCut, device::Microscope, bool);
+  DECL_GETSET_CLASS(GetSetAutoTileNthCutToStopAfter, device::Microscope, unsigned);
   typedef DevicePropController<device::Microscope,float   ,GetSetAutoTileZOff>              AutoTileZOffController;
   typedef DevicePropController<device::Microscope,float   ,GetSetAutoTileZMax>              AutoTileZMaxController;
   typedef DevicePropController<device::Microscope,unsigned,GetSetAutoTileTimeoutMs>         AutoTileTimeoutMsController;
   typedef DevicePropController<device::Microscope,unsigned,GetSetAutoTileChan>              AutoTileChanController;
   typedef DevicePropController<device::Microscope,float   ,GetSetAutoTileIntesityThreshold> AutoTileIntensityThresholdController;
   typedef DevicePropController<device::Microscope,float   ,GetSetAutoTileAreaThreshold>     AutoTileAreaThresholdController;
+  typedef DevicePropController<device::Microscope,bool   ,GetSetAutoTileScheduleStopAfterNthCut>  AutoTileScheduleStopAfterNthCutController;
+  typedef DevicePropController<device::Microscope,unsigned, GetSetAutoTileNthCutToStopAfter>  AutoTileNthCutToStopAfterController;
 }} //end fetch::ui
 
   ////////////////////////////////////////////////////////////////////////////

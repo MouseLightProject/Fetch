@@ -334,9 +334,11 @@ namespace ui {
 		lockmachine->start(); //DGA: The state machine is started
 		form->addRow("", checkBox); //DGA: Adds the row to the form, where the "" mean that the check box will be properly aligned with other fields in the widget
 
-		b = new MarkButton("Reset Cut Count to 0"); //DGA: Added button to reset cut count to 0
-		form->addRow(b);
-		connect(b, SIGNAL(clicked()), this, SLOT(confirmResetCutCount()));
+		//DGA: Make reset cut count button updateable/display current cut count
+		UpdateableButton * resetCutCountButton = new UpdateableButton(QString("Current Cut Count: %1. Reset Cut Count To 0?").arg(dc->_cut_count));
+		connect(resetCutCountButton, SIGNAL(clicked()), this, SLOT(confirmResetCutCount()));
+		connect(&(dc->cutCountChangedSignaler), SIGNAL(signaler(QString)), resetCutCountButton, SLOT(setValue(QString)), Qt::QueuedConnection);
+		form->addRow(resetCutCountButton);
       }
 
 #if 0 // turns out this tableview is completely useless.
@@ -444,6 +446,7 @@ namespace ui {
 		if (reply == QMessageBox::Yes) {
 			dc_->_cut_count = 0;
 			task::microscope::save_cut_count(dc_->_cut_count);
+			dc_->cutCountChanged(dc_->_cut_count, -1); //DGA: Update cut count, but by sending -1, will not update cut count since scheduled stop
 			qDebug() << "Reset cut count to 0";
 		}
 	}

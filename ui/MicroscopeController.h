@@ -17,12 +17,13 @@ namespace ui {
 	 MicroscopeController(device::Microscope *microscope, AgentController *ac, QObject *parent=0);
 
 	 QCheckBox * createSkipSurfaceFindOnImageResumeCheckBox(QWidget * parent=0); //DGA: Function to create skip surface find checkbox, which takes in parent, a pointer to type QWidget, defaulted to 0
-	 QCheckBox * createScheduleStopAfterNextCutCheckBox(QWidget * parent=0); //DGA: Function to create scheduled stop checkbox, which takes in parent, a pointer to type QWidget, defaulted to 0
 	 QCheckBox * createAcquireCalibrationStackCheckBox(QWidget * parent = 0); //DGA: Function to create acquire calibration stack checkbox, which takes in parent, a pointer to type QWidget, defaulted to 0
 
-   public slots: 
+   public slots:
+	 void checkCutCountParametersAfterConfigUpdated();//DGA: slot to be called when need to check cut count paramaters after config updated in file
+	 void scheduleStopCheckBoxToggledSoUpdateConfig(bool); //DGA: slot to be called when need to update _cut_count_since_scheduled_stop and cfg in microscope_
+	 void cutCountSinceScheduledStopChangedSoUpdateConfig(int); //DGA: slot to be called when need to update _cut_count_since_scheduled_stop and cfg in microscope_
      void setSkipSurfaceFindOnImageResume(bool); //DGA: slot to be called when need to set skipSurfaceFindOnImageResume_ in microscope_
-	 void setScheduleStopAfterNextCut(bool); //DGA: slot to be called when need to set scheduleStopAfterNextCut_ in microscope_
 	 void setAcquireCalibrationStack(bool); //DGA: slot to be called when need to set acquireCalibrationStack_ in microscope_
   };
 

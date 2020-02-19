@@ -514,6 +514,39 @@ QValidator* GetSetAutoTileIntesityThreshold::createValidator_(QObject* parent)
    return newValidator;
 }
 
+//DGA: Adding getter/setter for schedule stop
+void GetSetAutoTileScheduleStopAfterNthCut::Set_(device::Microscope *dc, bool &v)
+{
+	device::Microscope::Config c = dc->get_config();
+	c.mutable_autotile()->set_schedule_stop_after_nth_cut(v);
+	dc->set_config(c);
+}
+bool GetSetAutoTileScheduleStopAfterNthCut::Get_(device::Microscope *dc)
+{
+	return dc->get_config().autotile().schedule_stop_after_nth_cut();
+}
+QValidator* GetSetAutoTileScheduleStopAfterNthCut::createValidator_(QObject* parent)
+{
+	return new QIntValidator(0, 1000, parent);
+}
+
+//DGA: Adding getter/setter for nth cut to stop after
+void GetSetAutoTileNthCutToStopAfter::Set_(device::Microscope *dc, unsigned &v)
+{
+	device::Microscope::Config c = dc->get_config();
+	c.mutable_autotile()->set_nth_cut_to_stop_after(v);
+	dc->set_config(c);
+}
+unsigned GetSetAutoTileNthCutToStopAfter::Get_(device::Microscope *dc)
+{
+	return dc->get_config().autotile().nth_cut_to_stop_after();
+}
+QValidator* GetSetAutoTileNthCutToStopAfter::createValidator_(QObject* parent)
+{return new QIntValidator(1, 1000, parent);
+}
+
+
+
 void GetSetAutoTileAreaThreshold::Set_(device::Microscope *dc, float &v)
 { device::Microscope::Config c = dc->get_config();
   c.mutable_autotile()->set_area_threshold(v);

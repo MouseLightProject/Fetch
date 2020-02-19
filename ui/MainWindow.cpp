@@ -167,9 +167,13 @@ fetch::ui::MainWindow::MainWindow(device::Microscope *dc)
   _autotile_timeoutms_control        = new AutoTileTimeoutMsController(dc,"Timeout (ms)",this);
   _autotile_chan_control             = new AutoTileChanController(dc,"Channel to threshold",this);
   _autotile_intensity_thresh_control = new AutoTileIntensityThresholdController(dc,"Autotile threshold",this); //DGA: Changed the name to Autotile threshold
+  _autotile_schedule_stop_after_nth_cut_control = new AutoTileScheduleStopAfterNthCutController(dc, "", this); //DGA: Dynamically allocate _autotile_schedule_stop_after_nth_cut_control to point to instance of AutoTileScheduleStopAfterNthCutController
+  _autotile_nth_cut_to_stop_after_control = new AutoTileNthCutToStopAfterController(dc, "", this); //DGA: Dynamically allocate _autotile_nth_cut_control to point to instance of AutoTileNthCutController 
   _surface_find_intensity_thresh_control = new SurfaceFindIntensityThresholdController(dc, "Surface Find threshold", this); //DGA: Dynamically allocate _surface_find_intensity_thresh_control to point to instance of SurfaceFindIntensityThresholdController 
   _autotile_area_thresh_control      = new AutoTileAreaThresholdController(dc,"Area threshold (0-1)",this);
   
+  connect(_microscopeController, SIGNAL(configUpdated()), _autotile_schedule_stop_after_nth_cut_control, SIGNAL(configUpdated()));
+
   connect(_stageController,SIGNAL(moved()),          _stage_pos_x_control,SIGNAL(configUpdated()));
   connect(_stageController,SIGNAL(moved()),          _stage_pos_y_control,SIGNAL(configUpdated()));
   connect(_stageController,SIGNAL(moved()),          _stage_pos_z_control,SIGNAL(configUpdated()));

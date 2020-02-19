@@ -99,7 +99,7 @@ namespace microscope {
 	}
 
     float cx,cy,cz,vx,vy,vz,ax,ay,bx,by,bz,v,dz,thick, thicknessCorrection; //DGA: Added thicknessCorrection float
-	
+
 	// get current pos,vel
     CHK( dc->stage()->getTarget(&cx,&cy,&cz));
     CHK( dc->stage()->getVelocity(&vx,&vy,&vz));
@@ -136,6 +136,18 @@ namespace microscope {
     CHK( dc->stage()->setPos(cx,cy,cz+thick)); //DGA: Moves the stage back to cz+thick (the desired thickness)
     
     dc->_cut_count++;
+
+	int currentCutCountSinceScheduledStop = dc->get_config().autotile().cut_count_since_scheduled_stop();
+
+	if (! dc->get_config().autotile().schedule_stop_after_nth_cut()) { //DGA: Define this to be 0 unless a stop has been scheduled
+		currentCutCountSinceScheduledStop = 0;
+	}
+	else if (!dc->cutButtonWasPressed) {//DGA: only update if it was cut via autotile
+		currentCutCountSinceScheduledStop++;
+	}
+
+	dc->cutCountChanged(dc->_cut_count, currentCutCountSinceScheduledStop); //DGA: Signal cut count changed so can update button label
+
     save_cut_count(dc->_cut_count);
 
     return 0;

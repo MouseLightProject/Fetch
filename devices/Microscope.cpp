@@ -492,14 +492,49 @@ Error:
 		return actualZHeightToDropTo_mm;
 	}
 
+	void Microscope::scheduleStopCheckBoxToggledSoUpdateConfig(bool setValue) { //DGA: Defintion of scheduleStopCheckBoxToggledSoUpdateConfig function
+		device::Microscope::Config c = get_config();
+		if(!setValue)
+			c.mutable_autotile()->set_cut_count_since_scheduled_stop(0); //DGA: Then stop has just been scheduled and need to set _cut_count_since_scheduled_stop to 0
+	
+		c.mutable_autotile()->set_schedule_stop_after_nth_cut(setValue); //DGA: Uncheck stop after next cut checkbox
+		set_config_nowait(c); //DGA: Need nwait otherwise freezes 
+
+		updateScheduleStopCutCountProgress(c);
+	}
+
+
+	void Microscope::cutCountSinceScheduledStopChangedSoUpdateConfig(int setValue) { //DGA: Defintion of cutCountSinceScheduledStopChangedSoUpdateConfig function
+		device::Microscope::Config c = get_config();
+
+		if (setValue >= c.autotile().nth_cut_to_stop_after()) { //Then cut was performed outside autotile, eg via cut cycle and we need to reset
+			setValue = 0;
+			c.mutable_autotile()->set_schedule_stop_after_nth_cut(false);
+			scheduledStopReachedSignaler.signaler(false); //Need to signal to update checkbox
+		}
+
+		c.mutable_autotile()->set_cut_count_since_scheduled_stop(setValue); //DGA: Then stop has just been scheduled and need to set _cut_count_since_scheduled_stop to 0
+		set_config_nowait(c);
+
+		updateScheduleStopCutCountProgress(c);
+	}
+
+	void Microscope::updateScheduleStopCutCountProgress(device::Microscope::Config c) { //DGA: Definition of updateScheduleStopCutCountProgress function
+		QString setString;
+		if (c.autotile().schedule_stop_after_nth_cut()) {
+			setString = QString("(%1/%2)")
+				.arg(c.autotile().cut_count_since_scheduled_stop())
+				.arg(c.autotile().nth_cut_to_stop_after());
+		}
+		else {
+			setString = ""; //DGA: then it is done
+		}
+		emit updateScheduledStopCutCountProgressSignaler.signaler(setString);
+	}
+
 	void Microscope::setSkipSurfaceFindOnImageResume(bool setValue){ //DGA: Defintion of setSkipSurfaceFindOnImageResume function
 		skipSurfaceFindOnImageResume_ = setValue; //DGA: set value of skipSurfaceFindOnImageResume_ equal to setValue
 		skipSurfaceFindOnImageResumeCheckBoxUpdater.signaler(setValue); //DGA: Signal signal_valueSet(setValue) so that the skipSurfaceFindOnImageResume checkbox will be updated
-	}
-
-	void Microscope::setScheduleStopAfterNextCut(bool setValue){ //DGA: Defintion of setScheduleStopAfterNextCut function
-		scheduleStopAfterNextCut_ = setValue; //DGA: set value of scheduleStopAfterNextCut_ equal to setValue
-		scheduleStopAfterNextCutCheckBoxUpdater.signaler(setValue); //DGA: Signal signal_valueSet(setValue) so that the scheduleStopAfterNextCut checkbox will be updated
 	}
 
 	void Microscope::setAcquireCalibrationStack(bool setValue){ //DGA: Defintion of setAcquireCalibrationStack function

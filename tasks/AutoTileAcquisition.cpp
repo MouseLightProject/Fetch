@@ -285,13 +285,11 @@ Error:
 			if (PlaneInBounds(dc,cfg.maxz_mm())) tiling->useDoneTilesAsExplorableTilesForTwoDimensionalTiling(); //DGA: If the next position is in bounds (ie, not beyond the max z), then update the tiling, otherwise do nothing.
 		  }
 		  else tiling->useCurrentDoneTilesAsNextExplorableTiles(); //DGA: After imaging tiles, set the next explorable tiles equal to the current done tiles
-
-		  if(dc->getScheduleStopAfterNextCut()) //DGA: if a stop is scheduled
-		  {
-			dc->cutCompletedSoStop(); //DGA: Call function to stop autotile
-			dc->setScheduleStopAfterNextCut(false); //DGA: Uncheck stop after next cut checkbox
-		  }
+		  
+		  if(dc->get_config().autotile().schedule_stop_after_nth_cut() && dc->get_config().autotile().cut_count_since_scheduled_stop() == dc->get_config().autotile().nth_cut_to_stop_after()-1) //DGA: if a stop is scheduled. TODO: NOTE! UPDATING CFG SEEMS TO CAUSE BOUNCING INTO AND OUT OF FINALIZE/ERROR below, WHICH MEANS THAT THINGS AREN'T AS UP TO DATE AS THEY SHOULD BE, HENCE THE -1 HERE
+			 dc->scheduledStopReached(); //DGA: Call function to stop autotile
         }
+
 
 	Finalize:
 		dc->cutButtonWasPressed = true; //DGA: Make sure that cutButtonWasPressed is true unless otherwise specified (above)

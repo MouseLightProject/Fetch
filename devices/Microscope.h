@@ -145,7 +145,7 @@ namespace fetch
       task::microscope::AutoTileAcquisition auto_tile_task;
       task::microscope::TiledSurfacescan    surface_scan_task;
       task::microscope::TimeSeries          time_series_task;
-      int _cut_count;
+	  int _cut_count;
 
       mylib::Array* snapshot(float dz_um,unsigned timeout_ms);
 
@@ -168,23 +168,26 @@ namespace fetch
 
 	  float safeZtoLowerTo_mm(float current_z); //DGA: This will output the z height for the stage to be lowered to based on the minimum z stage height and the desired backup distance
 
+	  void scheduleStopCheckBoxToggledSoUpdateConfig(bool setChecked); //DGA: Function setter prototype for updating schedule stop after nth cut properties
+	  void cutCountSinceScheduledStopChangedSoUpdateConfig(int cutCountSinceScheduledStop); //DGA: Function setter prototype for cut count since scheduled stop changed
+	  void updateScheduleStopCutCountProgress(device::Microscope::Config c); //DGA: Change cut count progress text
+
 	  bool getSkipSurfaceFindOnImageResume() {return skipSurfaceFindOnImageResume_;}; //DGA: Getter for skipSurfaceFindOnImageResume_
 	  void setSkipSurfaceFindOnImageResume(bool setValue); //DGA: Function setter prototype for skipSurfaceFindOnImageResume_
-
-	  bool getScheduleStopAfterNextCut() {return scheduleStopAfterNextCut_;}; //DGA: Getter for scheduleStopAfterNextCut_
-	  void setScheduleStopAfterNextCut(bool setValue); //DGA: Function setter prototype for scheduleStopAfterNextCut_
 
 	  bool getAcquireCalibrationStack() {return acquireCalibrationStack_;}; //DGA: Getter for acquireCalibrationStack_
 	  void setAcquireCalibrationStack(bool setValue); //DGA: Function setter prototype for acquireCalibrationStack_
 
-	  void cutCompletedSoStop()          {cutCompletedSoStopSignaler.signaler();}; //DGA: Function to call signaler which stops the task
+	  void scheduledStopReached() { scheduledStopReachedSignaler.signaler(false); scheduledStopReachedSignaler.signaler(); }; //DGA: Function to call signaler which stops the task
+	  void cutCountChanged(int cutCount, int cutCountSinceScheduledStop) { cutCountChangedSignaler.signaler(QString("Current Cut Count: %1. Reset Cut Count To 0?").arg(cutCount)); if (cutCountSinceScheduledStop > 0) { cutCountChangedSignaler.signaler(cutCountSinceScheduledStop); } }; //DGA: Function to call signaler when vibratome completes cut
+
     public:
       FileSeries file_series;
 
     public:
       IDevice* _end_of_pipeline;
-	  ui::simpleSignalerClass skipSurfaceFindOnImageResumeCheckBoxUpdater, scheduleStopAfterNextCutCheckBoxUpdater, cutCompletedSoStopSignaler, acquireCalibrationStackCheckBoxUpdater; //DGA: Updater for skipSurfaceFindOnImageResumeCheckBox, scheduleStopAfterNextCutCheckBox, acquireCalibrationStackCheckBox and signaler for cutCompletedSoStop
-
+	  ui::simpleSignalerClass skipSurfaceFindOnImageResumeCheckBoxUpdater, scheduledStopReachedSignaler, acquireCalibrationStackCheckBoxUpdater, cutCountChangedSignaler, updateScheduledStopCutCountProgressSignaler; //DGA: Updater for skipSurfaceFindOnImageResumeCheckBox, acquireCalibrationStackCheckBox and signaler for scheduledStopReachedSignaler and cutCountChangedSignaler
+	
       Agent __self_agent;
       Agent __scan_agent;
       Agent __io_agent;
@@ -193,7 +196,7 @@ namespace fetch
 	  bool cutButtonWasPressed = true; //DGA: By default, set cutButtonWasPressed to true so that when it is pressed, this is correct; if the cut occurs during autotile cutBottonWasPressed will have been set to false
 	  fetch::cfg::device::Microscope*      cfg_as_set_by_file; //DGA: Keep track of configuration as set by file
 	private:
-		bool skipSurfaceFindOnImageResume_, scheduleStopAfterNextCut_, acquireCalibrationStack_; //DGA: Private variables storing whether or not to skip surface find or schedule a stop or acquire a calibration stack
+		bool skipSurfaceFindOnImageResume_, acquireCalibrationStack_; //DGA: Private variables storing whether or not to skip surface find or schedule a stop or acquire a calibration stack
     };
     //end namespace fetch::device
   }

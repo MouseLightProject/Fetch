@@ -135,6 +135,9 @@ public: // semi-private
   AutoTileTimeoutMsController          *_autotile_timeoutms_control;
   AutoTileChanController               *_autotile_chan_control;
   AutoTileIntensityThresholdController *_autotile_intensity_thresh_control;
+  AutoTileScheduleStopAfterNthCutController *_autotile_schedule_stop_after_nth_cut_control; //DGA: _autotile_schedule_stop_after_nth_cut_control is a pointer to an instance of AutoTileScheduleStopAfterNthCutController
+  AutoTileNthCutToStopAfterController *_autotile_nth_cut_to_stop_after_control; //DGA: _autotile_nth_cut_to_stop_aftercontrol is a pointer to an instance of AutoTileNthCutToStopAfterController
+
   SurfaceFindIntensityThresholdController *_surface_find_intensity_thresh_control; //DGA: _surface_find_intensity_thresh_control is a pointer to an instance of SurfaceFindIntensityThresholdController
 
   AutoTileAreaThresholdController      *_autotile_area_thresh_control;
