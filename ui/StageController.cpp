@@ -99,7 +99,7 @@ void fetch::ui::TilingController::
       return;
     }
     autosave_timer_.setSingleShot(false);
-    autosave_timer_.setInterval(30*1000); // interval msec   
+    autosave_timer_.setInterval(600*1000); // interval msec   
     autosave_timer_.start();
   }
   
