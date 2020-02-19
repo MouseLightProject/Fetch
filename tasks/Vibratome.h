@@ -39,7 +39,6 @@ namespace microscope {
 		  RegSetValueEx(key, "cut_count", 0, REG_DWORD,
 		  (const BYTE*)&cut_count, sizeof(cut_count))));
   }
-
 } // fetch::task::microscope
 
 }}

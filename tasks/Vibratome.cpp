@@ -99,7 +99,6 @@ namespace microscope {
 	}
 
     float cx,cy,cz,vx,vy,vz,ax,ay,bx,by,bz,v,dz,thick, thicknessCorrection; //DGA: Added thicknessCorrection float
-	device::Microscope::Config c;
 
 	// get current pos,vel
     CHK( dc->stage()->getTarget(&cx,&cy,&cz));

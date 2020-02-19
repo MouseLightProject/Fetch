@@ -140,7 +140,6 @@ public: // semi-private
 
   SurfaceFindIntensityThresholdController *_surface_find_intensity_thresh_control; //DGA: _surface_find_intensity_thresh_control is a pointer to an instance of SurfaceFindIntensityThresholdController
 
-
   AutoTileAreaThresholdController      *_autotile_area_thresh_control;
 
   QFileSystemWatcher           *_config_watcher;

@@ -514,7 +514,7 @@ QValidator* GetSetAutoTileIntesityThreshold::createValidator_(QObject* parent)
    return newValidator;
 }
 
-//DGA: Adding getter/setter for nth cut to stop after
+//DGA: Adding getter/setter for schedule stop
 void GetSetAutoTileScheduleStopAfterNthCut::Set_(device::Microscope *dc, bool &v)
 {
 	device::Microscope::Config c = dc->get_config();

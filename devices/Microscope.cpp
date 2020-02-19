@@ -504,7 +504,7 @@ Error:
 	}
 
 
-	void Microscope::cutCountSinceScheduledStopChangedSoUpdateConfig(int setValue) { //DGA: Defintion of updateScheduleStopAfterNthCutProperties function
+	void Microscope::cutCountSinceScheduledStopChangedSoUpdateConfig(int setValue) { //DGA: Defintion of cutCountSinceScheduledStopChangedSoUpdateConfig function
 		device::Microscope::Config c = get_config();
 
 		if (setValue >= c.autotile().nth_cut_to_stop_after()) { //Then cut was performed outside autotile, eg via cut cycle and we need to reset
@@ -514,8 +514,8 @@ Error:
 		}
 
 		c.mutable_autotile()->set_cut_count_since_scheduled_stop(setValue); //DGA: Then stop has just been scheduled and need to set _cut_count_since_scheduled_stop to 0
-		
 		set_config_nowait(c);
+
 		updateScheduleStopCutCountProgress(c);
 	}
 

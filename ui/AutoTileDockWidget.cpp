@@ -24,10 +24,10 @@ namespace ui{
 	skipSurfaceFindOnImageResumeCheckBox->setText("Skip Surface Find On Image Resume"); //DGA: Set the text then add the checkbox so that is aligned properly with other widgets
 	form->addRow("",skipSurfaceFindOnImageResumeCheckBox);
 
+	//DGA: Create checkbox to schedule stop
 	QCheckBox * scheduleStopAfterNthCutCheckBox = parent->_autotile_schedule_stop_after_nth_cut_control->createCheckBox();
 	connect(&(dc->scheduledStopReachedSignaler), SIGNAL(signaler(bool)), scheduleStopAfterNthCutCheckBox, SLOT(setChecked(bool)), Qt::QueuedConnection); //DGA: toggle checkbox off, since cutCompletedSoStop is only called when a cut was scheduled.
 	connect(scheduleStopAfterNthCutCheckBox, SIGNAL(toggled(bool)), parent->_microscopeController, SLOT(scheduleStopCheckBoxToggledSoUpdateConfig(bool)), Qt::QueuedConnection); //DGA: When checkbox is setChecked, update properties relevant to schedule stop
-
 	scheduleStopAfterNthCutCheckBox->setText("Schedule stop after cut number: ");
 
 	QLineEdit * nthCutToStopAfterLineEdit = parent->_autotile_nth_cut_to_stop_after_control->createLineEdit(); //DGA: Create line edit that is disabled when stop is scheduled

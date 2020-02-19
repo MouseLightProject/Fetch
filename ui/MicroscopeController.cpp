@@ -6,7 +6,7 @@
   QObject(parent), 
   microscope_(microscope)
 { //DGA: MicroscopeController constructor which initializes microscope_ to microscope and QObject with argument parent
-    connect(&(microscope_->scheduledStopReachedSignaler),SIGNAL(signaler()),ac,SLOT(stop()), Qt::BlockingQueuedConnection); //DGA: Connects signal_setValue() of cutCompletedSoStopSignaler to ac
+    connect(&(microscope_->scheduledStopReachedSignaler),SIGNAL(signaler()),ac,SLOT(stop()), Qt::BlockingQueuedConnection); //DGA: Connects signaler() of scheduledStopReachedSignaler to stop of ac
 } 
 
 QCheckBox *
@@ -47,7 +47,7 @@ void
 fetch::ui::MicroscopeController::
 cutCountSinceScheduledStopChangedSoUpdateConfig(int setValue) //DGA: cutCountSinceScheduledStopChangedSoUpdateConfig slot that takes in the setValue bool
 { 
-	microscope_->cutCountSinceScheduledStopChangedSoUpdateConfig(setValue); //DGA: updates schedule stop after nth cut properties
+	microscope_->cutCountSinceScheduledStopChangedSoUpdateConfig(setValue); //DGA: updates config based on cut count change since scheduled stop
 }
 
 void 
