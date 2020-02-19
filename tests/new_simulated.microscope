@@ -259,6 +259,9 @@ autotile {
   search_radius: 2
   use_adaptive_tiling: true
   use_explore: true
+  schedule_stop_after_nth_cut: true
+  nth_cut_to_stop_after: 2
+  cut_count_since_scheduled_stop: 1
 }
 surface_probe {
   simulated {

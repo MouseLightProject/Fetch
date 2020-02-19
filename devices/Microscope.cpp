@@ -494,13 +494,13 @@ Error:
 
 	void Microscope::scheduleStopCheckBoxToggledSoUpdateConfig(bool setValue) { //DGA: Defintion of scheduleStopCheckBoxToggledSoUpdateConfig function
 		device::Microscope::Config c = get_config();
-		if(setValue)
+		if(!setValue)
 			c.mutable_autotile()->set_cut_count_since_scheduled_stop(0); //DGA: Then stop has just been scheduled and need to set _cut_count_since_scheduled_stop to 0
 	
 		c.mutable_autotile()->set_schedule_stop_after_nth_cut(setValue); //DGA: Uncheck stop after next cut checkbox
-		set_config_nowait(c);
+		set_config_nowait(c); //DGA: Need nwait otherwise freezes 
 
-		updateScheduleStopCutCountProgress();
+		updateScheduleStopCutCountProgress(c);
 	}
 
 
@@ -514,13 +514,12 @@ Error:
 		}
 
 		c.mutable_autotile()->set_cut_count_since_scheduled_stop(setValue); //DGA: Then stop has just been scheduled and need to set _cut_count_since_scheduled_stop to 0
-
+		
 		set_config_nowait(c);
-		updateScheduleStopCutCountProgress();
+		updateScheduleStopCutCountProgress(c);
 	}
 
-	void Microscope::updateScheduleStopCutCountProgress() { //DGA: Definition of updateScheduleStopCutCountProgress function
-		device::Microscope::Config c = get_config();
+	void Microscope::updateScheduleStopCutCountProgress(device::Microscope::Config c) { //DGA: Definition of updateScheduleStopCutCountProgress function
 		QString setString;
 		if (c.autotile().schedule_stop_after_nth_cut()) {
 			setString = QString("(%1/%2)")
