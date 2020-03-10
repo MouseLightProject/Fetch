@@ -1,0 +1,11 @@
+1.) Install Visual Studio (Last tested with 2017)
+
+2.) Install cmake (Last tested with 3.16.5)
+
+3.) Install QT (Last tested with 5.14.1)
+
+4.) Install Cuda (Last tested with 10.2.89)
+
+5.) Obtain contents of 3rdParty folder. See readme in 3rdParty folder
+
+6.) 
