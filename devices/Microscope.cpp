@@ -241,7 +241,11 @@ ESCAN:
         data.mutable_current_lattice_position()->set_x(r(0));
         data.mutable_current_lattice_position()->set_y(r(1));
         data.mutable_current_lattice_position()->set_z(_cut_count); //DGA: Replace z lattice position with cut count since that is the most useful metric
-        #endif
+
+		
+		updateCurrentLatticePositionSignaler.signaler(QString("Last Completed Lattice Position (x, y, z): (%1, %2, %3)").arg(r(0)).arg(r(1)).arg(_cut_count)); //DGA: Signal that lattice position changed
+        
+		#endif
         data.set_cut_count(_cut_count);
         std::string s;
         google::protobuf::TextFormat::PrintToString(data,&s);
@@ -541,6 +545,7 @@ Error:
 		acquireCalibrationStack_ = setValue; //DGA: set value of acquireCalibrationStack_ equal to setValue
 		acquireCalibrationStackCheckBoxUpdater.signaler(setValue); //DGA: Signal signal_valueSet(setValue) so that the acquireCalibrationStack checkbox will be updated
 	}
+
 
     ///////////////////////////////////////////////////////////////////////
     // FileSeries
