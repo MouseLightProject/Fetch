@@ -1,11 +1,46 @@
-1.) Install Visual Studio (Last tested with 2017)
+1.) Install Visual Studio 2013
 
-2.) Install cmake (Last tested with 3.16.5)
+2.) Install QT (Last tested with 5.5)
 
-3.) Install QT (Last tested with 5.14.1)
+3.) Install Cuda (Last tested with 10.2.89)
 
-4.) Install Cuda (Last tested with 10.2.89)
+4.) Install cmake (Last tested with 3.16.5)
 
-5.) Obtain contents of 3rdParty folder. See readme in 3rdParty folder
+6.) Open cmake
+    * Check advanced box
+    * Select source as [repo root directory]
+    * Select build dir as [repo root directory]/build
+    * Add below, by clicking add entry. Put the desired path etc in the value section after you enter the name.
+      -	PROTOBUF_INCLUDE_DIR:PATH=[repo root directory]/3rdParty/protobuf-2.6.1/src
+      -	PROTOBUF_LIBRARY:FILEPATH=[repo root directory]/3rdParty/protobuf-2.6.1/vsprojects/x64/Debug/libprotobuf.lib
+      -	PROTOBUF_PROTOC_EXECUTABLE:FILEPATH=[repo root directory]/3rdParty/protobuf-2.6.1/vsprojects/x64/Debug/protoc.exe
+      -	MYLIB_INCLUDE_DIR:PATH=[repo root directory]/mylib/
+6.)	Suppress developer warnings, press Configure and select your Visual Studio version, Win64 and click finish
+7.)	An error will appear. Change directories as follows:
+	*	Qt5Core_DIR:PATH=C:/Qt/5.5/msvc2013_64/lib/cmake/Qt5Core
+	*	MYLIB_MYFFT_LIBRARY_D:FILEPATH=[path to mylib]/Visual Studio 10 Win64/Debug/myfft.lib
+	*	MYLIB_MYFFT_LIBRARY_R:STRING=[path to mylib]/Visual Studio 10 Win64/Release/myfft.lib
+	*	MYLIB_MYLIB_LIBRARY_D:FILEPATH=[path to mylib]/Visual Studio 10 Win64/Debug/mylib.lib
+	*	MYLIB_MYLIB_LIBRARY_R:STRING=[path to mylib]/Visual Studio 10 Win64/Release/mylib.lib
+	*	MYLIB_MYTIFF_LIBRARY_D:FILEPATH=[path to mylib]/Visual Studio 10 Win64/Debug/mytiff.lib
+	*	MYLIB_MYTIFF_LIBRARY_R:STRING=[path to mylib]/Visual Studio 10 Win64/Release/mytiff.lib
+	*	CUDA_TOOLKIT_INCLUDE:PATH=C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/[cuda version]/include
+8.)	Press configure again (it will find more directories). Then press it again. Then click generate.
+9.)	Open fetch.sln, and change fetch to startup project and build.
+10.) Copy glew32.dll (can be from parent directory or build2/debug/ etc.) into Debug, and Qt5Cored.dll, Qt5Guid.dll, Qt5Networkd.dll, Qt5OpenGLd.dll, Qt5PrintSupportd.dll, Qt5Widgetsd.dll from C:\Qt\5.5\msvc2013_64\bin into Debug
+11.) Obtain a copy of atsapi.dll and place in build/Debug folder
+12.) Run Fetch
+	* If no external devices are detected, Fetch will run in simulation mode. In this mode, Fetch will use noise to simulate data in order to cycle through the different steps in the pipeline. 
 
-6.) 
+
+
+
+
+
+
+
+
+
+
+
+
