@@ -629,6 +629,13 @@ namespace fetch
 
         // init fifo?
       }
+      else {
+        // cache data for simulated generation
+        LARGE_INTEGER li;
+        QueryPerformanceFrequency(&li);
+        m_pcFrequency = (double)li.QuadPart;
+        m_acqRunning = false;
+      }
 
       return 0; // 0 = success
     }
@@ -647,12 +654,16 @@ namespace fetch
 
     unsigned vDaqDigitizer::setup(int nrecords, double record_frequency_Hz, double duty)
     {
-      m_nrecords = nrecords;
+      m_nRecords = nrecords;
       m_recordSize = record_size(record_frequency_Hz, duty);
 
       if (m_pDevice) {
         // configure capture engine
         // configure fifo
+      }
+      else {
+        // calc simulated timing
+        m_recordPeriod.QuadPart = (LONGLONG)(m_pcFrequency / record_frequency_Hz);
       }
 
       return 1; // 1 = success
@@ -662,19 +673,72 @@ namespace fetch
       return duty*sample_rate() / record_frequency_Hz;
     }
 
+    void vDaqDigitizer::get_image_size(unsigned *w, unsigned *h) {
+      *w = (unsigned)m_recordSize;
+      *h = (unsigned)m_nRecords;
+    }
+
     int vDaqDigitizer::start()
     {
-      return 1; // 1 = ?
+      if (m_pDevice) {
+        // start capture engine
+        // start fifo
+      }
+      else {
+        // calc simulated timing
+        QueryPerformanceCounter(&m_nextRecordTime);
+        m_nextRecordTime.QuadPart += m_recordPeriod.QuadPart;
+        m_nRecordsDone = 0;
+      }
+      
+      m_acqRunning = true;
+      return 1; // 1 = success
     }
 
     int vDaqDigitizer::stop()
     {
-      return 1; // 1 = ?
+      if (m_pDevice) {
+        // stop capture engine
+      }
+
+      m_acqRunning = false;
+
+      return 1; // 1 = success
     }
 
     int vDaqDigitizer::fetch(Frame* frm)
     {
-      return 1; // 1 = ?
+      int frameAquired = 0;
+      LARGE_INTEGER currentTime;
+      LARGE_INTEGER timeoutTime;
+
+      QueryPerformanceCounter(&currentTime);
+      timeoutTime.QuadPart = currentTime.QuadPart + (LONGLONG)(m_pcFrequency * 5);
+
+      if (!m_pDevice) {
+        // go ahead and sim the frame data now
+        // frm->data[]
+      }
+
+      while (m_acqRunning && (currentTime.QuadPart < timeoutTime.QuadPart)) {
+        if (m_pDevice) {
+
+        }
+        else {
+          // simulated
+          if ((m_nRecordsDone < m_nRecords) && (currentTime.QuadPart >= m_nextRecordTime.QuadPart)) {
+            m_nextRecordTime.QuadPart += m_recordPeriod.QuadPart;
+            frameAquired = 1;
+
+            break;
+          }
+        }
+
+        Sleep(1);
+        QueryPerformanceCounter(&currentTime);
+      }
+
+      return frameAquired; // 1 = success
     }
 
     double vDaqDigitizer::sample_rate()

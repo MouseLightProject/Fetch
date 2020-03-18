@@ -199,13 +199,21 @@ namespace fetch
 		  virtual size_t nchan();
 		  virtual unsigned sample_rate_MHz() { return (unsigned)(sample_rate() / 1.0e6); }
 
+      void get_image_size(unsigned *w, unsigned *h); // size of the raw frame returned by the digitizer (as configured).
+
 		  double sample_rate();
 
     private:
 		  cRdiDeviceInterface *m_pDevice;
 
-      int m_nrecords;
+      int m_nRecords;
       size_t m_recordSize;
+
+      double m_pcFrequency;
+      LARGE_INTEGER m_recordPeriod;
+      LARGE_INTEGER m_nextRecordTime;
+      bool m_acqRunning;
+      int m_nRecordsDone;
 	  };
 
     ////////////////////////////////////////////////////////////

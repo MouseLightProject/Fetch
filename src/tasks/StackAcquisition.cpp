@@ -596,6 +596,116 @@ namespace fetch
         goto Finalize;
       }
 
+
+
+      //
+      // --- vDAQ ---
+      //
+
+      struct vdaq_fetch_thread_ctx_t
+      {
+        device::Scanner3D *d;
+        int nframes;       ///< used to set the number of fetch requests made by the fetch thread
+        int running;       ///< used to indicate thread still running (thread to host)
+        int ok;            ///< used to signal error state (bidirectional)
+        Basic_Type_ID tid; ///< pixel type.  Used to allocate the frame.
+        vdaq_fetch_thread_ctx_t(device::Scanner3D *d, int nframes, Basic_Type_ID tid)
+          : d(d), nframes(nframes), tid(tid), running(1), ok(1) {}
+      };
+
+      DWORD vdaq_fetch_stack_thread(void *ctx_)
+      {
+        vdaq_fetch_thread_ctx_t *ctx = (vdaq_fetch_thread_ctx_t*)ctx_;
+        device::Scanner3D *d = ctx->d;
+        Chan *q = Chan_Open(d->_out->contents[0], CHAN_WRITE);
+        device::vDaqDigitizer *dig = d->_scanner2d._digitizer._vdaq;
+        unsigned w, h, i;
+        const int nframes = ctx->nframes;
+        dig->get_image_size(&w, &h);
+        size_t nbytes;
+        Frame *frm = NULL;
+        TS_OPEN("timer-stack_acq.f32");
+        Frame_With_Interleaved_Planes ref(w, h, dig->nchan(), ctx->tid);
+        nbytes = ref.size_bytes();
+        Chan_Resize(q, nbytes);
+        frm = (Frame*)Chan_Token_Buffer_Alloc(q);
+        ref.format(frm);
+        TRY(dig->start());
+
+        // not sure what the purpose or reason for this was
+  //      TRY(dig->fetch(frm)); // first dead frame to set to zmin
+
+        for (i = 0; i < nframes && !d->_agent->is_stopping() && ctx->ok; ++i)
+        {
+          TS_TIC;
+          TRY(dig->fetch(frm));
+          TS_TOC;
+          TRY(CHAN_SUCCESS(SCANNER_PUSH(q, (void**)&frm, nbytes)));
+          ref.format(frm);
+        }
+
+        // not sure what the purpose or reason for this was
+   //     TRY(dig->fetch(frm)); // last dead frame to set back to zmin
+
+      Finalize:
+        TS_CLOSE;
+        ctx->running = 0;
+        if (frm) free(frm);
+        Chan_Close(q);
+        return 0;
+      Error:
+        ctx->ok = 0;
+        goto Finalize;
+      }
+
+      template<class TPixel>
+      unsigned int fetch::task::scanner::ScanStack<TPixel>::run_vdaq(device::Scanner3D *d)
+      {
+        int ecode = 0; // ecode == 0 implies success, error otherwise
+        f64 z_um, ummax, ummin, umstep;
+        HANDLE fetch_thread = 0;
+        TS_OPEN("timer-stack_ao.f32");
+
+        d->_zpiezo.getScanRange(&ummin, &ummax, &umstep);
+        vdaq_fetch_thread_ctx_t ctx(d, ((ummax - ummin) / umstep) + 1, TypeID<TPixel>());     /* ummin to ummax inclusive */
+        d->generateAOConstZ(ummin);                                           // first frame is a dead frame to lock to ummin
+        TRY(!d->writeAO());
+        TRY(!d->_scanner2d._daq.startCLK());
+        d->_scanner2d._shutter.Open();
+        TRY(!d->_scanner2d._daq.startAO());
+        Guarded_Assert_WinErr(fetch_thread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)vdaq_fetch_stack_thread, &ctx, 0, NULL));
+        for (z_um = ummin; ((ummax - z_um) / umstep) >= -0.5f && ctx.running; z_um += umstep)
+        {
+          TS_TIC;
+          d->generateAORampZ(z_um);
+          TRY(!d->writeAO());
+          TS_TOC;
+        }
+        d->generateAOConstZ(ummin);                                           // last frame is a dead frame to lock to ummin
+        TRY(!d->writeAO());
+        if (ctx.ok)
+          Guarded_Assert_WinErr(WAIT_OBJECT_0 == WaitForSingleObject(fetch_thread, INFINITE));
+        TRY(ctx.ok);
+      Finalize:
+        TS_CLOSE;
+        d->_scanner2d._shutter.Shut();
+        d->_scanner2d._digitizer._vdaq->stop();
+        d->get2d()->_daq.waitForDone(1000/*ms*/); // will make sure the last frame finishes generating before it times out.
+        d->_scanner2d._daq.stopCLK();
+        d->_scanner2d._daq.stopAO();
+        if (fetch_thread) CloseHandle(fetch_thread);
+        return ecode; // ecode == 0 implies success, error otherwise
+      Error:
+        warning("Error occurred during ScanStack<%s> task."ENDL, TypeStr<TPixel>());
+        d->generateAOConstZ(ummin); // try one last time to reset AO
+        d->writeAO();
+        ctx.ok = 0;
+        while (fetch_thread && ctx.running)
+          Guarded_Assert_WinErr__NoPanic(WAIT_OBJECT_0 == WaitForSingleObject(fetch_thread, 100)); // need to make sure thread is stopped before exiting this function so ctx remains live
+        ecode = 1;
+        goto Finalize;
+      }
+
     } // namespace scanner
   } // namespace task
 } //namespace fetch

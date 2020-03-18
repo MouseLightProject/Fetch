@@ -61,9 +61,10 @@ namespace fetch
         unsigned int config (device::Scanner3D *d);        
         unsigned int update (device::Scanner3D *d);
 
-        unsigned int run_niscope   (device::Scanner3D *d);
-        unsigned int run_alazar    (device::Scanner3D *d);
-        unsigned int run_simulated (device::Scanner3D *d);
+        unsigned int run_niscope(device::Scanner3D *d);
+        unsigned int run_alazar(device::Scanner3D *d);
+        unsigned int run_simulated(device::Scanner3D *d);
+        unsigned int run_vdaq(device::Scanner3D *d);
       };
 
 
