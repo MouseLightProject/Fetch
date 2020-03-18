@@ -21,7 +21,7 @@ scanner3d {
       }
     }
     digitizer {
-      kind: NIScope #Simulated #NIScope #Alazar
+      kind: vDAQ #Simulated #NIScope #Alazar #vDAQ
       niscope {
         name: "Dev3" # PCI-5105
         sample_rate: 60000000
@@ -63,6 +63,12 @@ scanner3d {
         width:  1024
         number: 0
         sample_rate: 1000000
+      }
+      vdaq {
+        device_num: 0
+        sample_rate: 125000000
+        trigger_source: TRIGGER_SOURCE_D1_0
+        trigger_analog_thresh: 5000
       }
     }
     pockels {

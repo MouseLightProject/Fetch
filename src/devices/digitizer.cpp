@@ -43,30 +43,37 @@
 namespace fetch
 {
 
-  bool operator==(const cfg::device::NIScopeDigitizer& a, const cfg::device::NIScopeDigitizer& b)         {return equals(&a,&b);}
-  bool operator==(const cfg::device::AlazarDigitizer& a, const cfg::device::AlazarDigitizer& b)           {return equals(&a,&b);}
-  bool operator==(const cfg::device::SimulatedDigitizer& a, const cfg::device::SimulatedDigitizer& b)     {return equals(&a,&b);}
-  bool operator==(const cfg::device::Digitizer& a, const cfg::device::Digitizer& b)                       {return equals(&a,&b);}
+  bool operator==(const cfg::device::NIScopeDigitizer& a, const cfg::device::NIScopeDigitizer& b)         { return equals(&a, &b);}
+  bool operator==(const cfg::device::AlazarDigitizer& a, const cfg::device::AlazarDigitizer& b)           { return equals(&a, &b);}
+  bool operator==(const cfg::device::SimulatedDigitizer& a, const cfg::device::SimulatedDigitizer& b)     { return equals(&a, &b); }
+  bool operator==(const cfg::device::Digitizer& a, const cfg::device::Digitizer& b)                       { return equals(&a, &b); }
+  bool operator==(const cfg::device::vDAQDigitizer& a, const cfg::device::vDAQDigitizer& b)               { return equals(&a, &b); }
 
-  bool operator!=(const cfg::device::NIScopeDigitizer& a, const cfg::device::NIScopeDigitizer& b)         {return !(a==b);}
-  bool operator!=(const cfg::device::AlazarDigitizer& a, const cfg::device::AlazarDigitizer& b)           {return !(a==b);}
-  bool operator!=(const cfg::device::SimulatedDigitizer& a, const cfg::device::SimulatedDigitizer& b)     {return !(a==b);}
-  bool operator!=(const cfg::device::Digitizer& a, const cfg::device::Digitizer& b)                       {return !(a==b);}
+  bool operator!=(const cfg::device::NIScopeDigitizer& a, const cfg::device::NIScopeDigitizer& b)         { return !(a == b); }
+  bool operator!=(const cfg::device::AlazarDigitizer& a, const cfg::device::AlazarDigitizer& b)           { return !(a == b); }
+  bool operator!=(const cfg::device::SimulatedDigitizer& a, const cfg::device::SimulatedDigitizer& b)     { return !(a == b); }
+  bool operator!=(const cfg::device::Digitizer& a, const cfg::device::Digitizer& b)                       { return !(a == b); }
+  bool operator!=(const cfg::device::vDAQDigitizer& a, const cfg::device::vDAQDigitizer& b)               { return !(a == b); }
 
   namespace device
   {
+    //
+    // NI Scope digitizer
+    //
     NIScopeDigitizer::NIScopeDigitizer(Agent *agent)
       :DigitizerBase<cfg::device::NIScopeDigitizer>(agent)
-      ,_vi(0)
-      ,_lastResourceName("")
-    { __common_setup();
+      , _vi(0)
+      , _lastResourceName("")
+    {
+      __common_setup();
     }
 
-    NIScopeDigitizer::NIScopeDigitizer(Agent *agent,Config *cfg)
-      :DigitizerBase<cfg::device::NIScopeDigitizer>(agent,cfg)
-      ,_vi(0)
-      ,_lastResourceName("")
-    { __common_setup();
+    NIScopeDigitizer::NIScopeDigitizer(Agent *agent, Config *cfg)
+      :DigitizerBase<cfg::device::NIScopeDigitizer>(agent, cfg)
+      , _vi(0)
+      , _lastResourceName("")
+    {
+      __common_setup();
     }
 
     NIScopeDigitizer::~NIScopeDigitizer(void)
@@ -74,7 +81,7 @@ namespace fetch
     }
 
     unsigned int
-    NIScopeDigitizer::on_detach(void)
+      NIScopeDigitizer::on_detach(void)
     {
 #ifdef HAVE_NISCOPE
       ViStatus status = 1; //error
@@ -84,7 +91,7 @@ namespace fetch
       status = 0;  // success
       digitizer_debug("Digitizer: Detached.\r\n");
       _lastResourceName.clear();
-Error:
+    Error:
       this->_vi = 0;
       return status;
 #else
@@ -102,10 +109,10 @@ Error:
       { // Open the NI-SCOPE instrument handle
         DIGJMP(
           status=niScope_init (
-            const_cast<ViRsrc>(_config->name().c_str()),
-            NISCOPE_VAL_TRUE,    // ID Query
-            NISCOPE_VAL_FALSE,   // Reset?
-            &_vi)                // Session
+          const_cast<ViRsrc>(_config->name().c_str()),
+          NISCOPE_VAL_TRUE,    // ID Query
+          NISCOPE_VAL_FALSE,   // Reset?
+          &_vi)                // Session
           );
       }
       digitizer_debug("\tGot session %3d with status %d\n",_vi,status);
@@ -117,14 +124,17 @@ Error:
     }
 
     void NIScopeDigitizer::onUpdate()
-    { if(_config->name().compare(_lastResourceName)!=0)
-      { if(_agent->is_attached())  // resource change - need to reattach
-        { int rearm = _agent->is_armed();
+    {
+      if (_config->name().compare(_lastResourceName) != 0)
+      {
+        if (_agent->is_attached())  // resource change - need to reattach
+        {
+          int rearm = _agent->is_armed();
           Task *last = _agent->_task;
-          CHKJMP(_agent->detach()==0);
-          CHKJMP(_agent->attach()==0);
-          if(rearm)
-            CHKJMP(_agent->arm(last,_agent->_owner)==0);
+          CHKJMP(_agent->detach() == 0);
+          CHKJMP(_agent->attach() == 0);
+          if (rearm)
+            CHKJMP(_agent->arm(last, _agent->_owner) == 0);
         }
       }
     Error:
@@ -142,16 +152,16 @@ Error:
       size_t
         Bpp = 2, //bytes per pixel to initially allocated for
         nbuf[2] = {DIGITIZER_BUFFER_NUM_FRAMES,
-                   DIGITIZER_BUFFER_NUM_FRAMES},
+        DIGITIZER_BUFFER_NUM_FRAMES},
         sz[2] = {
-          _config->num_records() * _config->record_size() * _config->nchannels() * Bpp,
-          _config->num_records() * sizeof(struct niScope_wfmInfo)};
-        _alloc_qs( &_out, 2, nbuf, sz );
+        _config->num_records() * _config->record_size() * _config->nchannels() * Bpp,
+        _config->num_records() * sizeof(struct niScope_wfmInfo)};
+      _alloc_qs( &_out, 2, nbuf, sz );
 #endif
     }
 
     unsigned NIScopeDigitizer::setup(int nrecords, double record_frequency_Hz, double duty)
-    { 
+    {
 #ifdef HAVE_NISCOPE
       ViSession vi = _vi;
 
@@ -170,10 +180,10 @@ Error:
       // Select the trigger channel
       if(_config->line_trigger_src() >= (unsigned) _config->channel_size())
         error("NIScopeDigitizer:\t\nTrigger source channel has not been configured.\n"
-              "\tTrigger source: %hhu (out of bounds)\n"
-              "\tNumber of configured channels: %d\n",
-              _config->line_trigger_src(),
-              _config->channel_size());
+        "\tTrigger source: %hhu (out of bounds)\n"
+        "\tNumber of configured channels: %d\n",
+        _config->line_trigger_src(),
+        _config->channel_size());
       const Config::Channel& line_trigger_cfg = _config->channel(_config->line_trigger_src());
       Guarded_Assert( line_trigger_cfg.enabled() );
 
@@ -236,14 +246,15 @@ Error:
 #endif
     }
 
-    size_t NIScopeDigitizer::record_size( double record_frequency_Hz, double duty )
-    { size_t d;
+    size_t NIScopeDigitizer::record_size(double record_frequency_Hz, double duty)
+    {
+      size_t d;
 #pragma warning(push)
 #pragma warning(disable:4244) // type cast
-      d=duty*_config->sample_rate()/record_frequency_Hz;
-	  d=(d/256)*256;//align to 256
+      d = duty*_config->sample_rate() / record_frequency_Hz;
+      d = (d / 256) * 256;//align to 256
 #pragma warning(pop)
-	  return d;
+      return d;
     }
 
     bool NIScopeDigitizer::aux_info(int *n, size_t **sizes)
@@ -258,99 +269,106 @@ Error:
 #endif
     }
 
+
+
     //
     // Alazar digitizer
     //
 #ifdef HAVE_ALAZAR
     AlazarDigitizer::AlazarDigitizer(Agent *agent)
-    : DigitizerBase<cfg::device::AlazarDigitizer>(agent)
-    , _ctx(0)
+      : DigitizerBase<cfg::device::AlazarDigitizer>(agent)
+      , _ctx(0)
     {}
     AlazarDigitizer::AlazarDigitizer(Agent *agent, Config *cfg)
-    : DigitizerBase<cfg::device::AlazarDigitizer>(agent,cfg)
-    , _ctx(0)
+      : DigitizerBase<cfg::device::AlazarDigitizer>(agent, cfg)
+      , _ctx(0)
     {}
 
     unsigned int AlazarDigitizer::on_attach() { return !alazar_attach(&_ctx); } ///< return 0 on failure and 1 on success
     unsigned int AlazarDigitizer::on_detach() { return !alazar_detach(&_ctx); } ///< return 0 on failure and 1 on success
-    unsigned int AlazarDigitizer::on_disarm() { return !alazar_disarm(_ctx);}    ///< return 0 on failure and 1 on success
+    unsigned int AlazarDigitizer::on_disarm() { return !alazar_disarm(_ctx); }    ///< return 0 on failure and 1 on success
 
-    unsigned AlazarDigitizer::setup( int nrecords, double record_frequency_Hz, double duty )
-    { alazar_cfg_t cfg=0;
-      CHKJMP(cfg=alazar_make_config());
-      alazar_set_line_trigger_lvl_volts(cfg,_config->trigger_lvl_volts());
-      alazar_set_image_size(cfg,record_frequency_Hz,nrecords,&duty);
-      alazar_set_aux_out_board(cfg,_config->aux_out_board_id());
+    unsigned AlazarDigitizer::setup(int nrecords, double record_frequency_Hz, double duty)
+    {
+      alazar_cfg_t cfg = 0;
+      CHKJMP(cfg = alazar_make_config());
+      alazar_set_line_trigger_lvl_volts(cfg, _config->trigger_lvl_volts());
+      alazar_set_image_size(cfg, record_frequency_Hz, nrecords, &duty);
+      alazar_set_aux_out_board(cfg, _config->aux_out_board_id());
       //debug("[ ]Duty (aligned): %f\n",duty);
       { int i;
-        for(i=0;i<_config->channels_size();++i)
-        { const int iboard=_config->channels(i).board_id(),
-                    ichan =_config->channels(i).chan_id();
-          alazar_set_channel_enable     (cfg,iboard,ichan,_config->channels(i).enabled());
-          alazar_set_channel_input_range(cfg,iboard,ichan,_config->channels(i).range());
-        }
+      for (i = 0; i < _config->channels_size(); ++i)
+      {
+        const int iboard = _config->channels(i).board_id(),
+          ichan = _config->channels(i).chan_id();
+        alazar_set_channel_enable(cfg, iboard, ichan, _config->channels(i).enabled());
+        alazar_set_channel_input_range(cfg, iboard, ichan, _config->channels(i).range());
       }
-      CHKJMP(alazar_arm(_ctx,cfg));
+      }
+      CHKJMP(alazar_arm(_ctx, cfg));
       alazar_free_config(&cfg);
       return 1;
-Error:
-      warning("DIGITIZER SETUP FAILED. %s(%d) %s()\n",__FILE__,__LINE__,__FUNCTION__);
+    Error:
+      warning("DIGITIZER SETUP FAILED. %s(%d) %s()\n", __FILE__, __LINE__, __FUNCTION__);
       return 0;
     }
-    size_t AlazarDigitizer::record_size( double record_frequency_Hz, double duty )
+    size_t AlazarDigitizer::record_size(double record_frequency_Hz, double duty)
     {
 #pragma warning(push)
 #pragma warning(disable:4244) // type cast
-      return duty*sample_rate()/record_frequency_Hz;
+      return duty*sample_rate() / record_frequency_Hz;
 #pragma warning(pop)
     }
 
     int AlazarDigitizer::start()
-    { CHKJMP(alazar_start(_ctx));
+    {
+      CHKJMP(alazar_start(_ctx));
       return 1;
     Error:
       return 0;
     }
 
     int AlazarDigitizer::stop()
-    { CHKJMP(alazar_stop(_ctx));
+    {
+      CHKJMP(alazar_stop(_ctx));
       return 1;
     Error:
       return 0;
     }
 
     int AlazarDigitizer::fetch(Frame* frm)
-    { CHKJMP(alazar_fetch(_ctx,&frm->data,5000)); // the only reason this is well behaved is because alazar_fetch doesn't actually swap pointers.
+    {
+      CHKJMP(alazar_fetch(_ctx, &frm->data, 5000)); // the only reason this is well behaved is because alazar_fetch doesn't actually swap pointers.
       return 1;
-Error:
+    Error:
       return 0;
     }
 
     double AlazarDigitizer::sample_rate()
     {
-      switch(_config->sample_rate())
+      switch (_config->sample_rate())
       {
-        case cfg::device::AlazarDigitizer_SampleRate_SAMPLE_RATE_1KSPS    : return      1000.0; break;
-        case cfg::device::AlazarDigitizer_SampleRate_SAMPLE_RATE_2KSPS    : return      2000.0; break;
-        case cfg::device::AlazarDigitizer_SampleRate_SAMPLE_RATE_5KSPS    : return      5000.0; break;
-        case cfg::device::AlazarDigitizer_SampleRate_SAMPLE_RATE_10KSPS   : return     10000.0; break;
-        case cfg::device::AlazarDigitizer_SampleRate_SAMPLE_RATE_100KSPS  : return    100000.0; break;
-        case cfg::device::AlazarDigitizer_SampleRate_SAMPLE_RATE_200KSPS  : return    200000.0; break;
-        case cfg::device::AlazarDigitizer_SampleRate_SAMPLE_RATE_500KSPS  : return    500000.0; break;
-        case cfg::device::AlazarDigitizer_SampleRate_SAMPLE_RATE_1MSPS    : return   1000000.0; break;
-        case cfg::device::AlazarDigitizer_SampleRate_SAMPLE_RATE_2MSPS    : return   2000000.0; break;
-        case cfg::device::AlazarDigitizer_SampleRate_SAMPLE_RATE_5MSPS    : return   5000000.0; break;
-        case cfg::device::AlazarDigitizer_SampleRate_SAMPLE_RATE_10MSPS   : return  10000000.0; break;
-        case cfg::device::AlazarDigitizer_SampleRate_SAMPLE_RATE_20MSPS   : return  20000000.0; break;
-        case cfg::device::AlazarDigitizer_SampleRate_SAMPLE_RATE_50MSPS   : return  50000000.0; break;
-        case cfg::device::AlazarDigitizer_SampleRate_SAMPLE_RATE_100MSPS  : return 100000000.0; break;
-        case cfg::device::AlazarDigitizer_SampleRate_SAMPLE_RATE_125MSPS  : return 125000000.0; break;
-        case cfg::device::AlazarDigitizer_SampleRate_SAMPLE_RATE_250MSPS  : return 250000000.0; break;
-        case cfg::device::AlazarDigitizer_SampleRate_SAMPLE_RATE_500MSPS  : return 500000000.0; break;
-        case cfg::device::AlazarDigitizer_SampleRate_SAMPLE_RATE_USER_DEF : return _config->ext_clock_rate(); break; // external clock
-        case cfg::device::AlazarDigitizer_SampleRate_SAMPLE_RATE_MAX: return 500000000.0; break;
+      case cfg::device::AlazarDigitizer_SampleRate_SAMPLE_RATE_1KSPS: return      1000.0; break;
+      case cfg::device::AlazarDigitizer_SampleRate_SAMPLE_RATE_2KSPS: return      2000.0; break;
+      case cfg::device::AlazarDigitizer_SampleRate_SAMPLE_RATE_5KSPS: return      5000.0; break;
+      case cfg::device::AlazarDigitizer_SampleRate_SAMPLE_RATE_10KSPS: return     10000.0; break;
+      case cfg::device::AlazarDigitizer_SampleRate_SAMPLE_RATE_100KSPS: return    100000.0; break;
+      case cfg::device::AlazarDigitizer_SampleRate_SAMPLE_RATE_200KSPS: return    200000.0; break;
+      case cfg::device::AlazarDigitizer_SampleRate_SAMPLE_RATE_500KSPS: return    500000.0; break;
+      case cfg::device::AlazarDigitizer_SampleRate_SAMPLE_RATE_1MSPS: return   1000000.0; break;
+      case cfg::device::AlazarDigitizer_SampleRate_SAMPLE_RATE_2MSPS: return   2000000.0; break;
+      case cfg::device::AlazarDigitizer_SampleRate_SAMPLE_RATE_5MSPS: return   5000000.0; break;
+      case cfg::device::AlazarDigitizer_SampleRate_SAMPLE_RATE_10MSPS: return  10000000.0; break;
+      case cfg::device::AlazarDigitizer_SampleRate_SAMPLE_RATE_20MSPS: return  20000000.0; break;
+      case cfg::device::AlazarDigitizer_SampleRate_SAMPLE_RATE_50MSPS: return  50000000.0; break;
+      case cfg::device::AlazarDigitizer_SampleRate_SAMPLE_RATE_100MSPS: return 100000000.0; break;
+      case cfg::device::AlazarDigitizer_SampleRate_SAMPLE_RATE_125MSPS: return 125000000.0; break;
+      case cfg::device::AlazarDigitizer_SampleRate_SAMPLE_RATE_250MSPS: return 250000000.0; break;
+      case cfg::device::AlazarDigitizer_SampleRate_SAMPLE_RATE_500MSPS: return 500000000.0; break;
+      case cfg::device::AlazarDigitizer_SampleRate_SAMPLE_RATE_USER_DEF: return _config->ext_clock_rate(); break; // external clock
+      case cfg::device::AlazarDigitizer_SampleRate_SAMPLE_RATE_MAX: return 500000000.0; break;
       default:
-        error("Did not recognize value returned by sample_rate().  Got: %d\r\n.",_config->sample_rate());
+        error("Did not recognize value returned by sample_rate().  Got: %d\r\n.", _config->sample_rate());
       }
       UNREACHABLE;
       return -1.0;
@@ -358,29 +376,30 @@ Error:
 
     size_t AlazarDigitizer::nchan()
     {
-      size_t n=0;
-      for(int i=0;i<_config->channels().size();++i)
-        if(_config->channels(i).enabled())
+      size_t n = 0;
+      for (int i = 0; i < _config->channels().size(); ++i)
+        if (_config->channels(i).enabled())
           ++n;
       return n;
     }
 
     void AlazarDigitizer::get_image_size(unsigned *w, unsigned *h)
-    { alazar_get_image_size(_ctx,w,h);
+    {
+      alazar_get_image_size(_ctx, w, h);
     }
 #else // DONT HAVE ALAZAR
     AlazarDigitizer::AlazarDigitizer(Agent *agent)
-    : DigitizerBase<cfg::device::AlazarDigitizer>(agent)
-    , _ctx(0)
+      : DigitizerBase<cfg::device::AlazarDigitizer>(agent)
+      , _ctx(0)
     { error("AlazarDigitizer not supported.\n"); }
     AlazarDigitizer::AlazarDigitizer(Agent *agent, Config *cfg)
-    : DigitizerBase<cfg::device::AlazarDigitizer>(agent,cfg)
-    , _ctx(0)
+      : DigitizerBase<cfg::device::AlazarDigitizer>(agent,cfg)
+      , _ctx(0)
     { error("AlazarDigitizer not supported.\n"); }
     unsigned int AlazarDigitizer::on_attach() { return 0;}
     unsigned int AlazarDigitizer::on_detach() { return 0;}
     unsigned int AlazarDigitizer::on_disarm() { return 0;}
-    void AlazarDigitizer::setup( int nrecords, double record_frequency_Hz, double duty ){}
+    unsigned AlazarDigitizer::setup(int nrecords, double record_frequency_Hz, double duty){return 0;}
     size_t AlazarDigitizer::record_size( double record_frequency_Hz, double duty ) {return 0;}
     int AlazarDigitizer::start(){ return 0; }
     int AlazarDigitizer::stop() { return 0; }
@@ -389,18 +408,21 @@ Error:
     size_t AlazarDigitizer::nchan() {return 0;}
     void AlazarDigitizer::get_image_size(unsigned *w, unsigned *h){ }
 #endif // HAVE_ALAZAR
+
+
+
     //
     // Simulated Digitizer
     //
-
-    size_t SimulatedDigitizer::record_size( double record_frequency_Hz, double duty )
-	{ size_t d;
+    size_t SimulatedDigitizer::record_size(double record_frequency_Hz, double duty)
+    {
+      size_t d;
 #pragma warning(push)
 #pragma warning(disable:4244) // type cast
-      d=duty*_config->sample_rate()/record_frequency_Hz;
-	  d=(d/256)*256;//align to 256
+      d = duty*_config->sample_rate() / record_frequency_Hz;
+      d = (d / 256) * 256;//align to 256
 #pragma warning(pop)
-	  return d;
+      return d;
     }
 
 
@@ -408,97 +430,121 @@ Error:
     //
     // Digitizer
     //
-
-    Digitizer::Digitizer( Agent *agent )
+    Digitizer::Digitizer(Agent *agent)
       :DigitizerBase<cfg::device::Digitizer>(agent)
-      ,_niscope(NULL)
-      ,_simulated(NULL)
-      ,_alazar(NULL)
-      ,_idevice(NULL)
-      ,_idigitizer(NULL)
+      , _niscope(NULL)
+      , _simulated(NULL)
+      , _alazar(NULL)
+      , _vdaq(NULL)
+      , _idevice(NULL)
+      , _idigitizer(NULL)
     {
       setKind(_config->kind());
     }
 
-    Digitizer::Digitizer( Agent *agent, Config *cfg )
-      :DigitizerBase<cfg::device::Digitizer>(agent,cfg)
-      ,_niscope(NULL)
-      ,_simulated(NULL)
-      ,_alazar(NULL)
-      ,_idevice(NULL)
-      ,_idigitizer(NULL)
+    Digitizer::Digitizer(Agent *agent, Config *cfg)
+      :DigitizerBase<cfg::device::Digitizer>(agent, cfg)
+      , _niscope(NULL)
+      , _simulated(NULL)
+      , _alazar(NULL)
+      , _vdaq(NULL)
+      , _idevice(NULL)
+      , _idigitizer(NULL)
     {
       setKind(cfg->kind());
     }
 
     Digitizer::~Digitizer()
     {
-      if(_niscope)     { delete _niscope;     _niscope=NULL; }
-      if(_simulated) { delete _simulated; _simulated=NULL; }
-      if(_alazar) { delete _alazar; _alazar=NULL; }
+      if (_niscope)     { delete _niscope;     _niscope = NULL; }
+      if (_simulated) { delete _simulated; _simulated = NULL; }
+      if (_alazar) { delete _alazar; _alazar = NULL; }
+      if (_vdaq) { delete _vdaq; _vdaq = NULL; }
     }
 
-    void Digitizer::setKind( Config::DigitizerType kind )
+    void Digitizer::setKind(Config::DigitizerType kind)
     {
-      switch(kind)
+      switch (kind)
       {
       case cfg::device::Digitizer_DigitizerType_NIScope:
-        if(!_niscope)
-          _niscope = new NIScopeDigitizer(_agent,_config->mutable_niscope());
-        _idevice  = _niscope;
+        if (!_niscope)
+          _niscope = new NIScopeDigitizer(_agent, _config->mutable_niscope());
+        _idevice = _niscope;
         _idigitizer = _niscope;
         break;
+
       case cfg::device::Digitizer_DigitizerType_Alazar:
-        if(!_alazar)
-          _alazar = new AlazarDigitizer(_agent,_config->mutable_alazar());
-        _idevice  = _alazar;
+        if (!_alazar)
+          _alazar = new AlazarDigitizer(_agent, _config->mutable_alazar());
+        _idevice = _alazar;
         _idigitizer = _alazar;
         break;
+
       case cfg::device::Digitizer_DigitizerType_Simulated:
-        if(!_simulated)
-          _simulated = new SimulatedDigitizer(_agent,_config->mutable_simulated());
-        _idevice  = _simulated;
+        if (!_simulated)
+          _simulated = new SimulatedDigitizer(_agent, _config->mutable_simulated());
+        _idevice = _simulated;
         _idigitizer = _simulated;
         break;
+
+      case cfg::device::Digitizer_DigitizerType_vDAQ:
+        if (!_vdaq)
+          _vdaq = new vDaqDigitizer(_agent, _config->mutable_vdaq());
+        _idevice = _vdaq;
+        _idigitizer = _vdaq;
+        break;
+
       default:
-        error("Unrecognized kind() for Digitizer.  Got: %u\r\n",(unsigned)kind);
+        error("Unrecognized kind() for Digitizer.  Got: %u\r\n", (unsigned)kind);
       }
     }
 
-    void Digitizer::set_config(const NIScopeDigitizer::Config &cfg )
+    void Digitizer::set_config(const NIScopeDigitizer::Config &cfg)
     {
       Guarded_Assert(_niscope);
       _niscope->set_config(cfg);
     }
 
-    void Digitizer::set_config(const AlazarDigitizer::Config &cfg )
+    void Digitizer::set_config(const AlazarDigitizer::Config &cfg)
     {
       Guarded_Assert(_simulated);
       _alazar->set_config(cfg);
     }
 
-    void Digitizer::set_config(const SimulatedDigitizer::Config &cfg )
+    void Digitizer::set_config(const SimulatedDigitizer::Config &cfg)
     {
       Guarded_Assert(_simulated);
       _simulated->set_config(cfg);
     }
 
-    void Digitizer::set_config_nowait(const SimulatedDigitizer::Config &cfg )
+    void Digitizer::set_config(const vDaqDigitizer::Config &cfg)
+    {
+      Guarded_Assert(_simulated);
+      _vdaq->set_config(cfg);
+    }
+
+    void Digitizer::set_config_nowait(const SimulatedDigitizer::Config &cfg)
     {
       Guarded_Assert(_simulated);
       _simulated->set_config_nowait(cfg);
     }
 
-    void Digitizer::set_config_nowait(const AlazarDigitizer::Config &cfg )
+    void Digitizer::set_config_nowait(const AlazarDigitizer::Config &cfg)
     {
       Guarded_Assert(_simulated);
       _alazar->set_config_nowait(cfg);
     }
 
-    void Digitizer::set_config_nowait(const NIScopeDigitizer::Config &cfg )
+    void Digitizer::set_config_nowait(const NIScopeDigitizer::Config &cfg)
     {
       Guarded_Assert(_niscope);
       _niscope->set_config_nowait(cfg);
+    }
+
+    void Digitizer::set_config_nowait(const vDaqDigitizer::Config &cfg)
+    {
+      Guarded_Assert(_vdaq);
+      _vdaq->set_config_nowait(cfg);
     }
 
     unsigned int Digitizer::on_attach()
@@ -519,23 +565,24 @@ Error:
       return _idevice->on_disarm();
     }
 
-    void Digitizer::_set_config( Config IN *cfg )
+    void Digitizer::_set_config(Config IN *cfg)
     {
       setKind(cfg->kind()); // this will instance a device refered to in the config
-      Guarded_Assert( _niscope || _alazar || _simulated );
-      if(_niscope)   _niscope->_set_config(cfg->mutable_niscope());
-      if(_alazar)    _alazar->_set_config(cfg->mutable_alazar());
-      if(_simulated) _simulated->_set_config(cfg->mutable_simulated());;
+      Guarded_Assert(_niscope || _alazar || _simulated || _vdaq);
+      if (_niscope)   _niscope->_set_config(cfg->mutable_niscope());
+      if (_alazar)    _alazar->_set_config(cfg->mutable_alazar());
+      if (_simulated) _simulated->_set_config(cfg->mutable_simulated());
+      if (_vdaq)      _vdaq->_set_config(cfg->mutable_vdaq());
       _config = cfg;
 
     }
 
-    void Digitizer::_set_config( const Config &cfg )
+    void Digitizer::_set_config(const Config &cfg)
     {
       cfg::device::Digitizer_DigitizerType kind = cfg.kind();
       _config->set_kind(kind);
       setKind(kind);
-      switch(kind)
+      switch (kind)
       {
       case cfg::device::Digitizer_DigitizerType_NIScope:
         _niscope->_set_config(cfg.niscope());
@@ -547,12 +594,98 @@ Error:
         _simulated->_set_config(cfg.simulated());
         break;
       default:
-        error("Unrecognized kind() for Digitizer.  Got: %u\r\n",(unsigned)kind);
+        error("Unrecognized kind() for Digitizer.  Got: %u\r\n", (unsigned)kind);
       }
     }
 
 
 
+    //
+    // vDAQ digitizer
+    //
+    vDaqDigitizer::vDaqDigitizer(Agent *agent)
+      : DigitizerBase<cfg::device::vDAQDigitizer>(agent)
+      , m_pDevice(NULL)
+    {}
+    vDaqDigitizer::vDaqDigitizer(Agent *agent, Config *cfg)
+      : DigitizerBase<cfg::device::vDAQDigitizer>(agent, cfg)
+      , m_pDevice(NULL)
+    {}
 
-} // namespace fetch
+    unsigned int vDaqDigitizer::on_attach() {
+      uint16_t numDevices;
+      int16_t deviceNum = _config->device_num();
+      
+      if (m_pDevice)
+        delete m_pDevice;
+      m_pDevice = NULL;
+
+      cRdiDeviceInterface::getDriverInfo(&numDevices);
+      
+      if (numDevices > deviceNum){
+        m_pDevice = new cRdiDeviceInterface(deviceNum,true);
+
+        // load bitfile
+
+        // init fifo?
+      }
+
+      return 0; // 0 = success
+    }
+
+    unsigned int vDaqDigitizer::on_detach() {
+      if (m_pDevice)
+        delete m_pDevice;
+      m_pDevice = NULL;
+
+      return 0; // 0 = success
+    }
+
+    unsigned int vDaqDigitizer::on_disarm() {
+      return 0; // 0 = success
+    }
+
+    unsigned vDaqDigitizer::setup(int nrecords, double record_frequency_Hz, double duty)
+    {
+      m_nrecords = nrecords;
+      m_recordSize = record_size(record_frequency_Hz, duty);
+
+      if (m_pDevice) {
+        // configure capture engine
+        // configure fifo
+      }
+
+      return 1; // 1 = success
+    }
+    size_t vDaqDigitizer::record_size(double record_frequency_Hz, double duty)
+    {
+      return duty*sample_rate() / record_frequency_Hz;
+    }
+
+    int vDaqDigitizer::start()
+    {
+      return 1; // 1 = ?
+    }
+
+    int vDaqDigitizer::stop()
+    {
+      return 1; // 1 = ?
+    }
+
+    int vDaqDigitizer::fetch(Frame* frm)
+    {
+      return 1; // 1 = ?
+    }
+
+    double vDaqDigitizer::sample_rate()
+    {
+      return 120000000.0;
+    }
+
+    size_t vDaqDigitizer::nchan()
+    {
+      return 4;
+    }
+
+  } // namespace device
 } // namespace fetch

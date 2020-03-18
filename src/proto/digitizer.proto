@@ -2,6 +2,21 @@ package fetch.cfg.device;
 
 
 ////////////////////////
+message vDAQDigitizer
+{
+  enum TriggerSource {
+    TRIGGER_SOURCE_AI3                             = 0;
+    TRIGGER_SOURCE_D1_0                            = 1;
+  }
+  
+  optional uint32 device_num             = 1 [default = 0];
+  optional double sample_rate            = 2 [default = 120000000];
+  optional TriggerSource trigger_source  = 3 [default = TRIGGER_SOURCE_D1_0];
+  optional uint32 trigger_analog_thresh  = 4 [default = 5000];
+}
+
+
+////////////////////////
 
 // Notes
 // -----
@@ -162,10 +177,12 @@ message Digitizer
     Simulated = 0;
     NIScope   = 1;
     Alazar    = 2;
+    vDAQ      = 3;
   }
-  optional DigitizerType  kind =  1 [default = NIScope];
+  optional DigitizerType  kind =  1 [default = vDAQ];
 
   optional NIScopeDigitizer   niscope   = 2;
   optional AlazarDigitizer    alazar    = 3;
   optional SimulatedDigitizer simulated = 4;
+  optional vDAQDigitizer      vdaq      = 5;
 }

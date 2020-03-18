@@ -38,6 +38,7 @@
 #include "types.h"
 #include "util\util-protobuf.h"
 #include "alazar.h"
+#include "rdiLib.h"
 #include "frame.h"
 
 #define DIGITIZER_BUFFER_NUM_FRAMES       4        // must be a power of two
@@ -46,14 +47,16 @@
 namespace fetch
 {
 
-  bool operator==(const cfg::device::NIScopeDigitizer& a, const cfg::device::NIScopeDigitizer& b)    ;
-  bool operator==(const cfg::device::AlazarDigitizer& a, const cfg::device::AlazarDigitizer& b)      ;
+  bool operator==(const cfg::device::NIScopeDigitizer& a, const cfg::device::NIScopeDigitizer& b);
+  bool operator==(const cfg::device::AlazarDigitizer& a, const cfg::device::AlazarDigitizer& b);
   bool operator==(const cfg::device::SimulatedDigitizer& a, const cfg::device::SimulatedDigitizer& b);
-  bool operator==(const cfg::device::Digitizer& a, const cfg::device::Digitizer& b)                  ;
-  bool operator!=(const cfg::device::NIScopeDigitizer& a, const cfg::device::NIScopeDigitizer& b)    ;
-  bool operator!=(const cfg::device::AlazarDigitizer& a, const cfg::device::AlazarDigitizer& b)      ;
+  bool operator==(const cfg::device::Digitizer& a, const cfg::device::Digitizer& b);
+  bool operator==(const cfg::device::vDAQDigitizer& a, const cfg::device::vDAQDigitizer& b);
+  bool operator!=(const cfg::device::NIScopeDigitizer& a, const cfg::device::NIScopeDigitizer& b);
+  bool operator!=(const cfg::device::AlazarDigitizer& a, const cfg::device::AlazarDigitizer& b);
   bool operator!=(const cfg::device::SimulatedDigitizer& a, const cfg::device::SimulatedDigitizer& b);
-  bool operator!=(const cfg::device::Digitizer& a, const cfg::device::Digitizer& b)                  ;
+  bool operator!=(const cfg::device::Digitizer& a, const cfg::device::Digitizer& b);
+  bool operator!=(const cfg::device::vDAQDigitizer& a, const cfg::device::vDAQDigitizer& b);
 
 
   namespace device
@@ -175,7 +178,35 @@ namespace fetch
       size_t SimulatedDigitizer::record_size( double record_frequency_Hz, double duty );
       virtual size_t nchan() {return _config->nchan();}
       virtual unsigned sample_rate_MHz() {return _config->sample_rate()/1e6;}
-    };
+	  };
+
+	  //////////////////////////////////////////////////////////////////////////
+	  class vDaqDigitizer : public DigitizerBase<cfg::device::vDAQDigitizer>
+	  {
+	  public:
+		  vDaqDigitizer(Agent *agent);
+		  vDaqDigitizer(Agent *agent, Config *cfg);
+
+		  unsigned int on_attach();
+		  unsigned int on_detach();
+		  unsigned int on_disarm();
+		  int start();
+		  int stop();
+		  int fetch(Frame* frm);
+
+		  virtual unsigned setup(int nrecords, double record_frequency_Hz, double duty);
+		  virtual size_t record_size(double record_frequency_Hz, double duty);
+		  virtual size_t nchan();
+		  virtual unsigned sample_rate_MHz() { return (unsigned)(sample_rate() / 1.0e6); }
+
+		  double sample_rate();
+
+    private:
+		  cRdiDeviceInterface *m_pDevice;
+
+      int m_nrecords;
+      size_t m_recordSize;
+	  };
 
     ////////////////////////////////////////////////////////////
     class Digitizer:public DigitizerBase<cfg::device::Digitizer>
@@ -206,16 +237,20 @@ namespace fetch
       virtual void set_config(const NIScopeDigitizer::Config &cfg);
       virtual void set_config(const AlazarDigitizer::Config &cfg);
       virtual void set_config(const SimulatedDigitizer::Config &cfg);
+      virtual void set_config(const vDaqDigitizer::Config &cfg);
       virtual void set_config_nowait(const NIScopeDigitizer::Config &cfg);
       virtual void set_config_nowait(const AlazarDigitizer::Config &cfg);
       virtual void set_config_nowait(const SimulatedDigitizer::Config &cfg);
+      virtual void set_config_nowait(const vDaqDigitizer::Config &cfg);
 
     public:
       NIScopeDigitizer     *_niscope;
-      SimulatedDigitizer   *_simulated;
-      AlazarDigitizer      *_alazar;
+	    SimulatedDigitizer   *_simulated;
+	    AlazarDigitizer      *_alazar;
+	    vDaqDigitizer        *_vdaq;
       IDevice              *_idevice;
       IDigitizer           *_idigitizer;
     };
-  }
+
+  } // namespace device
 } // namespace fetch

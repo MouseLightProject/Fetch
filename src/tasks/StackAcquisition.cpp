@@ -226,12 +226,19 @@ Error:
             case cfg::device::Digitizer_DigitizerType_NIScope:
                 ecode=run_niscope(s);
                 break;
+
             case cfg::device::Digitizer_DigitizerType_Alazar:
                 ecode=run_alazar(s); // ecode == 0 implies success, error otherwise
                 break;
+
             case cfg::device::Digitizer_DigitizerType_Simulated:
-                ecode = run_simulated(s);
-                break;
+              ecode = run_simulated(s);
+              break;
+
+            case cfg::device::Digitizer_DigitizerType_vDAQ:
+              ecode = run_vdaq(s);
+              break;
+
             default:
                 warning("%s(%d)"ENDL "\tScanStack<>::run() - Got invalid kind() for Digitizer.get_config"ENDL,__FILE__,__LINE__);
         }
@@ -256,6 +263,11 @@ Error:
           scanner->generateAO();
           return 1;
         }
+
+
+        //
+        // --- NIScope ---
+        //
 
       template<class TPixel>
         unsigned int
@@ -399,6 +411,11 @@ Error:
           return 1; //failure - no niscope
 #endif
         }
+
+
+        //
+        // --- SIMULATED ---
+        //
 
         template<class TPixel>
         unsigned int fetch::task::scanner::ScanStack<TPixel>::run_simulated( device::Scanner3D *d )
