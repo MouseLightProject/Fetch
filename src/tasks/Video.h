@@ -41,6 +41,7 @@ namespace fetch
           unsigned int run_niscope(device::IScanner *d);
           unsigned int run_alazar(device::IScanner *d);
           unsigned int run_simulated(device::IScanner *d);
+          unsigned int run_vdaq(device::IScanner *d);
 
         protected:
       };

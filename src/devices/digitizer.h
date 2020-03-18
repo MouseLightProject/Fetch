@@ -210,10 +210,9 @@ namespace fetch
       size_t m_recordSize;
 
       double m_pcFrequency;
-      LARGE_INTEGER m_recordPeriod;
-      LARGE_INTEGER m_nextRecordTime;
+      LARGE_INTEGER m_framePeriod;
+      LARGE_INTEGER m_nextFrameCompleteTime;
       bool m_acqRunning;
-      int m_nRecordsDone;
 	  };
 
     ////////////////////////////////////////////////////////////

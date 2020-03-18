@@ -4,24 +4,24 @@
  *  Created on: Apr 20, 2010
  *      Author: Nathan Clack <clackn@janelia.hhmi.org>
  */
-/*
- * Copyright 2010 Howard Hughes Medical Institute.
- * All rights reserved.
- * Use is subject to Janelia Farm Research Campus Software Copyright 1.1
- * license terms (http://license.janelia.org/license/jfrc_copyright_1_1.html).
- */
-/*
- * Aside(s)
- * --------
- * Q: When should a helper function be included in the class vs. as a static
- *    local?
- * A: For code reuse via inheritance.
- *
- *    One might want to subclass a Task to reuse most of the config or run
- *    code.  For example, the volume acquisition task is likely to use mostly
- *    the same setup as this Video class. (The run loop is different, but
- *    the setup is very similar).
- */
+ /*
+  * Copyright 2010 Howard Hughes Medical Institute.
+  * All rights reserved.
+  * Use is subject to Janelia Farm Research Campus Software Copyright 1.1
+  * license terms (http://license.janelia.org/license/jfrc_copyright_1_1.html).
+  */
+  /*
+   * Aside(s)
+   * --------
+   * Q: When should a helper function be included in the class vs. as a static
+   *    local?
+   * A: For code reuse via inheritance.
+   *
+   *    One might want to subclass a Task to reuse most of the config or run
+   *    code.  For example, the volume acquisition task is likely to use mostly
+   *    the same setup as this Video class. (The run loop is different, but
+   *    the setup is very similar).
+   */
 #include "config.h"
 #include "common.h"
 #include "Video.h"
@@ -34,7 +34,7 @@
 #include "util/timestream.h"
 
 #define SCANNER_VIDEO_TASK_FETCH_TIMEOUT  10.0  //10.0, //(-1=infinite) (0.0=immediate)
-                                                // Setting this to infinite can sometimes make the application difficult to quit
+   // Setting this to infinite can sometimes make the application difficult to quit
 #if 1
 #define DBG(...) debug(__VA_ARGS__)
 #else
@@ -139,12 +139,19 @@ namespace fetch
         case cfg::device::Digitizer_DigitizerType_NIScope:
           return run_niscope(s);
           break;
+
         case cfg::device::Digitizer_DigitizerType_Alazar:
           return run_alazar(s);
           break;
+
         case cfg::device::Digitizer_DigitizerType_Simulated:
           return run_simulated(s);
           break;
+
+        case cfg::device::Digitizer_DigitizerType_vDAQ:
+          return run_vdaq(s);
+          break;
+
         default:
           warning("Video<>::run() - Got invalid kind() for Digitizer.get_config\r\n");
         }
@@ -210,6 +217,10 @@ namespace fetch
       }
 #endif
 
+
+      //
+      // --- NIScope ---
+      //
       template<class TPixel>
       unsigned int
         Video<TPixel>::run_niscope(device::IScanner *d)
@@ -317,6 +328,10 @@ namespace fetch
       }
 
 
+
+      //
+      // --- Simulated ---
+      //
       template<class TPixel>
       unsigned int fetch::task::scanner::Video<TPixel>::run_simulated(device::IScanner *d)
       {
@@ -397,6 +412,8 @@ namespace fetch
         goto Finalize;
       }
 
+
+
       //
       // --- ALAZAR ---
       //
@@ -473,6 +490,101 @@ namespace fetch
         TS_CLOSE;
         d->get2d()->_shutter.Shut();
         d->get2d()->_digitizer._alazar->stop();
+
+        d->get2d()->_daq.waitForDone(1000/*ms*/); // will make sure the last frame finishes generating before it times out.
+
+        d->get2d()->_daq.stopCLK();
+        d->get2d()->_daq.stopAO();
+        if (fetch_thread) CloseHandle(fetch_thread);
+        return ecode; // ecode == 0 implies success, error otherwise
+      Error:
+        warning("Error occurred during ScanStack<%s> task."ENDL, TypeStr<TPixel>());
+        d->writeAO(); // try one more just in case
+        ctx.ok = 0; // signal fetch thread to stop early
+        while (fetch_thread && ctx.running)
+          Guarded_Assert_WinErr__NoPanic(WAIT_FAILED != WaitForSingleObject(fetch_thread, 100)); // need to make sure thread is stopped before exiting this function so ctx remains live
+        ecode = 1;
+        goto Finalize;
+      }
+
+
+
+      //
+      // --- vDAQ ---
+      //
+      struct vdaq_fetch_thread_ctx_t
+      {
+        device::IScanner *d;
+        int running;       ///< used to indicate thread still running (thread to host)
+        int ok;            ///< used to signal error state (bidirectional)
+        Basic_Type_ID tid; ///< pixel type.  Used to allocate the frame.
+        vdaq_fetch_thread_ctx_t(device::IScanner *d, Basic_Type_ID tid)
+          : d(d), tid(tid), running(1), ok(1) {}
+      };
+
+      DWORD vdaq_fetch_video_thread(void *ctx_)
+      {
+        vdaq_fetch_thread_ctx_t *ctx = (vdaq_fetch_thread_ctx_t*)ctx_;
+        device::Scanner2D *d = ctx->d->get2d();
+        Chan *q = Chan_Open(d->_out->contents[0], CHAN_WRITE);
+        device::vDaqDigitizer *dig = d->_digitizer._vdaq;
+        unsigned w, h, i;
+        dig->get_image_size(&w, &h);
+        size_t nbytes;
+        Frame *frm = NULL;
+        Frame_With_Interleaved_Planes ref(w, h, dig->nchan(), ctx->tid);
+        TS_OPEN("timer-video_acq.f32");
+        nbytes = ref.size_bytes();
+        Chan_Resize(q, nbytes);
+        frm = (Frame*)Chan_Token_Buffer_Alloc(q);
+        ref.format(frm);
+        TRY(dig->start());
+        //TS_TIC;
+        while (!d->_agent->is_stopping() && ctx->ok)
+        {
+          TS_TIC;
+          TRY(dig->fetch(frm));
+          TS_TOC;
+          TRY(CHAN_SUCCESS(SCANNER_PUSH(q, (void**)&frm, nbytes)));
+          ref.format(frm);
+        }
+      Finalize:
+        TS_CLOSE;
+        ctx->running = 0;
+        if (frm) free(frm);
+        Chan_Close(q);
+        return 0;
+      Error:
+        ctx->ok = 0;
+        goto Finalize;
+      }
+
+      template<class TPixel>
+      unsigned int fetch::task::scanner::Video<TPixel>::run_vdaq(device::IScanner *d)
+      {
+        int ecode = 0; // ecode == 0 implies success, error otherwise
+        HANDLE fetch_thread = 0;
+        vdaq_fetch_thread_ctx_t ctx(d, TypeID<TPixel>());
+        TS_OPEN("timer-video_ao.f32");
+        d->generateAO();
+        d->writeAO();
+        TRY(!d->get2d()->_daq.startCLK());
+        d->get2d()->_shutter.Open();
+        TRY(!d->get2d()->_daq.startAO());
+        Guarded_Assert_WinErr(fetch_thread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)vdaq_fetch_video_thread, &ctx, 0, NULL));
+        TS_TIC;
+        while (ctx.running)
+        {
+          TRY(!d->writeAO());
+          TS_TOC;
+        }
+        if (ctx.ok)
+          Guarded_Assert_WinErr(WAIT_OBJECT_0 == WaitForSingleObject(fetch_thread, INFINITE));
+        TRY(ctx.ok);
+      Finalize:
+        TS_CLOSE;
+        d->get2d()->_shutter.Shut();
+        d->get2d()->_digitizer._vdaq->stop();
 
         d->get2d()->_daq.waitForDone(1000/*ms*/); // will make sure the last frame finishes generating before it times out.
 

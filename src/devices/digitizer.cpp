@@ -663,7 +663,7 @@ namespace fetch
       }
       else {
         // calc simulated timing
-        m_recordPeriod.QuadPart = (LONGLONG)(m_pcFrequency / record_frequency_Hz);
+        m_framePeriod.QuadPart = (LONGLONG)(m_pcFrequency * ((double)nrecords) / record_frequency_Hz);
       }
 
       return 1; // 1 = success
@@ -686,9 +686,8 @@ namespace fetch
       }
       else {
         // calc simulated timing
-        QueryPerformanceCounter(&m_nextRecordTime);
-        m_nextRecordTime.QuadPart += m_recordPeriod.QuadPart;
-        m_nRecordsDone = 0;
+        QueryPerformanceCounter(&m_nextFrameCompleteTime);
+        m_nextFrameCompleteTime.QuadPart += m_framePeriod.QuadPart;
       }
       
       m_acqRunning = true;
@@ -726,10 +725,9 @@ namespace fetch
         }
         else {
           // simulated
-          if ((m_nRecordsDone < m_nRecords) && (currentTime.QuadPart >= m_nextRecordTime.QuadPart)) {
-            m_nextRecordTime.QuadPart += m_recordPeriod.QuadPart;
+          if (currentTime.QuadPart >= m_nextFrameCompleteTime.QuadPart) {
+            m_nextFrameCompleteTime.QuadPart += m_framePeriod.QuadPart;
             frameAquired = 1;
-
             break;
           }
         }
