@@ -213,6 +213,7 @@ namespace fetch
       LARGE_INTEGER m_framePeriod;
       LARGE_INTEGER m_nextFrameCompleteTime;
       bool m_acqRunning;
+      size_t m_simFramesDone;
 	  };
 
     ////////////////////////////////////////////////////////////

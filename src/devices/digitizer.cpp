@@ -670,7 +670,8 @@ namespace fetch
     }
     size_t vDaqDigitizer::record_size(double record_frequency_Hz, double duty)
     {
-      return duty*sample_rate() / record_frequency_Hz;
+      // seems that record size must be divisible by 32
+      return (((size_t)(duty*sample_rate() / record_frequency_Hz)) >> 5) << 5;
     }
 
     void vDaqDigitizer::get_image_size(unsigned *w, unsigned *h) {
@@ -688,6 +689,7 @@ namespace fetch
         // calc simulated timing
         QueryPerformanceCounter(&m_nextFrameCompleteTime);
         m_nextFrameCompleteTime.QuadPart += m_framePeriod.QuadPart;
+        m_simFramesDone = 0;
       }
       
       m_acqRunning = true;
@@ -727,6 +729,7 @@ namespace fetch
           // simulated
           if (currentTime.QuadPart >= m_nextFrameCompleteTime.QuadPart) {
             m_nextFrameCompleteTime.QuadPart += m_framePeriod.QuadPart;
+            m_simFramesDone += 1;
             frameAquired = 1;
             break;
           }

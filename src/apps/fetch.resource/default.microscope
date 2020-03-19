@@ -66,7 +66,7 @@ scanner3d {
       }
       vdaq {
         device_num: 0
-        sample_rate: 125000000
+        sample_rate: 120000000
         trigger_source: TRIGGER_SOURCE_D1_0
         trigger_analog_thresh: 5000
       }

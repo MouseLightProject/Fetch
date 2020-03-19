@@ -121,11 +121,15 @@ namespace fetch
       //template<class TPixel> unsigned int Video<TPixel>::run(device::Scanner3D* d)  {return run(&d->_scanner2d);}
       template<class TPixel> unsigned int Video<TPixel>::run(IDevice *d)
       {
-        { device::Scanner2D *s = dynamic_cast<device::Scanner2D*>(d);
-        if (s) return _run(s);// else return 2;
+        {
+          device::Scanner2D *s = dynamic_cast<device::Scanner2D*>(d);
+          if (s)
+            return _run(s);// else return 2;
         }
-        { device::Scanner3D *s = dynamic_cast<device::Scanner3D*>(d);
-        if (s) return _run(s); else return 2;
+        {
+          device::Scanner3D *s = dynamic_cast<device::Scanner3D*>(d);
+          if (s)
+            return _run(s); else return 2;
         }
       }
 
@@ -571,6 +575,9 @@ namespace fetch
         TRY(!d->get2d()->_daq.startCLK());
         d->get2d()->_shutter.Open();
         TRY(!d->get2d()->_daq.startAO());
+
+
+        /*
         Guarded_Assert_WinErr(fetch_thread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)vdaq_fetch_video_thread, &ctx, 0, NULL));
         TS_TIC;
         while (ctx.running)
@@ -580,6 +587,10 @@ namespace fetch
         }
         if (ctx.ok)
           Guarded_Assert_WinErr(WAIT_OBJECT_0 == WaitForSingleObject(fetch_thread, INFINITE));
+          */
+        vdaq_fetch_video_thread(&ctx);
+
+
         TRY(ctx.ok);
       Finalize:
         TS_CLOSE;
