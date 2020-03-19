@@ -214,6 +214,8 @@ namespace fetch
       LARGE_INTEGER m_nextFrameCompleteTime;
       bool m_acqRunning;
       size_t m_simFramesDone;
+      uint32_t m_stRec;
+      bool m_enFill;
 	  };
 
     ////////////////////////////////////////////////////////////

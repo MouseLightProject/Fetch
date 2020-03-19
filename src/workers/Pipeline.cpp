@@ -98,22 +98,23 @@ namespace fetch
 
       // MAIN LOOP
       size_t src_bytes=Chan_Buffer_Size_Bytes(qsrc);
-      while(CHAN_SUCCESS(Chan_Next(reader,(void**)&fsrc,src_bytes)))
-      { int emit=0;
+      while (CHAN_SUCCESS(Chan_Next(reader, (void**)&fsrc, src_bytes)))
+      {
+        int emit = 0;
         //REMIND(fsrc->totif("pipeline-src.tif"));
         TS_TIC;
-        TRY(pipesrc=pipeline_set_image_from_frame(pipesrc,fsrc));
-        TRY(pipedst=pipeline_make_dst_image(pipedst,ctx,pipesrc));
-        TRY(fdst=pipeline_format_frame(pipedst,fdst)); // maybe realloc fdst and format the frame.
-        pipeline_image_set_data(pipedst,fdst->data);
-        TRY(pipeline_exec(ctx,pipedst,pipesrc,&emit));
+        TRY(pipesrc = pipeline_set_image_from_frame(pipesrc, fsrc));
+        TRY(pipedst = pipeline_make_dst_image(pipedst, ctx, pipesrc));
+        TRY(fdst = pipeline_format_frame(pipedst, fdst)); // maybe realloc fdst and format the frame.
+        pipeline_image_set_data(pipedst, fdst->data);
+        TRY(pipeline_exec(ctx, pipedst, pipesrc, &emit));
         TS_TOC;
-        if(emit)
+        if (emit)
         { //REMIND(fdst->totif("pipeline-dst.tif"));
-          TRY(CHAN_SUCCESS(Chan_Next(writer,(void**)&fdst,fdst->size_bytes())));
+          TRY(CHAN_SUCCESS(Chan_Next(writer, (void**)&fdst, fdst->size_bytes())));
           { // init fdst
             size_t dst_bytes = Chan_Buffer_Size_Bytes(qdst);
-            Frame_With_Interleaved_Planes ref(dst_bytes,1,1,id_u8); // just a 1d array with the right number of bytes. dst will get formated correctly later.
+            Frame_With_Interleaved_Planes ref(dst_bytes, 1, 1, id_u8); // just a 1d array with the right number of bytes. dst will get formated correctly later.
             ref.format(fdst);
           }
         }

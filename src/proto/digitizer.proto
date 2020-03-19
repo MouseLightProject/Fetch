@@ -7,6 +7,7 @@ message vDAQDigitizer
   enum TriggerSource {
     TRIGGER_SOURCE_AI3                             = 0;
     TRIGGER_SOURCE_D1_0                            = 1;
+	TRIGGER_SOURCE_SIM                             = 2;
   }
   
   optional uint32 device_num             = 1 [default = 0];

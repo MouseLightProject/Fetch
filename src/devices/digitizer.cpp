@@ -635,6 +635,7 @@ namespace fetch
         QueryPerformanceFrequency(&li);
         m_pcFrequency = (double)li.QuadPart;
         m_acqRunning = false;
+        m_enFill = true;
       }
 
       return 0; // 0 = success
@@ -690,6 +691,7 @@ namespace fetch
         QueryPerformanceCounter(&m_nextFrameCompleteTime);
         m_nextFrameCompleteTime.QuadPart += m_framePeriod.QuadPart;
         m_simFramesDone = 0;
+        m_stRec = 0;
       }
       
       m_acqRunning = true;
@@ -718,24 +720,60 @@ namespace fetch
 
       if (!m_pDevice) {
         // go ahead and sim the frame data now
-        // frm->data[]
+        int16_t *data = (int16_t*)frm->data;
+
+        /*    size_t n = m_recordSize * m_nRecords * 4;
+            for (uint32_t i = 0; i < n; i++)
+              *(data++) = rand() >> 4;
+    */
+
+
+    /*   for (uint32_t ch = 0; ch < 4; ch++)
+         for (uint32_t rec = 0; rec < m_nRecords; rec++)
+           for (uint32_t samp = 0; samp < m_recordSize; samp++)
+             *(data++) = !ch ? (rec * 128) : 0;*/
+
+
+        for (uint32_t ch = 0; ch < 4; ch++) {
+          uint32_t t_stRec = m_stRec + ch * 10;
+          t_stRec -= m_nRecords*(t_stRec >= m_nRecords);
+
+          uint32_t ndRec = t_stRec + 30;
+          bool wrap = ndRec > m_nRecords;
+          ndRec = wrap ? ndRec - m_nRecords : ndRec;
+
+          for (uint32_t rec = 0; rec < m_nRecords; rec++) {
+            bool fill = m_enFill && (wrap ? ((rec < ndRec) || (rec >= t_stRec)) : ((rec < ndRec) && (rec >= t_stRec)));
+
+            for (uint32_t samp = 0; samp < m_recordSize; samp++) {
+              int16_t fv = (samp > (m_recordSize >> 1)) ? m_recordSize - samp : samp;
+              *(data++) = fill ? fv * 2 : rand() >> 2;
+            }
+          }
+        }
+
+        m_stRec = (m_stRec >= m_nRecords) ? 0 : m_stRec + 1;
       }
 
       while (m_acqRunning && (currentTime.QuadPart < timeoutTime.QuadPart)) {
         if (m_pDevice) {
-
+          Sleep(10);
         }
         else {
           // simulated
           if (currentTime.QuadPart >= m_nextFrameCompleteTime.QuadPart) {
             m_nextFrameCompleteTime.QuadPart += m_framePeriod.QuadPart;
-            m_simFramesDone += 1;
+            m_simFramesDone++;
             frameAquired = 1;
             break;
           }
+          else {
+            DWORD t = (m_nextFrameCompleteTime.QuadPart - currentTime.QuadPart) * 1000 / m_pcFrequency;
+            debug("sleepin %d", t);
+            Sleep(t);
+          }
         }
 
-        Sleep(1);
         QueryPerformanceCounter(&currentTime);
       }
 
