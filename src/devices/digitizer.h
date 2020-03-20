@@ -38,7 +38,7 @@
 #include "types.h"
 #include "util\util-protobuf.h"
 #include "alazar.h"
-#include "rdiLib.h"
+#include "vdaq.h"
 #include "frame.h"
 
 #define DIGITIZER_BUFFER_NUM_FRAMES       4        // must be a power of two
@@ -204,7 +204,7 @@ namespace fetch
 		  double sample_rate();
 
     private:
-		  cRdiDeviceInterface *m_pDevice;
+      vDAQ *m_pDevice;
 
       int m_nRecords;
       size_t m_recordSize;

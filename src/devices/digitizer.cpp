@@ -623,11 +623,29 @@ namespace fetch
       cRdiDeviceInterface::getDriverInfo(&numDevices);
       
       if (numDevices > deviceNum){
-        m_pDevice = new cRdiDeviceInterface(deviceNum,true);
+        m_pDevice = new vDAQ(deviceNum,true);
 
         // load bitfile
+        bool designLoaded;
+        
+        m_pDevice->getInfo(NULL, 0, NULL, NULL, NULL, &designLoaded);
 
-        // init fifo?
+        if (!designLoaded) {
+          m_pDevice->loadDesign(L"vDAQR0_Init.dbs");
+        }
+        m_pDevice->loadDesign(L"vDAQR0_SI.dbs");
+
+        designLoaded = true;
+        uint64_t t;
+        while (designLoaded) {
+          t = m_pDevice->getPcieClkT();
+          t = m_pDevice->getSystemClockT();
+          t = m_pDevice->getSampleClkTicksPerMeasInterval();
+        }
+
+        // init sample clock
+
+        // init msadc
       }
       else {
         // cache data for simulated generation
