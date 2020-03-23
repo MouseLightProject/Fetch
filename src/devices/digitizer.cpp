@@ -15,6 +15,7 @@
 #include "digitizer.h"
 #include "Chan.h"
 #include "alazar.h"
+#include "qcoreapplication.h"
 
 #pragma warning(push)
 #pragma warning(disable:4005)
@@ -606,63 +607,110 @@ namespace fetch
     vDaqDigitizer::vDaqDigitizer(Agent *agent)
       : DigitizerBase<cfg::device::vDAQDigitizer>(agent)
       , m_pDevice(NULL)
+      , m_pSimBuffer(NULL)
+      , m_pIntFrameBuffer(NULL)
     {}
     vDaqDigitizer::vDaqDigitizer(Agent *agent, Config *cfg)
       : DigitizerBase<cfg::device::vDAQDigitizer>(agent, cfg)
       , m_pDevice(NULL)
+      , m_pSimBuffer(NULL)
+      , m_pIntFrameBuffer(NULL)
     {}
 
     unsigned int vDaqDigitizer::on_attach() {
       uint16_t numDevices;
       int16_t deviceNum = _config->device_num();
-      
+
       if (m_pDevice)
         delete m_pDevice;
       m_pDevice = NULL;
 
       cRdiDeviceInterface::getDriverInfo(&numDevices);
-      
-      if (numDevices > deviceNum){
-        m_pDevice = new vDAQ(deviceNum,true);
+
+      if (numDevices > deviceNum) {
+        m_pDevice = new vDAQ(deviceNum, true);
 
         // load bitfile
         bool designLoaded;
-        
-        m_pDevice->getInfo(NULL, 0, NULL, NULL, NULL, &designLoaded);
+        int16_t err = 0;
+        uint16_t hwRev;
+        wchar_t strBuf[500];
 
+        m_pDevice->getInfo(NULL, 0, &hwRev, NULL, NULL, &designLoaded);
+
+        debug("Initializing vDAQ...");
         if (!designLoaded) {
-          m_pDevice->loadDesign(L"vDAQR0_Init.dbs");
+          strBuf[QCoreApplication::applicationDirPath().append("/vDAQR0_Init.dbs").replace('/', '\\').toWCharArray(strBuf)] = 0;
+          m_pDevice->loadDesign(strBuf);
         }
-        m_pDevice->loadDesign(L"vDAQR0_SI.dbs");
+        strBuf[QCoreApplication::applicationDirPath().append("/vDAQR0_SI.dbs").replace('/', '\\').toWCharArray(strBuf)] = 0;
+        err = m_pDevice->loadDesign(strBuf);
 
-        designLoaded = true;
-        uint64_t t;
-        while (designLoaded) {
-          t = m_pDevice->getPcieClkT();
-          t = m_pDevice->getSystemClockT();
-          t = m_pDevice->getSampleClkTicksPerMeasInterval();
+        if (err) {
+          delete m_pDevice;
+          m_pDevice = NULL;
+
+          error("Failed to initialize vDAQ. Bitfiles may be missing.");
         }
 
-        // init sample clock
+        if (hwRev) {
+          delete m_pDevice;
+          m_pDevice = NULL;
 
-        // init msadc
+          error("Currently only vDAQ rev 0 hardware is supported.");
+        }
+
+        if (!m_pDevice->clkCfg.setupMsadcSampleClock()) {
+          delete m_pDevice;
+          m_pDevice = NULL;
+
+          error("Failed to initialize vDAQ sample clock.");
+        }
+
+        Sleep(20);
+        double fs = m_pDevice->getSampleClockRate();
+        if (isnan(fs) || (abs(fs - 120e6) > 5e5)) {
+          delete m_pDevice;
+          m_pDevice = NULL;
+
+          error("vDAQ sample clock is unstable.");
+        }
+
+        if (!m_pDevice->initMsadc()) {
+          delete m_pDevice;
+          m_pDevice = NULL;
+
+          error("Failed to initialize vDAQ AFE.");
+        }
       }
       else {
         // cache data for simulated generation
-        LARGE_INTEGER li;
-        QueryPerformanceFrequency(&li);
-        m_pcFrequency = (double)li.QuadPart;
         m_acqRunning = false;
         m_enFill = true;
       }
+
+      LARGE_INTEGER li;
+      QueryPerformanceFrequency(&li);
+      m_pcFrequency = (double)li.QuadPart;
 
       return 0; // 0 = success
     }
 
     unsigned int vDaqDigitizer::on_detach() {
-      if (m_pDevice)
+      if (m_pDevice) {
+        m_pDevice->dataFifo.close();
+
         delete m_pDevice;
+      }
       m_pDevice = NULL;
+
+      if (m_pSimBuffer)
+        delete[] m_pSimBuffer;
+      m_pSimBuffer = NULL;
+
+      if (m_pIntFrameBuffer)
+        delete[] m_pIntFrameBuffer;
+      m_pIntFrameBuffer = NULL;
 
       return 0; // 0 = success
     }
@@ -673,19 +721,75 @@ namespace fetch
 
     unsigned vDaqDigitizer::setup(int nrecords, double record_frequency_Hz, double duty)
     {
+      unsigned success = 1;
+
       m_nRecords = nrecords;
       m_recordSize = record_size(record_frequency_Hz, duty);
 
       if (m_pDevice) {
         // configure capture engine
-        // configure fifo
+        m_pDevice->acqEngine.resetStateMachine();
+
+        int flybackPeriods = 10;
+
+        // write acq plan
+        m_pDevice->acqEngine.resetAcqPlan();
+        m_pDevice->acqEngine.addAcqPlanStep(true, nrecords);
+        m_pDevice->acqEngine.addAcqPlanStep(false, flybackPeriods);
+
+        m_pDevice->acqEngine.setAcqParamPeriodTriggerChIdx(8);
+        m_pDevice->acqEngine.setAcqParamPeriodTriggerDebounce(63);
+        m_pDevice->acqEngine.setAcqParamTriggerHoldoff(0); // todo: variable holdoff to eliminate delay box
+        m_pDevice->acqEngine.setAcqParamPeriodTriggerMaxPeriod(1.1 * 120e6 / record_frequency_Hz);
+        m_pDevice->acqEngine.setAcqParamPeriodTriggerSettledThresh(10);
+        m_pDevice->acqEngine.setAcqParamSimulatedResonantPeriod(15152); // 8k
+
+        m_pDevice->acqEngine.setAcqParamChannelsInvertReg(0);
+        m_pDevice->acqEngine.setAcqParamSamplesPerLine(m_recordSize);
+        m_pDevice->acqEngine.setAcqParamUniformSampling(1);
+        m_pDevice->acqEngine.setAcqParamUniformBinSize(1);
+        m_pDevice->acqEngine.setAcqParamVolumesPerAcq(0); // inf
+        m_pDevice->acqEngine.setAcqParamTotalAcqs(0); // dont care
+        m_pDevice->acqEngine.setAcqParamEnableBidi(0);
+        m_pDevice->acqEngine.setAcqParamEnableLineTag(0);
+
+        m_BytesToDiscard = flybackPeriods * m_recordSize;// ammount of data generated during flyback that should be discarded between frames
+        m_pDevice->acqEngine.setAcqParamSampleClkPulsesPerPeriod(100);
+
+
+        // configure fifo to hold 250ms worth of data
+        uint64_t desiredBufferSize = 240000000; // 0.25s * 120 MSPS * 8 bytes per sample
+        uint64_t actualBufferSize = m_pDevice->dataFifo.configureOrFlush(desiredBufferSize);
+        success = actualBufferSize >= desiredBufferSize;
+
+        // intermediate buffer for reading interleaved channel data
+        if (m_pIntFrameBuffer)
+          delete[] m_pIntFrameBuffer;
+        m_pIntFrameBuffer = NULL;
+
+        m_pIntFrameBuffer = new int16_t[m_nRecords * m_recordSize * 8];
       }
       else {
         // calc simulated timing
         m_framePeriod.QuadPart = (LONGLONG)(m_pcFrequency * ((double)nrecords) / record_frequency_Hz);
+
+        // precalc buffer of random values to speed up simulated data output
+        if (m_pSimBuffer)
+          delete[] m_pSimBuffer;
+        m_pSimBuffer = NULL;
+
+        simBufferSizeFrames = 50;
+        simBufferFramePtr = 0;
+        size_t N = simBufferSizeFrames * m_nRecords * m_recordSize;
+        m_pSimBuffer = new int16_t[N];
+
+        int16_t *fillPtr = m_pSimBuffer;
+        int16_t *nd = fillPtr + N;
+        while (fillPtr < nd)
+          *(fillPtr++) = rand() >> 3;
       }
 
-      return 1; // 1 = success
+      return success; // 1 = success
     }
     size_t vDaqDigitizer::record_size(double record_frequency_Hz, double duty)
     {
@@ -701,8 +805,12 @@ namespace fetch
     int vDaqDigitizer::start()
     {
       if (m_pDevice) {
-        // start capture engine
-        // start fifo
+        m_pDevice->acqEngine.resetStateMachine();
+        m_pDevice->dataFifo.flush();
+        m_DiscardNeeded = 0;
+
+        m_pDevice->acqEngine.enableStateMachine();
+        m_pDevice->acqEngine.softTrigger();
       }
       else {
         // calc simulated timing
@@ -719,7 +827,7 @@ namespace fetch
     int vDaqDigitizer::stop()
     {
       if (m_pDevice) {
-        // stop capture engine
+        m_pDevice->acqEngine.resetStateMachine();
       }
 
       m_acqRunning = false;
@@ -730,52 +838,80 @@ namespace fetch
     int vDaqDigitizer::fetch(Frame* frm)
     {
       int frameAquired = 0;
+      int16_t *pData = (int16_t*)frm->data;
+      int16_t *pChanData[4];
       LARGE_INTEGER currentTime;
       LARGE_INTEGER timeoutTime;
 
       QueryPerformanceCounter(&currentTime);
       timeoutTime.QuadPart = currentTime.QuadPart + (LONGLONG)(m_pcFrequency * 5);
 
+      for (int j = 0; j < 4; j++)
+        pChanData[j] = pData + (m_nRecords * m_recordSize * j);
+
       if (!m_pDevice) {
         // go ahead and sim the frame data now
-        int16_t *data = (int16_t*)frm->data;
-
-        /*    size_t n = m_recordSize * m_nRecords * 4;
-            for (uint32_t i = 0; i < n; i++)
-              *(data++) = rand() >> 4;
-    */
-
-
-    /*   for (uint32_t ch = 0; ch < 4; ch++)
-         for (uint32_t rec = 0; rec < m_nRecords; rec++)
-           for (uint32_t samp = 0; samp < m_recordSize; samp++)
-             *(data++) = !ch ? (rec * 128) : 0;*/
-
 
         for (uint32_t ch = 0; ch < 4; ch++) {
-          uint32_t t_stRec = m_stRec + ch * 10;
-          t_stRec -= m_nRecords*(t_stRec >= m_nRecords);
+          memcpy(pChanData[ch], &m_pSimBuffer[simBufferFramePtr++], m_nRecords * m_recordSize * 2);
+          simBufferFramePtr = (simBufferFramePtr >= simBufferSizeFrames) ? 0 : simBufferFramePtr;
 
-          uint32_t ndRec = t_stRec + 30;
-          bool wrap = ndRec > m_nRecords;
-          ndRec = wrap ? ndRec - m_nRecords : ndRec;
+          if (m_enFill) {
+            uint32_t t_stRec = m_stRec + ch * 10;
+            t_stRec -= m_nRecords * (t_stRec >= m_nRecords);
 
-          for (uint32_t rec = 0; rec < m_nRecords; rec++) {
-            bool fill = m_enFill && (wrap ? ((rec < ndRec) || (rec >= t_stRec)) : ((rec < ndRec) && (rec >= t_stRec)));
+            uint32_t ndRec = t_stRec + 30;
+            bool wrap = ndRec > m_nRecords;
+            ndRec = wrap ? ndRec - m_nRecords : ndRec;
 
-            for (uint32_t samp = 0; samp < m_recordSize; samp++) {
-              int16_t fv = (samp > (m_recordSize >> 1)) ? m_recordSize - samp : samp;
-              *(data++) = fill ? fv * 2 : rand() >> 2;
+            for (uint32_t rec = 0; rec < m_nRecords; rec++) {
+              bool fill = wrap ? ((rec < ndRec) || (rec >= t_stRec)) : ((rec < ndRec) && (rec >= t_stRec));
+
+              if (fill) {
+                int16_t *recData = pChanData[ch] + (m_recordSize * rec);
+
+                for (uint32_t samp = 0; samp < m_recordSize; samp++) {
+                  int16_t fv = (samp > (m_recordSize >> 1)) ? m_recordSize - samp : samp;
+                  *(recData++) = fv;
+                }
+              }
             }
           }
         }
 
-        m_stRec = (m_stRec >= m_nRecords) ? 0 : m_stRec + 1;
+        m_stRec = ((m_stRec+1) >= m_nRecords) ? 0 : m_stRec + 1;
       }
 
       while (m_acqRunning && (currentTime.QuadPart < timeoutTime.QuadPart)) {
         if (m_pDevice) {
-          Sleep(10);
+          uint64_t nDiscarded;
+          uint64_t nRead = 0;
+
+          if (m_DiscardNeeded) {
+            m_pDevice->dataFifo.discard(m_BytesToDiscard, &nDiscarded);
+            if (nDiscarded)
+              m_DiscardNeeded = false;
+          }
+
+          if (!m_DiscardNeeded)
+            m_pDevice->dataFifo.read(m_pIntFrameBuffer, m_nRecords * m_recordSize * 8, &nRead);
+
+          if (nRead) {
+            // de-interleave channels
+            int16_t *src = m_pIntFrameBuffer;
+            int16_t *nd = src + (m_nRecords * m_recordSize * 4);
+
+            while (src < nd) {
+              for (int j = 0; j < 4; j++)
+                *(pChanData[j]++) = *(src++);
+            }
+
+            m_DiscardNeeded = 1;
+            frameAquired = 1;
+            break;
+          }
+          else
+            Sleep(1);
         }
         else {
           // simulated

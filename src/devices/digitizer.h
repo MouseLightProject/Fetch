@@ -208,14 +208,21 @@ namespace fetch
 
       int m_nRecords;
       size_t m_recordSize;
-
+      int16_t *m_pIntFrameBuffer;
       double m_pcFrequency;
+      bool m_DiscardNeeded;
+      size_t m_BytesToDiscard;
+
+      // for simulated mode
       LARGE_INTEGER m_framePeriod;
       LARGE_INTEGER m_nextFrameCompleteTime;
       bool m_acqRunning;
       size_t m_simFramesDone;
       uint32_t m_stRec;
       bool m_enFill;
+      int16_t *m_pSimBuffer;
+      size_t simBufferSizeFrames;
+      size_t simBufferFramePtr;
 	  };
 
     ////////////////////////////////////////////////////////////
