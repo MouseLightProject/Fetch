@@ -1,6 +1,6 @@
 #pragma once
 
-#include "rdiLib.h"
+#include "ddi.h"
 
 
 
@@ -8,11 +8,6 @@ class vDAQ_AcquisitionEngine : public cRdiDeviceRegisterMap
 {
 public:
   vDAQ_AcquisitionEngine(cRdiDeviceRegisterMap *pParent, uint32_t baseAddr) : cRdiDeviceRegisterMap(pParent, baseAddr) {};
-
-  void resetStateMachine();
-  void enableStateMachine();
-
-  void softTrigger();
 
   void resetAcqPlan();
   void addAcqPlanStep(bool frameClockState, uint32_t numPeriods);
@@ -23,6 +18,11 @@ public:
 
   void getRawChannelOffsets(int16_t *vals);
   void setRawChannelOffsets(int16_t *vals);
+
+  // AE Cmd
+  REG_U32_CommandV(resetStateMachine, 100, 38);
+  REG_U32_CommandV(enableStateMachine, 100, 37);
+  REG_U32_CommandV(softTrigger, 100, 39);
 
   // AE Regs
   REG_U32_RW(MaskTableSize, 116);
@@ -95,8 +95,6 @@ public:
   REG_U32_R(ScopeStatusWrites, 424);
 
 protected:
-  REG_U32_Command(sendStateMachineCmd, 100);
-
   uint32_t m_acqPlanWriteIdx;
   REG_U32_RW(AcqPlanNumSteps, 108);
 
@@ -171,13 +169,6 @@ public:
 protected:
   REG_U32_RW(CalDataRaw, 60);
   REG_U32_RW(ResetReg, 64);
-};
-
-
-class vDAQ_WaveformGen : public cRdiDeviceRegisterMap
-{
-public:
-  vDAQ_WaveformGen(cRdiDeviceRegisterMap *pParent, uint32_t baseAddr) : cRdiDeviceRegisterMap(pParent, baseAddr) {};
 };
 
 

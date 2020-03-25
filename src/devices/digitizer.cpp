@@ -161,7 +161,7 @@ namespace fetch
 #endif
     }
 
-    unsigned NIScopeDigitizer::setup(int nrecords, double record_frequency_Hz, double duty)
+    unsigned NIScopeDigitizer::setup(int nrecords, double record_frequency_Hz, double duty, const ::fetch::cfg::device::DAQ& daqCfg)
     {
 #ifdef HAVE_NISCOPE
       ViSession vi = _vi;
@@ -289,7 +289,7 @@ namespace fetch
     unsigned int AlazarDigitizer::on_detach() { return !alazar_detach(&_ctx); } ///< return 0 on failure and 1 on success
     unsigned int AlazarDigitizer::on_disarm() { return !alazar_disarm(_ctx); }    ///< return 0 on failure and 1 on success
 
-    unsigned AlazarDigitizer::setup(int nrecords, double record_frequency_Hz, double duty)
+    unsigned AlazarDigitizer::setup(int nrecords, double record_frequency_Hz, double duty, const ::fetch::cfg::device::DAQ &daqCfg)
     {
       alazar_cfg_t cfg = 0;
       CHKJMP(cfg = alazar_make_config());
@@ -400,7 +400,7 @@ namespace fetch
     unsigned int AlazarDigitizer::on_attach() { return 0;}
     unsigned int AlazarDigitizer::on_detach() { return 0;}
     unsigned int AlazarDigitizer::on_disarm() { return 0;}
-    unsigned AlazarDigitizer::setup(int nrecords, double record_frequency_Hz, double duty){return 0;}
+    unsigned AlazarDigitizer::setup(int nrecords, double record_frequency_Hz, double duty, const ::fetch::cfg::device::DAQ& daqCfg){return 0;}
     size_t AlazarDigitizer::record_size( double record_frequency_Hz, double duty ) {return 0;}
     int AlazarDigitizer::start(){ return 0; }
     int AlazarDigitizer::stop() { return 0; }
@@ -719,7 +719,7 @@ namespace fetch
       return 0; // 0 = success
     }
 
-    unsigned vDaqDigitizer::setup(int nrecords, double record_frequency_Hz, double duty)
+    unsigned vDaqDigitizer::setup(int nrecords, double record_frequency_Hz, double duty, const ::fetch::cfg::device::DAQ& daqCfg)
     {
       unsigned success = 1;
 
@@ -730,9 +730,8 @@ namespace fetch
         // configure capture engine
         m_pDevice->acqEngine.resetStateMachine();
 
-        int flybackPeriods = 10;
-
         // write acq plan
+        uint32_t flybackPeriods = daqCfg.vdaq().flyback_periods();
         m_pDevice->acqEngine.resetAcqPlan();
         m_pDevice->acqEngine.addAcqPlanStep(true, nrecords);
         m_pDevice->acqEngine.addAcqPlanStep(false, flybackPeriods);
@@ -753,8 +752,12 @@ namespace fetch
         m_pDevice->acqEngine.setAcqParamEnableBidi(0);
         m_pDevice->acqEngine.setAcqParamEnableLineTag(0);
 
-        m_BytesToDiscard = flybackPeriods * m_recordSize;// ammount of data generated during flyback that should be discarded between frames
-        m_pDevice->acqEngine.setAcqParamSampleClkPulsesPerPeriod(100);
+        // ammount of data generated during flyback that should be discarded between frames
+        m_BytesToDiscard = flybackPeriods * m_recordSize * 8;
+
+        // sample clock generation for scanner control
+        uint32_t samplesPerPeriod = daqCfg.vdaq().ao_samples_per_period();
+        m_pDevice->acqEngine.setAcqParamSampleClkPulsesPerPeriod(samplesPerPeriod);
 
 
         // configure fifo to hold 250ms worth of data

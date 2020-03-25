@@ -23,14 +23,23 @@ message SimulatedDAQ
   optional double  sample_frequency_hz = 2  [default=1000000.0];
 }
 
+message vDAQ
+{
+  optional uint32 device_num            = 1  [default=0];     // Index of vDAQ device index to use for AO
+  optional uint32 ao_samples_per_period = 2  [default=100];   // DAQ AO: Samples per resonant period. Used to size buffers for DAQ output during a frame.
+  optional uint32 flyback_periods       = 3  [default=16];    // AO will be extended for this number of resonant periods to allow the y-mirror to reset for the next frame.
+}
+
 message DAQ
 {
   enum DAQKind
   {
     Simulated = 0;
     NIDAQ     = 1;
+    vDAQ      = 2;
   }
   optional DAQKind                kind      = 1 [default=Simulated];
   optional NationalInstrumentsDAQ nidaq     = 2;
   optional SimulatedDAQ           simulated = 3;
+  optional vDAQ                   vdaq      = 4;
 }

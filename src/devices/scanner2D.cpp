@@ -201,7 +201,7 @@ ESHUTTER:
 
       _shutter.Shut();
 
-      isok &= _digitizer.setup((int)nscans,scan_freq_Hz,_config->line_duty_cycle());
+      isok &= _digitizer.setup((int)nscans,scan_freq_Hz,_config->line_duty_cycle(), _config->daq());
       return isok;
     }
 
@@ -209,7 +209,7 @@ ESHUTTER:
     {
       int N,f;
       transaction_lock();
-      N = _daq.samplesPerRecordAO();
+      N = _daq.samplesPerRecordAO(_config->nscans());
       f = _daq.flybackSampleIndex(_config->nscans());
       vector_f64_request(_ao_workspace,3*N-1/*max index*/);
       f64 *m = _ao_workspace->contents,
@@ -223,7 +223,7 @@ ESHUTTER:
 
     void Scanner2D::__common_setup()
     {
-      _ao_workspace = vector_f64_alloc(_daq.samplesPerRecordAO()*3);
+      _ao_workspace = vector_f64_alloc(_daq.samplesPerRecordAO(_config->nscans())*3);
 
       // setup name mapping
       { const char* names[]={"Chameleon","chameleon","800nm"};
@@ -243,7 +243,7 @@ ESHUTTER:
     }
 
     int Scanner2D::writeLastAOSample()
-    { int N = _daq.samplesPerRecordAO();
+    { int N = _daq.samplesPerRecordAO(_config->nscans());
       f64 *m = _ao_workspace->contents;
       float64 last[] = {m[N-1],m[2*N-1],m[3*N-1]};
       return _daq.writeOneToAO(last);

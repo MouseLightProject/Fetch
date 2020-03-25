@@ -36,9 +36,11 @@ namespace fetch {
 
   bool operator==(const cfg::device::NationalInstrumentsDAQ& a, const cfg::device::NationalInstrumentsDAQ& b)  {return equals(&a,&b);}
   bool operator==(const cfg::device::SimulatedDAQ& a, const cfg::device::SimulatedDAQ& b)                      {return equals(&a,&b);}
+  bool operator==(const cfg::device::vDAQ& a, const cfg::device::vDAQ& b)                                      {return equals(&a, &b);}
   bool operator==(const cfg::device::DAQ& a, const cfg::device::DAQ& b)                                        {return equals(&a,&b);}
   bool operator!=(const cfg::device::NationalInstrumentsDAQ& a, const cfg::device::NationalInstrumentsDAQ& b)  {return !(a==b);}
   bool operator!=(const cfg::device::SimulatedDAQ& a, const cfg::device::SimulatedDAQ& b)                      {return !(a==b);}
+  bool operator!=(const cfg::device::vDAQ& a, const cfg::device::vDAQ& b)                                      {return !(a == b);}
   bool operator!=(const cfg::device::DAQ& a, const cfg::device::DAQ& b)                                        {return !(a==b);}
 
 
@@ -360,6 +362,127 @@ Error:
     }
 
     //
+    // vDAQ
+    //
+
+    vDAQ::vDAQ(Agent *agent)
+      :DAQBase<Config>(agent)
+      , m_pDevice(NULL)
+      , m_pAoTask(NULL)
+    {
+    }
+
+
+    vDAQ::vDAQ(Agent *agent, Config *cfg)
+      :DAQBase<Config>(agent, cfg)
+      , m_pDevice(NULL)
+      , m_pAoTask(NULL)
+    {
+    }
+
+
+    unsigned int vDAQ::on_attach()
+    {
+      int error = 0;
+
+      uint16_t numDevices;
+      int16_t deviceNum = _config->device_num();
+
+      if (m_pDevice)
+        delete m_pDevice;
+      m_pDevice = NULL;
+
+      cRdiDeviceInterface::getDriverInfo(&numDevices);
+
+      if (numDevices > deviceNum) {
+        m_pDevice = new ::vDAQ(deviceNum, true);
+
+        // for now we will assume this is the same vDAQ used as a digitizer.
+        // we are opening a dublicate handle to the same device. that is ok.
+        // in this case though we do not need to load the bitfile.
+      }
+
+      return error;
+    }
+
+
+    unsigned int vDAQ::on_detach()
+    {
+      int error = 0;
+
+      if (m_pDevice)
+        delete m_pDevice;
+      m_pDevice = NULL;
+
+      if (m_pAoTask)
+        delete m_pAoTask;
+      m_pAoTask = NULL;
+
+      return error;
+    }
+
+
+    void vDAQ::setupAO(float64 nrecords, float64 record_frequency_Hz)
+    {
+      if (m_pAoTask)
+        delete m_pAoTask;
+      m_pAoTask = NULL;
+
+      m_pAoTask = new ddi::AnalogOutputTask(m_pDevice);
+
+      m_pAoTask->sampleMode = ddi::SampleMode::Finite;
+      m_pAoTask->sampleRate = 2e6;
+      m_pAoTask->samplesPerTrigger = 1;
+      m_pAoTask->startTriggerIndex = 50; // sample clock from image acquisition engine
+      m_pAoTask->allowRetrigger = true;
+
+      return;
+    }
+
+
+    void vDAQ::setupAOChannels(float64 nrecords,
+      float64 record_frequency_Hz,
+      float64 vmin,
+      float64 vmax,
+      IDAQPhysicalChannel **channels,
+      int nchannels)
+    {
+      for (int i = 0; i < nchannels; ++i){
+        IDAQPhysicalChannel *ch = channels[i];
+        m_pAoTask->addChannel(ch->channelId());
+      }
+    }
+
+
+    int vDAQ::writeAO(float64 *data)
+    {
+      return 0; // success
+    }
+
+    int vDAQ::writeOneToAO(float64 *data)
+    {
+      return 1; // success
+    }
+
+
+    int32 vDAQ::startAO() {
+      return 0;
+    }
+
+
+    int vDAQ::waitForDone(DWORD timeout_ms/*=INFINITE*/)
+    {
+      return 0;
+    }
+
+
+    int32 vDAQ::stopAO() {
+      return 0;
+    }
+
+
+
+    //
     // SimulatedDAQ
     //
 
@@ -371,6 +494,8 @@ Error:
       :DAQBase<Config>(agent,cfg)
     {}
 
+
+
     //
     // DAQ
     //
@@ -379,6 +504,7 @@ Error:
       :DAQBase<Config>(agent)
       ,_nidaq(NULL)
       ,_simulated(NULL)
+      ,_vdaq(NULL)
       ,_idevice(NULL)
       ,_idaq(NULL)
     {
@@ -389,6 +515,7 @@ Error:
       :DAQBase<Config>(agent,cfg)
       ,_nidaq(NULL)
       ,_simulated(NULL)
+      ,_vdaq(NULL)
       ,_idevice(NULL)
       ,_idaq(NULL)
     {
@@ -399,6 +526,7 @@ Error:
     {
       if(_nidaq){delete _nidaq; _nidaq=NULL;}
       if(_simulated){delete _simulated; _simulated=NULL;}
+      if(_vdaq){delete _vdaq; _vdaq =NULL;}
     }
 
     void DAQ::setKind( Config::DAQKind kind )
@@ -417,6 +545,12 @@ Error:
         _idevice  = _simulated;
         _idaq = _simulated;
         break;
+      case cfg::device::DAQ_DAQKind_vDAQ:
+        if(!_vdaq)
+          _vdaq = new vDAQ(_agent);
+        _idevice  = _vdaq;
+        _idaq = _vdaq;
+        break;
       default:
         error("Unrecognized kind() for DAQ.  Got: %u\r\n",(unsigned)kind);
       }
@@ -425,9 +559,10 @@ Error:
     void DAQ::_set_config( Config IN *cfg )
     {
       setKind(cfg->kind());
-      Guarded_Assert(_nidaq||_simulated); // at least one device was instanced
+      Guarded_Assert(_nidaq||_simulated||_vdaq); // at least one device was instanced
       if(_nidaq)     _nidaq->_set_config(cfg->mutable_nidaq());
       if(_simulated) _simulated->_set_config(cfg->mutable_simulated());
+      if(_vdaq)      _vdaq->_set_config(cfg->mutable_vdaq());
       _config = cfg;
     }
 
@@ -443,6 +578,9 @@ Error:
         break;
       case cfg::device::DAQ_DAQKind_Simulated:
         _simulated->_set_config(cfg.simulated());
+        break;
+      case cfg::device::DAQ_DAQKind_vDAQ:
+        _vdaq->_set_config(cfg.vdaq());
         break;
       default:
         error("Unrecognized kind() for DAQ.  Got: %u\r\n",(unsigned)kind);

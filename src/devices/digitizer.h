@@ -34,6 +34,7 @@
 #include "agent.h"
 #include "util/util-niscope.h"
 #include "digitizer.pb.h"
+#include "daq.pb.h"
 #include "object.h"
 #include "types.h"
 #include "util\util-protobuf.h"
@@ -86,7 +87,7 @@ namespace fetch
     class IDigitizer
     {
     public:
-      virtual unsigned    setup(int nrecords, double record_frequency_Hz, double duty) = 0;
+      virtual unsigned    setup(int nrecords, double record_frequency_Hz, double duty, const ::fetch::cfg::device::DAQ& daqCfg) = 0;
       virtual size_t record_size(double record_frequency_Hz, double duty) = 0;
       virtual size_t nchan() = 0;
       virtual unsigned sample_rate_MHz()=0; // in principle, there's no reason why this has to be MHz. see pipeline.
@@ -119,7 +120,7 @@ namespace fetch
       unsigned int on_detach(void);
       virtual void onUpdate();
 
-      virtual unsigned  setup(int nrecords, double record_frequency_Hz, double duty);
+      virtual unsigned  setup(int nrecords, double record_frequency_Hz, double duty, const ::fetch::cfg::device::DAQ& daqCfg);
       virtual size_t record_size(double record_frequency_Hz, double duty);
       virtual size_t nchan() {return _config->nchannels();}
       virtual unsigned sample_rate_MHz() {return _config->sample_rate()/1e6;}
@@ -151,7 +152,7 @@ namespace fetch
       int stop();
       int fetch(Frame* frm);
 
-      virtual unsigned setup(int nrecords, double record_frequency_Hz, double duty);
+      virtual unsigned setup(int nrecords, double record_frequency_Hz, double duty, const ::fetch::cfg::device::DAQ& daqCfg);
       virtual size_t record_size(double record_frequency_Hz, double duty);
       virtual size_t nchan();
       virtual unsigned sample_rate_MHz() {return (unsigned)(sample_rate()/1.0e6);}
@@ -174,7 +175,7 @@ namespace fetch
       unsigned int on_attach() {return 0;}
       unsigned int on_detach() {return 0;}
 
-      virtual unsigned setup(int nrecords, double record_frequency_Hz, double duty) {return 1;}
+      virtual unsigned setup(int nrecords, double record_frequency_Hz, double duty, const ::fetch::cfg::device::DAQ& daqCfg) {return 1;}
       size_t SimulatedDigitizer::record_size( double record_frequency_Hz, double duty );
       virtual size_t nchan() {return _config->nchan();}
       virtual unsigned sample_rate_MHz() {return _config->sample_rate()/1e6;}
@@ -194,7 +195,7 @@ namespace fetch
 		  int stop();
 		  int fetch(Frame* frm);
 
-		  virtual unsigned setup(int nrecords, double record_frequency_Hz, double duty);
+		  virtual unsigned setup(int nrecords, double record_frequency_Hz, double duty, const ::fetch::cfg::device::DAQ& daqCfg);
 		  virtual size_t record_size(double record_frequency_Hz, double duty);
 		  virtual size_t nchan();
 		  virtual unsigned sample_rate_MHz() { return (unsigned)(sample_rate() / 1.0e6); }
@@ -242,7 +243,7 @@ namespace fetch
       virtual void _set_config(const Config &cfg); // only updates the digitizer selected by cfg.kind().
       virtual void onUpdate() {_idigitizer->onUpdate();};
 
-      virtual unsigned setup(int nrecords, double record_frequency_Hz, double duty) {return _idigitizer->setup(nrecords,record_frequency_Hz,duty);}
+      virtual unsigned setup(int nrecords, double record_frequency_Hz, double duty, const ::fetch::cfg::device::DAQ& daqCfg) {return _idigitizer->setup(nrecords,record_frequency_Hz,duty,daqCfg);}
 
       virtual size_t record_size(double record_frequency_Hz, double duty) {return _idigitizer->record_size(record_frequency_Hz,duty);}
       virtual size_t nchan() {return _idigitizer->nchan();}

@@ -14,15 +14,25 @@ message SimulatedLinearScanMirror
   optional double val = 1 [default=0.0];
 }
 
+message vDAQLinearScanMirror  
+{ 
+  optional  double    v_lim_max   = 1 [default= 10.0];       // safety limit - high value
+  optional  double    v_lim_min   = 2 [default=-10.0];       // safety limit - low  value
+  optional  double    vpp         = 3 [default= 10.0];       // ??
+  optional  uint32    ao_channel  = 4 [default= 0];          // control channel
+}         
+
 message LinearScanMirror
 { 
   enum LinearScanMirrorType
   {
     Simulated = 0;
     NIDAQ     = 1;
+    vDAQ      = 2;
   }
 
-  optional LinearScanMirrorType       kind      = 1 [default=NIDAQ];
+  optional LinearScanMirrorType       kind      = 1 [default=vDAQ];
   optional NIDAQLinearScanMirror      nidaq     = 2;
   optional SimulatedLinearScanMirror  simulated = 3;
+  optional vDAQLinearScanMirror       vdaq      = 4;
 }

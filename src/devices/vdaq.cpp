@@ -81,20 +81,6 @@ bool vDAQ::initMsadc() {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-void vDAQ_AcquisitionEngine::resetStateMachine() {
-  sendStateMachineCmd(38);
-}
-
-
-void vDAQ_AcquisitionEngine::enableStateMachine() {
-  sendStateMachineCmd(37);
-}
-
-
-void vDAQ_AcquisitionEngine::softTrigger() {
-  sendStateMachineCmd(39);
-}
-
 void vDAQ_AcquisitionEngine::resetAcqPlan() {
   setAcqPlanNumSteps(0);
   m_acqPlanWriteIdx = 0;

@@ -113,8 +113,8 @@ ESCAN2D:
 
     int Scanner3D::onConfigTask()
     {
-      float64 nscans       = _config->scanner2d().nscans(),
-              scan_freq_Hz = _config->scanner2d().frequency_hz();
+      float64 nscans        = _config->scanner2d().nscans(),
+              scan_freq_Hz  = _config->scanner2d().frequency_hz();
       int isok=1;
       IDAQPhysicalChannel *chans[] = {
         _scanner2d._LSM.physicalChannel(),
@@ -127,7 +127,8 @@ ESCAN2D:
       _scanner2d._daq.setupAOChannels(nscans,scan_freq_Hz,-10,10,chans,countof(chans));
 
       _scanner2d._shutter.Shut();
-      isok &= _scanner2d._digitizer.setup((int)nscans,scan_freq_Hz,_scanner2d._config->line_duty_cycle());
+      
+      isok &= _scanner2d._digitizer.setup((int)nscans,scan_freq_Hz,_scanner2d._config->line_duty_cycle(), _config->scanner2d().daq());
       return isok;
     }
 
@@ -151,7 +152,7 @@ ESCAN2D:
     {
       int f, N;
       transaction_lock();
-      N = _scanner2d._daq.samplesPerRecordAO();
+      N = _scanner2d._daq.samplesPerRecordAO(_config->scanner2d().nscans());
       f = _scanner2d._daq.flybackSampleIndex(_config->scanner2d().nscans());
       vector_f64_request(_ao_workspace,4*N-1/*max index*/);
       f64 *m  = _ao_workspace->contents,
@@ -174,7 +175,7 @@ ESCAN2D:
     {
       int N,f;
       transaction_lock();
-      N = _scanner2d._daq.samplesPerRecordAO();
+      N = _scanner2d._daq.samplesPerRecordAO(_config->scanner2d().nscans());
       f = _scanner2d._daq.flybackSampleIndex(_config->scanner2d().nscans());
       vector_f64_request(_ao_workspace,4*N-1/*max index*/);
       f64 *m  = _ao_workspace->contents,
@@ -193,11 +194,11 @@ ESCAN2D:
 
     void Scanner3D::__common_setup()
     {
-      _ao_workspace = vector_f64_alloc(_scanner2d._daq.samplesPerRecordAO()*3);
+      _ao_workspace = vector_f64_alloc(_scanner2d._daq.samplesPerRecordAO(_config->scanner2d().nscans())*3);
     }
 
     int Scanner3D::writeLastAOSample()
-    { int N = _scanner2d._daq.samplesPerRecordAO();
+    { int N = _scanner2d._daq.samplesPerRecordAO(_config->scanner2d().nscans());
       f64 *m = _ao_workspace->contents;
       float64 last[] = {m[N-1],m[2*N-1],m[3*N-1],m[4*N-1]};
       return _scanner2d._daq.writeOneToAO(last);

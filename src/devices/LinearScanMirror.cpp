@@ -18,9 +18,11 @@ namespace fetch {
 
   bool operator==(const cfg::device::NIDAQLinearScanMirror& a, const cfg::device::NIDAQLinearScanMirror& b)         {return equals(&a,&b);}
   bool operator==(const cfg::device::SimulatedLinearScanMirror& a, const cfg::device::SimulatedLinearScanMirror& b) {return equals(&a,&b);}
+  bool operator==(const cfg::device::vDAQLinearScanMirror& a, const cfg::device::vDAQLinearScanMirror& b)           {return equals(&a,&b);}
   bool operator==(const cfg::device::LinearScanMirror& a, const cfg::device::LinearScanMirror& b)                   {return equals(&a,&b);}
   bool operator!=(const cfg::device::NIDAQLinearScanMirror& a, const cfg::device::NIDAQLinearScanMirror& b)         {return !(a==b);}
   bool operator!=(const cfg::device::SimulatedLinearScanMirror& a, const cfg::device::SimulatedLinearScanMirror& b) {return !(a==b);}
+  bool operator!=(const cfg::device::vDAQLinearScanMirror& a, const cfg::device::vDAQLinearScanMirror& b)           {return !(a==b);}
   bool operator!=(const cfg::device::LinearScanMirror& a, const cfg::device::LinearScanMirror& b)                   {return !(a==b);}
 
   namespace device {
@@ -42,6 +44,35 @@ namespace fetch {
     {}
 
     void NIDAQLinearScanMirror::computeSawtooth( float64 *data, int flyback, int n )
+    { int i;
+      double N = flyback;
+      float64 A = _config->vpp();
+      for(i=0;i<flyback;++i)
+        data[i] = A*((i/N)-0.5); // linear ramp from -A/2 to A/2
+      for(;i<n;++i)
+        data[i]=data[0];         // at end of wave, head back to the starting position
+    }
+
+
+    //
+    // vDAQLinearScanMirror
+    //
+
+    vDAQLinearScanMirror::vDAQLinearScanMirror(Agent *agent)
+      :LSMBase<Config>(agent)
+      ,_pchan("")
+    {
+      _pchan.setChannelId(get_config().ao_channel());
+    }
+
+    vDAQLinearScanMirror::vDAQLinearScanMirror(Agent *agent,Config *cfg)
+      :LSMBase<Config>(agent,cfg)
+      ,_pchan("")
+    {
+      _pchan.setChannelId(get_config().ao_channel());
+    }
+
+    void vDAQLinearScanMirror::computeSawtooth(float64 *data, int flyback, int n)
     { int i;
       double N = flyback;
       float64 A = _config->vpp();
@@ -80,6 +111,7 @@ namespace fetch {
       :LSMBase<cfg::device::LinearScanMirror>(agent)
       ,_nidaq(NULL)
       ,_simulated(NULL)
+      , _vdaq(NULL)
       ,_idevice(NULL)
       ,_ilsm(NULL)
     {
@@ -90,6 +122,7 @@ namespace fetch {
       :LSMBase<cfg::device::LinearScanMirror>(agent,cfg)
       ,_nidaq(NULL)
       ,_simulated(NULL)
+      , _vdaq(NULL)
       ,_idevice(NULL)
       ,_ilsm(NULL)
     {
@@ -100,6 +133,7 @@ namespace fetch {
     {
       if(_nidaq){delete _nidaq; _nidaq=NULL;}
       if(_simulated){delete _simulated; _simulated=NULL;}
+      if(_vdaq){delete _vdaq; _vdaq =NULL;}
     }
 
     void LinearScanMirror::setKind( Config::LinearScanMirrorType kind )
@@ -118,6 +152,12 @@ namespace fetch {
         _idevice  = _simulated;
         _ilsm = _simulated;
         break;
+      case cfg::device::LinearScanMirror_LinearScanMirrorType_vDAQ:
+        if(!_vdaq)
+          _vdaq = new vDAQLinearScanMirror(_agent, _config->mutable_vdaq());
+        _idevice  = _vdaq;
+        _ilsm = _vdaq;
+        break;
       default:
         error("Unrecognized kind() for LinearScanMirror.  Got: %u\r\n",(unsigned)kind);
       }
@@ -129,6 +169,7 @@ namespace fetch {
       Guarded_Assert(_nidaq||_simulated); // at least one device was instanced
       if(_nidaq)     _nidaq->_set_config(cfg->mutable_nidaq());
       if(_simulated) _simulated->_set_config(cfg->mutable_simulated());
+      if(_vdaq)      _vdaq->_set_config(cfg->mutable_vdaq());
       _config = cfg;
     }
 
@@ -144,6 +185,9 @@ namespace fetch {
         break;
       case cfg::device::LinearScanMirror_LinearScanMirrorType_Simulated:
         _simulated->_set_config(cfg.simulated());
+        break;
+      case cfg::device::LinearScanMirror_LinearScanMirrorType_vDAQ:
+        _vdaq->_set_config(const_cast<Config&>(cfg).mutable_vdaq());
         break;
       default:
         error("Unrecognized kind() for LinearScanMirror.  Got: %u\r\n",(unsigned)kind);

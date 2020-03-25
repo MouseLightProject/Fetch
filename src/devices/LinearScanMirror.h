@@ -22,12 +22,14 @@
 namespace fetch
 {
 
-  bool operator==(const cfg::device::NIDAQLinearScanMirror& a, const cfg::device::NIDAQLinearScanMirror& b)        ;
+  bool operator==(const cfg::device::NIDAQLinearScanMirror& a, const cfg::device::NIDAQLinearScanMirror& b);
   bool operator==(const cfg::device::SimulatedLinearScanMirror& a, const cfg::device::SimulatedLinearScanMirror& b);
-  bool operator==(const cfg::device::LinearScanMirror& a, const cfg::device::LinearScanMirror& b)                  ;
-  bool operator!=(const cfg::device::NIDAQLinearScanMirror& a, const cfg::device::NIDAQLinearScanMirror& b)        ;
+  bool operator==(const cfg::device::vDAQLinearScanMirror& a, const cfg::device::vDAQLinearScanMirror& b);
+  bool operator==(const cfg::device::LinearScanMirror& a, const cfg::device::LinearScanMirror& b);
+  bool operator!=(const cfg::device::NIDAQLinearScanMirror& a, const cfg::device::NIDAQLinearScanMirror& b);
   bool operator!=(const cfg::device::SimulatedLinearScanMirror& a, const cfg::device::SimulatedLinearScanMirror& b);
-  bool operator!=(const cfg::device::LinearScanMirror& a, const cfg::device::LinearScanMirror& b)                  ;
+  bool operator!=(const cfg::device::vDAQLinearScanMirror& a, const cfg::device::vDAQLinearScanMirror& b);
+  bool operator!=(const cfg::device::LinearScanMirror& a, const cfg::device::LinearScanMirror& b);
 
   namespace device
   {
@@ -74,6 +76,28 @@ namespace fetch
 
     };
 
+    class vDAQLinearScanMirror : public LSMBase<cfg::device::vDAQLinearScanMirror>
+    {
+      IDAQPhysicalChannel _pchan;
+    public:
+      vDAQLinearScanMirror(Agent *agent);
+      vDAQLinearScanMirror(Agent *agent, Config *cfg);
+
+      virtual unsigned int on_attach() {return 0;}
+      virtual unsigned int on_detach() {return 0;}
+
+      virtual void _set_config(Config IN *cfg) {_pchan.setId(cfg->ao_channel());}
+
+      virtual void computeSawtooth(float64 *data, int flyback, int n);
+
+      virtual IDAQPhysicalChannel* physicalChannel() {return &_pchan;}
+
+      virtual double getAmplitudeVolts()                                   {return _config->vpp();}
+      virtual void   setAmplitudeVolts(double vpp)                         {Config c = get_config(); c.set_vpp(vpp); set_config(c);}
+      virtual void   setAmplitudeVoltsNoWait(double vpp)                   {Config c = get_config(); c.set_vpp(vpp); Guarded_Assert_WinErr(set_config_nowait(c));}
+
+    };
+
     class SimulatedLinearScanMirror : public LSMBase<cfg::device::SimulatedLinearScanMirror>
     {
       SimulatedDAQChannel _chan;
@@ -98,6 +122,7 @@ namespace fetch
    {
      NIDAQLinearScanMirror     *_nidaq;
      SimulatedLinearScanMirror *_simulated;
+     vDAQLinearScanMirror      *_vdaq;
      IDevice *_idevice;
      ILSM    *_ilsm;
    public:
