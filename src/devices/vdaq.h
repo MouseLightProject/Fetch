@@ -1,6 +1,7 @@
 #pragma once
 
 #include "ddi.h"
+#include <vector>
 
 
 
@@ -182,7 +183,7 @@ public:
   vDAQ_ClockCfg clkCfg;
   vDAQ_Msadc msadc;
 
-  vDAQ_WaveformGen *pWavegen[5];
+  vector<ddi::WaveformGenIp*> pWavegenIp;
 
   cRdiFifo dataFifo;
 

@@ -50,7 +50,7 @@ namespace fetch
       virtual void set(const std::string& name) { _name = name; }
 
       void setChannelId(const uint32_t chIdx) { _chIdx = chIdx; }
-      uint32_t channelId() { return = _chIdx; }
+      uint32_t channelId() { return _chIdx; }
     };
 
     class NIDAQChannel : public IDAQChannel, public IConfigurableDevice<char*>

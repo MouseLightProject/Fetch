@@ -10,14 +10,18 @@ vDAQ::vDAQ(int16_t deviceNum, bool designLoadAccess) :
   msadc(this, 0x460400),
   dataFifo(this, 0x480000)
 {
+  pWavegenIp.resize(5);
   for (int ctr = 0; ctr < 5; ctr++)
-    pWavegen[ctr] = new vDAQ_WaveformGen(this, 0x600000 + 0x10000*ctr);
+    pWavegenIp[ctr] = new ddi::WaveformGenIp(this, 0x600000 + 0x10000*ctr);
 }
 
 
 vDAQ::~vDAQ() {
-  for (int ctr = 0; ctr < 5; ctr++)
-    delete pWavegen[ctr];
+  while (!pWavegenIp.empty()) {
+    auto pIp = pWavegenIp.begin();
+    delete *pIp;
+    pWavegenIp.erase(pIp);
+  }
 }
 
 

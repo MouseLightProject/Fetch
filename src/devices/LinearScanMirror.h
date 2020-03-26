@@ -86,7 +86,7 @@ namespace fetch
       virtual unsigned int on_attach() {return 0;}
       virtual unsigned int on_detach() {return 0;}
 
-      virtual void _set_config(Config IN *cfg) {_pchan.setId(cfg->ao_channel());}
+      virtual void _set_config(Config IN *cfg) {_pchan.setChannelId(cfg->ao_channel());}
 
       virtual void computeSawtooth(float64 *data, int flyback, int n);
 
