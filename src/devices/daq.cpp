@@ -428,15 +428,17 @@ Error:
         delete m_pAoTask;
       m_pAoTask = NULL;
 
-      m_pAoTask = new ddi::AnalogOutputTask(m_pDevice);
+      if (m_pDevice) {
+        m_pAoTask = new ddi::AnalogOutputTask(m_pDevice);
 
-      m_pAoTask->sampleMode = ddi::SampleMode::Finite;
-      m_pAoTask->sampleRate = 2e6;
-      m_pAoTask->samplesPerTrigger = 1;
-      m_pAoTask->startTriggerIndex = 50; // sample clock from image acquisition engine
-      m_pAoTask->allowRetrigger = true;
+        m_pAoTask->sampleMode = ddi::SampleMode::Finite;
+        m_pAoTask->sampleRate = 2e6;
+        m_pAoTask->samplesPerTrigger = 1;
+        m_pAoTask->startTriggerIndex = 44;
+        m_pAoTask->allowRetrigger = true;
 
-      return;
+        m_pAoTask->setOutputBufferLength(samplesPerRecordAO(nrecords));
+      }
     }
 
 
@@ -447,16 +449,18 @@ Error:
       IDAQPhysicalChannel **channels,
       int nchannels)
     {
-      for (int i = 0; i < nchannels; ++i){
-        IDAQPhysicalChannel *ch = channels[i];
-        m_pAoTask->addChannel(ch->channelId());
-      }
+      if (m_pAoTask)
+        for (int i = 0; i < nchannels; ++i)
+          if (channels[i]->channelId() >= 0)
+            m_pAoTask->addChannel(channels[i]->channelId());
     }
 
 
     int vDAQ::writeAO(float64 *data)
     {
-      return 0; // success
+      if (m_pAoTask)
+        m_pAoTask->writeOutputBuffer(data);
+      return 0;
     }
 
     int vDAQ::writeOneToAO(float64 *data)
@@ -466,6 +470,8 @@ Error:
 
 
     int32 vDAQ::startAO() {
+      if (m_pAoTask)
+        m_pAoTask->start();
       return 0;
     }
 
@@ -477,6 +483,8 @@ Error:
 
 
     int32 vDAQ::stopAO() {
+      if (m_pAoTask)
+        m_pAoTask->abort();
       return 0;
     }
 

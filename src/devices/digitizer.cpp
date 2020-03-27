@@ -896,6 +896,10 @@ namespace fetch
               m_DiscardNeeded = false;
           }
 
+          uint64_t oc = m_pDevice->acqEngine.getAcqStatusDataFifoOverflowCount();
+          if (oc)
+            oc++;
+
           if (!m_DiscardNeeded)
             m_pDevice->dataFifo.read(m_pIntFrameBuffer, m_nRecords * m_recordSize * 8, &nRead);
 
@@ -906,7 +910,7 @@ namespace fetch
 
             while (src < nd) {
               for (int j = 0; j < 4; j++)
-                *(pChanData[j]++) = *(src++);
+                *(pChanData[j]++) = *(src++) >> 4;
             }
 
             m_DiscardNeeded = 1;

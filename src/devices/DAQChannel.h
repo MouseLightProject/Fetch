@@ -42,15 +42,15 @@ namespace fetch
     class IDAQPhysicalChannel    
     {
       std::string _name;
-      uint32_t _chIdx;
+      int32_t _chIdx;
     public:
-      IDAQPhysicalChannel(const char* name) : _name(name)        {}
-      IDAQPhysicalChannel(const std::string& name) : _name(name) {}
+      IDAQPhysicalChannel(const char* name) : _name(name), _chIdx(-1) {}
+      IDAQPhysicalChannel(const std::string& name) : _name(name), _chIdx(-1) {}
       virtual char* name()                                       {return const_cast<char*>(_name.c_str());}
       virtual void set(const std::string& name) { _name = name; }
 
-      void setChannelId(const uint32_t chIdx) { _chIdx = chIdx; }
-      uint32_t channelId() { return _chIdx; }
+      void setChannelId(const int32_t chIdx) { _chIdx = chIdx; }
+      int32_t channelId() { return _chIdx; }
     };
 
     class NIDAQChannel : public IDAQChannel, public IConfigurableDevice<char*>

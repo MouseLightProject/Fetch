@@ -204,7 +204,7 @@ bool vDAQ_ClockCfg::lockPll() {
 
 bool vDAQ_ClockCfg::checkPll() {
   readAllDeviceSettings();
-  return getReadbackBufWord0Reg() & (1 << 26);
+  return (getReadbackBufWord0Reg() & (1 << 26)) > 0;
 }
 
 
@@ -220,7 +220,7 @@ bool vDAQ_ClockCfg::checkPll() {
 
 
 bool vDAQ_Msadc::calInProgress() {
-  return getCalDataRaw() & 1<<20;
+  return (getCalDataRaw() & 1<<20) > 0;
 }
 
 

@@ -22,14 +22,20 @@ ddi::WaveformGenIp::WaveformGenIp(cRdiDeviceRegisterMap *pParent, ::uint32_t bas
 }
 
 void ddi::WaveformGenIp::createWaveBuffer(uint64_t nSamples) {
-  freeWaveBuffer();
-
   uint64_t desiredBufferSize = nSamples * 2;
-  m_waveBufferSizeBytes = m_waveformDmaBuffer.allocateBuffer(desiredBufferSize,getSgMaxNumPages());
-  m_waveBufferSizeSamples = m_waveBufferSizeBytes / 2;
+
+  if (m_waveBufferSizeBytes < desiredBufferSize) {
+    freeWaveBuffer();
+
+    m_waveBufferSizeBytes = m_waveformDmaBuffer.allocateBuffer(desiredBufferSize, getSgMaxNumPages());
+    m_waveBufferSizeSamples = m_waveBufferSizeBytes / 2;
+  }
 
   if (m_waveBufferSizeBytes < desiredBufferSize)
     throw "Failed to allocate waveform buffer.";
+
+  m_waveformDmaBuffer.writeBufferSGListToDeviceRegU32(m_baseAddr + 200);
+  setWaveformLength(nSamples);
 }
 
 
@@ -81,7 +87,7 @@ void ddi::WaveformGenIp::writeChannelOutputValue(double value_volts) {
 
 
 int16_t ddi::vToCounts(double v) {
-  return ((ddi_max(ddi_min(v,10.0),-10.0) + 10.0) / 20.0) * 65535.0;
+  return (int16_t)(((DDI_MAX(DDI_MIN(v,10.0),-10.0) + 10.0) / 20.0) * 65535.0);
 }
 
 
@@ -95,7 +101,9 @@ int16_t ddi::vToCounts(double v) {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-ddi::AnalogOutputTask::AnalogOutputTask(vDAQ *pDevice) : m_pDevice(pDevice), m_waveformLength(0) {
+ddi::AnalogOutputTask::AnalogOutputTask(vDAQ *pDevice) : m_pDevice(pDevice), m_outputBufferLength(0)
+  , sampleMode(SampleMode::Continuous), sampleRate(1e6), samplesPerTrigger(0), startTriggerIndex(-1), allowRetrigger(false)
+{
   m_channels.clear();
   m_pChanIp.clear();
 }
@@ -117,7 +125,7 @@ bool ddi::AnalogOutputTask::checkIpOwners() {
   auto i = m_pChanIp.begin();
 
   while (iCanOwn && (i != m_pChanIp.end())) {
-    uint64_t owner = (*i)->getOwnerId();
+    uint64_t owner = (*i++)->getOwnerId();
     iCanOwn = iCanOwn && (!owner || (owner == ((uint64_t)this)));
   }
 
@@ -131,7 +139,7 @@ bool ddi::AnalogOutputTask::verifyBuffers() {
   auto i = m_pChanIp.begin();
 
   while (iOwn && (i != m_pChanIp.end())) {
-    uint64_t owner = (*i)->getBufferWriterId();
+    uint64_t owner = (*i++)->getBufferWriterId();
     iOwn = iOwn && (owner == ((uint64_t)this));
   }
 
@@ -140,67 +148,180 @@ bool ddi::AnalogOutputTask::verifyBuffers() {
 
 
 
-void ddi::AnalogOutputTask::writeOutputBuffer(int16_t *data_counts, uint64_t nSamplesPerChannel, uint64_t sampleOffset) {
-  if (!checkIpOwners())
-    throw "Another task is using the requested channel.";
-
-  auto i = m_pChanIp.begin();
-  int16_t *dataCollumnI = data_counts;
-
-  if (isActive()) {
-    if ((nSamplesPerChannel + sampleOffset) > m_waveformLength)
-      throw "Cannot increase buffer size while task is active.";
-
-    while (i != m_pChanIp.end()) {
-      (*i)->writeWaveBuffer(dataCollumnI, nSamplesPerChannel, sampleOffset);
-      dataCollumnI += nSamplesPerChannel;
-      (*i)->notifyBufferUpdate();
-      (*i)->setBufferWriterId((uint64_t)this);
-    }
-  }
+void ddi::AnalogOutputTask::setOutputBufferLength(uint64_t nSamplesPerChannel) {
+  if (isActive())
+    throw "Cannot change buffer size while task is active.";
   else {
-    if (sampleOffset)
-      throw "Before starting task, only full buffer update is allowed.";
-    m_waveformLength = nSamplesPerChannel;
-
-    while (i != m_pChanIp.end()) {
-      (*i)->createWaveBuffer(nSamplesPerChannel);
-      (*i)->writeWaveBuffer(dataCollumnI, nSamplesPerChannel, 0);
-      dataCollumnI += nSamplesPerChannel;
-      (*i)->setBufferWriterId((uint64_t)this);
-    }
+    m_outputBufferLength = nSamplesPerChannel;
+    m_bufferNeedsWrite = true;
   }
 }
 
 
 
 void ddi::AnalogOutputTask::writeOutputBuffer(double *data_volts, uint64_t nSamplesPerChannel, uint64_t sampleOffset) {
-  uint64_t N = nSamplesPerChannel * m_pChanIp.size();
-  int16_t *data_i = new int16_t[N];
+  writeOutputBufferInternal(NULL, nSamplesPerChannel, sampleOffset, data_volts);
+}
 
-  for (uint64_t i = 0; i < N; i++)
+void ddi::AnalogOutputTask::writeOutputBuffer(int16_t *data_counts, uint64_t nSamplesPerChannel, uint64_t sampleOffset) {
+  writeOutputBufferInternal(data_counts, nSamplesPerChannel, sampleOffset);
+}
+
+int16_t *ddi::AnalogOutputTask::convertSamples(double *data_volts, uint64_t nSamples) {
+  int16_t *data_i = new int16_t[nSamples];
+
+  for (uint64_t i = 0; i < nSamples; i++)
     data_i[i] = ddi::vToCounts(data_volts[i]);
 
-  try {
-    writeOutputBuffer(data_i, nSamplesPerChannel, sampleOffset);
-    delete[] data_i;
+  return data_i;
+}
+
+
+
+void ddi::AnalogOutputTask::writeOutputBufferInternal(int16_t *data_counts, uint64_t nSamplesPerChannel, uint64_t sampleOffset, double *data_volts) {
+  if (!checkIpOwners())
+    throw "Another task is using the requested channel.";
+
+  auto i = m_pChanIp.begin();
+  int16_t *data_counts_actual;
+
+  if (isActive()) {
+    if (!nSamplesPerChannel && sampleOffset)
+      throw "If number of samples is zero, offset must also be zero to imply a complete buffer write.";
+    else if (!nSamplesPerChannel)
+      nSamplesPerChannel = m_outputBufferLength;
+    else if ((nSamplesPerChannel + sampleOffset) > m_outputBufferLength)
+      throw "Cannot increase buffer size while task is active.";
+
+    // we don't need to handle the case where both nSamplesPerChannel and m_outputBufferLength are zero,
+    // because task is active. task would not start if m_outputBufferLength was zero
+
+    if (data_counts)
+      data_counts_actual = data_counts;
+    else
+      data_counts_actual = convertSamples(data_volts, nSamplesPerChannel * m_channels.size());
+
+    int16_t *dataCollumnI = data_counts_actual;
+
+    try {
+      while (i != m_pChanIp.end()) {
+        (*i)->writeWaveBuffer(dataCollumnI, nSamplesPerChannel, sampleOffset);
+        (*i)->notifyBufferUpdate();
+        (*i++)->setBufferWriterId((uint64_t)this);
+        dataCollumnI += nSamplesPerChannel;
+      }
+
+      if (!data_counts)
+        delete[] data_counts_actual;
+    }
+    catch (exception e) {
+      if (!data_counts)
+        delete[] data_counts_actual;
+
+      throw;
+    }
   }
-  catch (exception e) {
-    delete[] data_i;
-    throw;
+  else {
+    if (!nSamplesPerChannel && !m_outputBufferLength)
+      throw "Waveform length must be set.";
+    else if (sampleOffset && !nSamplesPerChannel)
+      throw "If number of samples is zero, offset must also be zero to imply a complete buffer write.";
+    else if (m_outputBufferLength && !nSamplesPerChannel)
+      nSamplesPerChannel = m_outputBufferLength;
+    else if (!m_outputBufferLength && sampleOffset)
+      throw "If waveform length has not yet been set, write offset must be zero; waveform length will be implied from number of samples written.";
+    else if (!m_outputBufferLength)
+      m_outputBufferLength = nSamplesPerChannel;
+
+    if (data_counts)
+      data_counts_actual = data_counts;
+    else
+      data_counts_actual = convertSamples(data_volts, nSamplesPerChannel * m_channels.size());
+
+    int16_t *dataCollumnI = data_counts_actual;
+
+    if (!sampleOffset && (nSamplesPerChannel == m_outputBufferLength))
+      m_bufferNeedsWrite = false;
+
+    try {
+      while (i != m_pChanIp.end()) {
+        (*i)->createWaveBuffer(nSamplesPerChannel); // this only recreates the buffer if the existing buffer isn't large enough
+        (*i)->writeWaveBuffer(dataCollumnI, nSamplesPerChannel, sampleOffset);
+        (*i++)->setBufferWriterId((uint64_t)this);
+        dataCollumnI += nSamplesPerChannel;
+      }
+
+      if (!data_counts)
+        delete[] data_counts_actual;
+    }
+    catch (exception e) {
+      if (!data_counts)
+        delete[] data_counts_actual;
+
+      throw;
+    }
   }
 }
 
 
 
-void ddi::AnalogOutputTask::start() {
+void ddi::AnalogOutputTask::start(bool triggerImmediately) {
+  if (!m_channels.size())
+    throw "Cannot start task without channels.";
 
+  if (!checkIpOwners())
+    throw "Cannot start task. Some resources are already in use.";
+
+  uint64_t samps;
+  if (sampleMode == SampleMode::Finite) {
+    if (!samplesPerTrigger)
+      throw "Samples per trigger must be set for finite output task.";
+    samps = samplesPerTrigger;
+  }
+  else
+    samps = 0;
+
+  if (m_bufferNeedsWrite)
+    throw "Cannot start task; buffer was not written.";
+  verifyBuffers();
+
+  auto i = m_pChanIp.begin();
+  WaveformGenIp *pMasterIp = *i;
+  uint32_t peerTrig = pMasterIp->getThisPeerTriggerId();
+  do {
+    WaveformGenIp *pIp = *i;
+
+    pIp->stopBufferedOutput();
+    pIp->setSamplePeriod((uint32_t)(DDI_SAMPLE_CLK_TIMEBASE_HZ / sampleRate));
+    pIp->setSamplesPerTrigger(samps);
+    pIp->setAllowRetrigger(allowRetrigger);
+    pIp->setPeerTriggerId(peerTrig);
+
+    pIp->startBufferedOutput();
+    pIp->setOwnerId((uint64_t)this);
+
+  } while (++i != m_pChanIp.end());
+
+  if (startTriggerIndex >= 0)
+    pMasterIp->setExtTriggerId(startTriggerIndex);
+
+  if (triggerImmediately)
+    pMasterIp->softTrigger();
 }
 
 
 
 void ddi::AnalogOutputTask::abort() {
-
+  auto i = m_pChanIp.begin();
+  do {
+    WaveformGenIp *pIp = *i;
+    uint64_t owner_i = pIp->getOwnerId();
+    if (!owner_i || (owner_i == ((uint64_t)this))) {
+      pIp->stopBufferedOutput();
+      pIp->setOwnerId(0);
+      pIp->setExtTriggerId(0xFF);
+    }
+  } while (++i != m_pChanIp.end());
 }
 
 
@@ -212,7 +333,7 @@ bool ddi::AnalogOutputTask::isActive() {
 
     while (imActive && (i != m_pChanIp.end())) {
       uint64_t owner = (*i)->getOwnerId();
-      imActive = imActive && (owner == ((uint64_t)this)) && (*i)->getBufferedModeActive();
+      imActive = imActive && (owner == ((uint64_t)this)) && (*i++)->getBufferedModeActive();
     }
     return imActive;
   }
@@ -229,7 +350,7 @@ bool ddi::AnalogOutputTask::isDone() {
 
     while (imDone && (i != m_pChanIp.end())) {
       uint64_t owner = (*i)->getOwnerId();
-      imDone = imDone && (owner == ((uint64_t)this)) && (*i)->getBufferedModeActive() && (*i)->getBufferedOutputDone();
+      imDone = imDone && (owner == ((uint64_t)this)) && (*i)->getBufferedModeActive() && (*i++)->getBufferedOutputDone();
     }
     return imDone;
   }

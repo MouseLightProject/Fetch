@@ -4,9 +4,10 @@
 #include <list>
 
 
-#define ddi_max(a,b) ((a > b) ? a : b)
-#define ddi_min(a,b) ((a < b) ? a : b)
+#define DDI_MAX(a,b) ((a > b) ? a : b)
+#define DDI_MIN(a,b) ((a < b) ? a : b)
 
+#define DDI_SAMPLE_CLK_TIMEBASE_HZ 200000000.0
 
 class vDAQ;
 
@@ -27,8 +28,6 @@ namespace ddi {
 
     void writeChannelOutputValue(int16_t value_counts);
     void writeChannelOutputValue(double value_volts);
-
-    int16_t vToCounts(double v);
 
     REG_U32_Command(softTrigger, 52);
     REG_U32_CommandV(startBufferedOutput, 4, 1);
@@ -75,10 +74,11 @@ namespace ddi {
 
     void addChannel(uint32_t channelId);
 
-    void writeOutputBuffer(int16_t *data_counts, uint64_t nSamplesPerChannel, uint64_t sampleOffset = 0);
-    void writeOutputBuffer(double *data_volts, uint64_t nSamplesPerChannel, uint64_t sampleOffset = 0);
+    void setOutputBufferLength(uint64_t nSamplesPerChannel);
+    void writeOutputBuffer(int16_t *data_counts, uint64_t nSamplesPerChannel = 0, uint64_t sampleOffset = 0);
+    void writeOutputBuffer(double *data_volts, uint64_t nSamplesPerChannel = 0, uint64_t sampleOffset = 0);
 
-    void start();
+    void start(bool triggerImmediately = false);
     void abort();
 
     bool isActive();
@@ -87,14 +87,18 @@ namespace ddi {
     SampleMode sampleMode;
     double sampleRate;
     uint64_t samplesPerTrigger;
-    uint32_t startTriggerIndex;
+    int32_t startTriggerIndex;
     bool allowRetrigger;
 
   private:
     bool checkIpOwners();
     bool verifyBuffers();
 
-    uint64_t m_waveformLength;
+    void writeOutputBufferInternal(int16_t *data_counts, uint64_t nSamplesPerChannel, uint64_t sampleOffset, double *data_volts = NULL);
+    int16_t *convertSamples(double *data_volts, uint64_t nSamples);
+
+    uint64_t m_outputBufferLength;
+    bool m_bufferNeedsWrite;
 
     vDAQ *m_pDevice;
 

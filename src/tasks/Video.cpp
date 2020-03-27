@@ -572,40 +572,20 @@ namespace fetch
         TS_OPEN("timer-video_ao.f32");
         d->generateAO();
         d->writeAO();
-        TRY(!d->get2d()->_daq.startCLK());
         d->get2d()->_shutter.Open();
         TRY(!d->get2d()->_daq.startAO());
 
-
-        /*
-        Guarded_Assert_WinErr(fetch_thread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)vdaq_fetch_video_thread, &ctx, 0, NULL));
-        TS_TIC;
-        while (ctx.running)
-        {
-          TRY(!d->writeAO());
-          TS_TOC;
-        }
-        if (ctx.ok)
-          Guarded_Assert_WinErr(WAIT_OBJECT_0 == WaitForSingleObject(fetch_thread, INFINITE));
-          */
         vdaq_fetch_video_thread(&ctx);
-
 
         TRY(ctx.ok);
       Finalize:
         TS_CLOSE;
         d->get2d()->_shutter.Shut();
         d->get2d()->_digitizer._vdaq->stop();
-
-        d->get2d()->_daq.waitForDone(1000/*ms*/); // will make sure the last frame finishes generating before it times out.
-
-        d->get2d()->_daq.stopCLK();
         d->get2d()->_daq.stopAO();
-        if (fetch_thread) CloseHandle(fetch_thread);
         return ecode; // ecode == 0 implies success, error otherwise
       Error:
         warning("Error occurred during ScanStack<%s> task."ENDL, TypeStr<TPixel>());
-        d->writeAO(); // try one more just in case
         ctx.ok = 0; // signal fetch thread to stop early
         while (fetch_thread && ctx.running)
           Guarded_Assert_WinErr__NoPanic(WAIT_FAILED != WaitForSingleObject(fetch_thread, 100)); // need to make sure thread is stopped before exiting this function so ctx remains live
