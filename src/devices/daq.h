@@ -166,7 +166,7 @@ namespace fetch
       int32   flybackSampleIndex(int nscans) { return _config->ao_samples_per_period() * nscans; }
 
     private:
-      ::vDAQ *m_pDevice;
+      vdaq::Device *m_pDevice;
       ddi::AnalogOutputTask *m_pAoTask;
     };
 

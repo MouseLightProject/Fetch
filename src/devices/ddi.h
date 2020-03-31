@@ -9,16 +9,18 @@
 
 #define DDI_SAMPLE_CLK_TIMEBASE_HZ 200000000.0
 
-class vDAQ;
+namespace vdaq {
+  class Device;
+}
 
 namespace ddi {
 
   typedef ::uint32_t uint32_t;
 
-  class WaveformGenIp : public cRdiDeviceRegisterMap
+  class WaveformGenIp : public rdi::DeviceRegisterMap
   {
   public:
-    WaveformGenIp(cRdiDeviceRegisterMap *pParent, ::uint32_t baseAddr);
+    WaveformGenIp(DeviceRegisterMap *pParent, ::uint32_t baseAddr);
 
     void createWaveBuffer(uint64_t nSamples);
     void freeWaveBuffer();
@@ -56,7 +58,7 @@ namespace ddi {
     REG_U32_R(SgMaxNumPages, 204);
     REG_U32_RW(OutputValueReg, 20);
 
-    cRdiDmaBuffer m_waveformDmaBuffer;
+    rdi::DmaBuffer m_waveformDmaBuffer;
     uint64_t m_waveBufferSizeBytes;
     uint64_t m_waveBufferSizeSamples;
   };
@@ -70,9 +72,12 @@ namespace ddi {
   class AnalogOutputTask
   {
   public:
-    AnalogOutputTask(vDAQ *pDevice);
+    AnalogOutputTask(vdaq::Device *pDevice);
 
     void addChannel(uint32_t channelId);
+
+    void setOutputChannelValues(int16_t *data_counts);
+    void setOutputChannelValues(double *data_volts);
 
     void setOutputBufferLength(uint64_t nSamplesPerChannel);
     void writeOutputBuffer(int16_t *data_counts, uint64_t nSamplesPerChannel = 0, uint64_t sampleOffset = 0);
@@ -94,13 +99,14 @@ namespace ddi {
     bool checkIpOwners();
     bool verifyBuffers();
 
+    void setOutputChannelValuesInt(int16_t *data_counts, double *data_volts = NULL);
     void writeOutputBufferInternal(int16_t *data_counts, uint64_t nSamplesPerChannel, uint64_t sampleOffset, double *data_volts = NULL);
     int16_t *convertSamples(double *data_volts, uint64_t nSamples);
 
     uint64_t m_outputBufferLength;
     bool m_bufferNeedsWrite;
 
-    vDAQ *m_pDevice;
+    vdaq::Device *m_pDevice;
 
     list<uint16_t> m_channels;
     list<WaveformGenIp*> m_pChanIp;

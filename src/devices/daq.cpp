@@ -392,10 +392,10 @@ Error:
         delete m_pDevice;
       m_pDevice = NULL;
 
-      cRdiDeviceInterface::getDriverInfo(&numDevices);
+      rdi::Device::getDriverInfo(&numDevices);
 
       if (numDevices > deviceNum) {
-        m_pDevice = new ::vDAQ(deviceNum, true);
+        m_pDevice = new vdaq::Device(deviceNum, true);
 
         // for now we will assume this is the same vDAQ used as a digitizer.
         // we are opening a dublicate handle to the same device. that is ok.
@@ -465,6 +465,8 @@ Error:
 
     int vDAQ::writeOneToAO(float64 *data)
     {
+      if (m_pAoTask)
+        m_pAoTask->setOutputChannelValues(data);
       return 1; // success
     }
 

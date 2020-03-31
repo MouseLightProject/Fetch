@@ -166,7 +166,7 @@ namespace fetch {
     void LinearScanMirror::_set_config( Config IN *cfg )
     {
       setKind(cfg->kind());
-      Guarded_Assert(_nidaq||_simulated); // at least one device was instanced
+      Guarded_Assert(_nidaq||_simulated||_vdaq); // at least one device was instanced
       if(_nidaq)     _nidaq->_set_config(cfg->mutable_nidaq());
       if(_simulated) _simulated->_set_config(cfg->mutable_simulated());
       if(_vdaq)      _vdaq->_set_config(cfg->mutable_vdaq());

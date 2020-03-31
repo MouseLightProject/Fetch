@@ -625,10 +625,10 @@ namespace fetch
         delete m_pDevice;
       m_pDevice = NULL;
 
-      cRdiDeviceInterface::getDriverInfo(&numDevices);
+      rdi::Device::getDriverInfo(&numDevices);
 
       if (numDevices > deviceNum) {
-        m_pDevice = new vDAQ(deviceNum, true);
+        m_pDevice = new vdaq::Device(deviceNum, true);
 
         // load bitfile
         bool designLoaded;
@@ -698,7 +698,10 @@ namespace fetch
 
     unsigned int vDaqDigitizer::on_detach() {
       if (m_pDevice) {
-        m_pDevice->dataFifo.close();
+        m_pDevice->pChannelFifos[0]->close();
+        m_pDevice->pChannelFifos[1]->close();
+        m_pDevice->pChannelFifos[2]->close();
+        m_pDevice->pChannelFifos[3]->close();
 
         delete m_pDevice;
       }
@@ -721,7 +724,7 @@ namespace fetch
 
     unsigned vDaqDigitizer::setup(int nrecords, double record_frequency_Hz, double duty, const ::fetch::cfg::device::DAQ& daqCfg)
     {
-      unsigned success = 1;
+      bool success = 1;
 
       m_nRecords = nrecords;
       m_recordSize = record_size(record_frequency_Hz, duty);
@@ -753,7 +756,7 @@ namespace fetch
         m_pDevice->acqEngine.setAcqParamEnableLineTag(0);
 
         // ammount of data generated during flyback that should be discarded between frames
-        m_BytesToDiscard = flybackPeriods * m_recordSize * 8;
+        m_BytesToDiscard = flybackPeriods * m_recordSize * 2;
 
         // sample clock generation for scanner control
         uint32_t samplesPerPeriod = daqCfg.vdaq().ao_samples_per_period();
@@ -761,9 +764,9 @@ namespace fetch
 
 
         // configure fifo to hold 250ms worth of data
-        uint64_t desiredBufferSize = 240000000; // 0.25s * 120 MSPS * 8 bytes per sample
-        uint64_t actualBufferSize = m_pDevice->dataFifo.configureOrFlush(desiredBufferSize);
-        success = actualBufferSize >= desiredBufferSize;
+        uint64_t desiredBufferSize = 60000000; // 0.25s * 120 MSPS * 2 bytes per sample for each channel
+        for (int i = 0; i < 4; i++)
+          success = success && (m_pDevice->pChannelFifos[i]->configureOrFlush(desiredBufferSize) >= desiredBufferSize);
 
         // intermediate buffer for reading interleaved channel data
         if (m_pIntFrameBuffer)
@@ -809,8 +812,11 @@ namespace fetch
     {
       if (m_pDevice) {
         m_pDevice->acqEngine.resetStateMachine();
-        m_pDevice->dataFifo.flush();
+        for (int i = 0; i < 4; i++)
+          m_pDevice->pChannelFifos[i]->flush();
         m_DiscardNeeded = 0;
+
+        lce.QuadPart = 0;
 
         m_pDevice->acqEngine.enableStateMachine();
         m_pDevice->acqEngine.softTrigger();
@@ -884,34 +890,45 @@ namespace fetch
 
         m_stRec = ((m_stRec+1) >= m_nRecords) ? 0 : m_stRec + 1;
       }
+      
 
       while (m_acqRunning && (currentTime.QuadPart < timeoutTime.QuadPart)) {
         if (m_pDevice) {
-          uint64_t nDiscarded;
           uint64_t nRead = 0;
 
           if (m_DiscardNeeded) {
-            m_pDevice->dataFifo.discard(m_BytesToDiscard, &nDiscarded);
-            if (nDiscarded)
-              m_DiscardNeeded = false;
+            bool canDiscard = true;
+
+            for (int iif = 0; iif < 4; iif++)
+              canDiscard = canDiscard && (m_pDevice->pChannelFifos[iif]->getUnreadCount() >= m_BytesToDiscard);
+
+            m_DiscardNeeded = !canDiscard;
+
+            if (canDiscard)
+              for (int iif = 0; iif < 4; iif++)
+                m_pDevice->pChannelFifos[iif]->discard(m_BytesToDiscard);
           }
 
           uint64_t oc = m_pDevice->acqEngine.getAcqStatusDataFifoOverflowCount();
           if (oc)
-            oc++;
+            return 0; //data lost; abort
 
+          bool canRead = true;
           if (!m_DiscardNeeded)
-            m_pDevice->dataFifo.read(m_pIntFrameBuffer, m_nRecords * m_recordSize * 8, &nRead);
+            for (int iif = 0; iif < 4; iif++)
+              canRead = canRead && (m_pDevice->pChannelFifos[iif]->getUnreadCount() > (m_nRecords * m_recordSize * 2));
 
-          if (nRead) {
-            // de-interleave channels
-            int16_t *src = m_pIntFrameBuffer;
-            int16_t *nd = src + (m_nRecords * m_recordSize * 4);
+          if (canRead) {
+            LARGE_INTEGER t1, t2;
+            double d, t;
+            QueryPerformanceCounter(&t1);
 
-            while (src < nd) {
-              for (int j = 0; j < 4; j++)
-                *(pChanData[j]++) = *(src++) >> 4;
-            }
+            for (int iif = 0; iif < 4; iif++)
+              m_pDevice->pChannelFifos[iif]->read(pChanData[iif], m_nRecords * m_recordSize * 2);
+
+            QueryPerformanceCounter(&t2);
+            d = t2.QuadPart - t1.QuadPart;
+            t = d * 1000 / m_pcFrequency;
 
             m_DiscardNeeded = 1;
             frameAquired = 1;

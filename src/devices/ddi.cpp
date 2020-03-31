@@ -12,8 +12,8 @@
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-ddi::WaveformGenIp::WaveformGenIp(cRdiDeviceRegisterMap *pParent, ::uint32_t baseAddr)
-  : cRdiDeviceRegisterMap(pParent, baseAddr)
+ddi::WaveformGenIp::WaveformGenIp(DeviceRegisterMap *pParent, ::uint32_t baseAddr)
+  : DeviceRegisterMap(pParent, baseAddr)
   , m_waveformDmaBuffer(pParent)
   , m_waveBufferSizeBytes(0)
   , m_waveBufferSizeSamples(0)
@@ -101,7 +101,7 @@ int16_t ddi::vToCounts(double v) {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-ddi::AnalogOutputTask::AnalogOutputTask(vDAQ *pDevice) : m_pDevice(pDevice), m_outputBufferLength(0)
+ddi::AnalogOutputTask::AnalogOutputTask(vdaq::Device *pDevice) : m_pDevice(pDevice), m_outputBufferLength(0)
   , sampleMode(SampleMode::Continuous), sampleRate(1e6), samplesPerTrigger(0), startTriggerIndex(-1), allowRetrigger(false)
 {
   m_channels.clear();
@@ -148,6 +148,56 @@ bool ddi::AnalogOutputTask::verifyBuffers() {
 
 
 
+void ddi::AnalogOutputTask::setOutputChannelValues(int16_t *data_counts) {
+  setOutputChannelValuesInt(data_counts);
+}
+
+
+
+void ddi::AnalogOutputTask::setOutputChannelValues(double *data_volts) {
+  setOutputChannelValuesInt(NULL, data_volts);
+}
+
+
+
+void ddi::AnalogOutputTask::setOutputChannelValuesInt(int16_t *data_counts, double *data_volts) {
+  size_t nChans = m_channels.size();
+  size_t i;
+
+  if (!nChans)
+    throw "Cannot write task without channels.";
+  if (!checkIpOwners())
+    throw "Another task is using the requested channel.";
+
+  int16_t *data_actual = data_counts;
+
+  if (!data_actual) {
+    data_actual = new int16_t[nChans];
+    for (i = 0; i < nChans; i++)
+      data_actual[i] = vToCounts(data_volts[i]);
+  }
+
+  auto ipI = m_pChanIp.begin();
+
+  try {
+    i = 0;
+
+    while (ipI != m_pChanIp.end())
+      (*ipI++)->writeChannelOutputValue(data_actual[i++]);
+
+    if (!data_counts)
+      delete[] data_actual;
+  }
+  catch (exception e) {
+    if (!data_counts)
+      delete[] data_actual;
+
+    throw;
+  }
+}
+
+
+
 void ddi::AnalogOutputTask::setOutputBufferLength(uint64_t nSamplesPerChannel) {
   if (isActive())
     throw "Cannot change buffer size while task is active.";
@@ -179,6 +229,8 @@ int16_t *ddi::AnalogOutputTask::convertSamples(double *data_volts, uint64_t nSam
 
 
 void ddi::AnalogOutputTask::writeOutputBufferInternal(int16_t *data_counts, uint64_t nSamplesPerChannel, uint64_t sampleOffset, double *data_volts) {
+  if (!m_channels.size())
+    throw "Cannot write task without channels.";
   if (!checkIpOwners())
     throw "Another task is using the requested channel.";
 
@@ -268,7 +320,6 @@ void ddi::AnalogOutputTask::writeOutputBufferInternal(int16_t *data_counts, uint
 void ddi::AnalogOutputTask::start(bool triggerImmediately) {
   if (!m_channels.size())
     throw "Cannot start task without channels.";
-
   if (!checkIpOwners())
     throw "Cannot start task. Some resources are already in use.";
 

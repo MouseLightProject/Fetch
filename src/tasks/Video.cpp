@@ -573,6 +573,8 @@ namespace fetch
         d->generateAO();
         d->writeAO();
         d->get2d()->_shutter.Open();
+
+        //TRY(!d->get2d()->_daq.writeOneToAO()); // write first sample of each channel
         TRY(!d->get2d()->_daq.startAO());
 
         vdaq_fetch_video_thread(&ctx);

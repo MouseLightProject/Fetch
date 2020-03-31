@@ -205,7 +205,7 @@ namespace fetch
 		  double sample_rate();
 
     private:
-      vDAQ *m_pDevice;
+      vdaq::Device *m_pDevice;
 
       int m_nRecords;
       size_t m_recordSize;
@@ -213,6 +213,8 @@ namespace fetch
       double m_pcFrequency;
       bool m_DiscardNeeded;
       size_t m_BytesToDiscard;
+
+      LARGE_INTEGER lce;
 
       // for simulated mode
       LARGE_INTEGER m_framePeriod;

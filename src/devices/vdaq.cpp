@@ -3,29 +3,41 @@
 #include "vdaq.h"
 
 
-vDAQ::vDAQ(int16_t deviceNum, bool designLoadAccess) :
-  cRdiDeviceInterface(deviceNum, designLoadAccess),
+vdaq::Device::Device(int16_t deviceNum, bool designLoadAccess) :
+  rdi::Device(deviceNum, designLoadAccess),
   acqEngine(this, 0x400400),
   clkCfg(this, 0x440000),
-  msadc(this, 0x460400),
-  dataFifo(this, 0x480000)
+  msadc(this, 0x460400)
 {
   pWavegenIp.resize(5);
   for (int ctr = 0; ctr < 5; ctr++)
-    pWavegenIp[ctr] = new ddi::WaveformGenIp(this, 0x600000 + 0x10000*ctr);
+    pWavegenIp[ctr] = new ddi::WaveformGenIp(this, 0x600000 + 0x10000 * ctr);
+
+  pChannelFifos.resize(4);
+  for (int ctr = 0; ctr < 4; ctr++)
+    pChannelFifos[ctr] = new rdi::Fifo(this, 0x470000 + 0x1000 * ctr);
+
+  DWORD p = pChannelFifos[0]->getProtocolVersion();
+  p = 2;
 }
 
 
-vDAQ::~vDAQ() {
+vdaq::Device::~Device() {
   while (!pWavegenIp.empty()) {
     auto pIp = pWavegenIp.begin();
     delete *pIp;
     pWavegenIp.erase(pIp);
   }
+
+  while (!pChannelFifos.empty()) {
+    auto pFifo = pWavegenIp.begin();
+    delete *pFifo;
+    pWavegenIp.erase(pFifo);
+  }
 }
 
 
-double vDAQ::getSampleClockRate() {
+double vdaq::Device::getSampleClockRate() {
   uint32_t ticksPerT = getSampleClkTicksPerMeasInterval();
   if (ticksPerT == 8388607)
     return NAN;
@@ -34,13 +46,13 @@ double vDAQ::getSampleClockRate() {
 }
 
 
-uint64_t vDAQ::getSystemClockT() {
+uint64_t vdaq::Device::getSystemClockT() {
   cacheSystemClockT();
   return getSystemClockTReg();
 }
 
 
-bool vDAQ::verifyMsadcData() {
+bool vdaq::Device::verifyMsadcData() {
   int16_t vals[4];
   bool success = true;
   msadc.setUsrTestPatternReq(1);
@@ -61,7 +73,7 @@ FINALIZE:
 }
 
 
-bool vDAQ::initMsadc() {
+bool vdaq::Device::initMsadc() {
   bool success = false;
   int tries = 1;
 
@@ -85,12 +97,12 @@ bool vDAQ::initMsadc() {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-void vDAQ_AcquisitionEngine::resetAcqPlan() {
+void vdaq::AcquisitionEngine::resetAcqPlan() {
   setAcqPlanNumSteps(0);
   m_acqPlanWriteIdx = 0;
 }
 
-void vDAQ_AcquisitionEngine::addAcqPlanStep(bool frameClockState, uint32_t numPeriods) {
+void vdaq::AcquisitionEngine::addAcqPlanStep(bool frameClockState, uint32_t numPeriods) {
   setAcqPlanNumSteps(getAcqPlanNumSteps() + 1);
 
   numPeriods >>= 1;
@@ -105,31 +117,31 @@ void vDAQ_AcquisitionEngine::addAcqPlanStep(bool frameClockState, uint32_t numPe
   writeAcqPlanStep(m_acqPlanWriteIdx,true);
 }
 
-void vDAQ_AcquisitionEngine::writeAcqPlanStep(uint32_t idx, bool newEntry, bool frameClockState, uint32_t numPeriods) {
+void vdaq::AcquisitionEngine::writeAcqPlanStep(uint32_t idx, bool newEntry, bool frameClockState, uint32_t numPeriods) {
   if (newEntry)
     writeAcqPlanStepReg((idx << 9) + (1<<8) + (numPeriods & ((1<<7)-1)) + (((uint32_t)frameClockState)<<7));
   else
     writeAcqPlanStepReg((idx << 9) + (numPeriods & ((1<<8)-1)));
 }
 
-void vDAQ_AcquisitionEngine::writeMaskTableEntry(uint32_t index, uint32_t val) {
+void vdaq::AcquisitionEngine::writeMaskTableEntry(uint32_t index, uint32_t val) {
   writeMaskTableInt((val&((1<<12)-1)) + (index<<12));
 }
 
 
-void vDAQ_AcquisitionEngine::getRawChannelVals(int16_t *vals) {
+void vdaq::AcquisitionEngine::getRawChannelVals(int16_t *vals) {
   *((uint32_t*)(&vals[0])) = getAcqStatusRawChannelDataReg1();
   *((uint32_t*)(&vals[2])) = getAcqStatusRawChannelDataReg2();
 }
 
 
-void vDAQ_AcquisitionEngine::getRawChannelOffsets(int16_t *vals) {
+void vdaq::AcquisitionEngine::getRawChannelOffsets(int16_t *vals) {
   *((uint32_t*)(&vals[0])) = getAcqParamChannelOffsetsReg1();
   *((uint32_t*)(&vals[2])) = getAcqParamChannelOffsetsReg2();
 }
 
 
-void vDAQ_AcquisitionEngine::setRawChannelOffsets(int16_t *vals) {
+void vdaq::AcquisitionEngine::setRawChannelOffsets(int16_t *vals) {
   setAcqParamChannelOffsetsReg1(*((uint32_t*)(&vals[0])));
   setAcqParamChannelOffsetsReg2(*((uint32_t*)(&vals[2])));
 }
@@ -144,31 +156,31 @@ void vDAQ_AcquisitionEngine::setRawChannelOffsets(int16_t *vals) {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-void vDAQ_ClockCfg::issueDeviceCommand(uint8_t address, uint8_t sizeBits, bool read) {
+void vdaq::ClockCfg::issueDeviceCommand(uint8_t address, uint8_t sizeBits, bool read) {
   writeDeviceCommandReg(((uint32_t)address) + (((uint32_t)sizeBits) << 8) + (((uint32_t)read) << 16));
 }
 
 
-void vDAQ_ClockCfg::writeAllDeviceSettings() {
+void vdaq::ClockCfg::writeAllDeviceSettings() {
   issueDeviceCommand(2, 136, false);
   // a complete write of device settings takes about 15us. Ensure it is complete
   Sleep(1);
 }
 
 
-void vDAQ_ClockCfg::readAllDeviceSettings() {
+void vdaq::ClockCfg::readAllDeviceSettings() {
   issueDeviceCommand(0, 160, true);
   // a complete read of device settings takes about 16.8us. Ensure it is complete
   Sleep(1);
 }
 
 
-bool vDAQ_ClockCfg::checkIpId() {
+bool vdaq::ClockCfg::checkIpId() {
   return getIpId() == 0xBC1DC10C;
 }
 
 
-bool vDAQ_ClockCfg::setupMsadcSampleClock() {
+bool vdaq::ClockCfg::setupMsadcSampleClock() {
   uint32_t dat;
 
   dat = getOutputBufWord2Reg();
@@ -184,7 +196,7 @@ bool vDAQ_ClockCfg::setupMsadcSampleClock() {
 }
 
 
-bool vDAQ_ClockCfg::lockPll() {
+bool vdaq::ClockCfg::lockPll() {
   uint32_t dat;
 
   dat = getOutputBufWord1Reg();
@@ -202,7 +214,7 @@ bool vDAQ_ClockCfg::lockPll() {
 }
 
 
-bool vDAQ_ClockCfg::checkPll() {
+bool vdaq::ClockCfg::checkPll() {
   readAllDeviceSettings();
   return (getReadbackBufWord0Reg() & (1 << 26)) > 0;
 }
@@ -219,12 +231,12 @@ bool vDAQ_ClockCfg::checkPll() {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-bool vDAQ_Msadc::calInProgress() {
+bool vdaq::Msadc::calInProgress() {
   return (getCalDataRaw() & 1<<20) > 0;
 }
 
 
-void vDAQ_Msadc::doReset() {
+void vdaq::Msadc::doReset() {
   setResetReg(1);
   setResetReg(0);
 
