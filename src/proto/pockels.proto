@@ -16,6 +16,16 @@ message NIDAQPockels
   optional  string    ai_channel  = 6 [default="/Dev1/ai16"]; // channel for reading off transmission
 }
 
+message vDAQPockels
+{ 
+  optional  double    v_lim_max   = 1 [default=2.0];          // safety limit - high value
+  optional  double    v_lim_min   = 2 [default=0.0];          // safety limit - low  value
+  optional  double    v_open      = 3 [default=0.0];          // control voltage when pockels is maximally transmissive
+  optional  double    v_closed    = 4 [default=0.0];          // control voltage when pockels is minimally transmissive
+  optional  int32     ao_channel  = 5 [default=2];            // control channel
+  optional  int32     ai_channel  = 6 [default=-1];            // channel for reading off transmission
+}
+
 message SimulatedPockels
 {
   optional double v_open = 1 [default=0.0];
@@ -37,12 +47,13 @@ message Pockels
   {
     Simulated = 0;
     NIDAQ     = 1;
+    vDAQ      = 2;
   }
   enum LaserLineIdentifier
   { Chameleon = 0;
     Fianium   = 1;
   }
-  optional PockelsType         kind        = 1 [default=Simulated];
+  optional PockelsType         kind        = 1 [default=vDAQ];
 
   required LaserLineIdentifier laser       = 2;
   optional string              name        = 3 [default="default"];
@@ -50,6 +61,7 @@ message Pockels
 
   optional NIDAQPockels        nidaq       = 5;
   optional SimulatedPockels    simulated   = 6;
+  optional vDAQPockels         vdaq        = 7;
 
-  optional CalibrationStack    calibration_stack = 7;
+  optional CalibrationStack    calibration_stack = 8;
 }

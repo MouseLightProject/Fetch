@@ -18,10 +18,12 @@
 namespace fetch
 {
 
+  bool operator==(const cfg::device::vDAQZPiezo& a, const cfg::device::vDAQZPiezo& b);
   bool operator==(const cfg::device::NIDAQZPiezo& a, const cfg::device::NIDAQZPiezo& b);
   bool operator==(const cfg::device::SimulatedZPiezo& a, const cfg::device::SimulatedZPiezo& b);
   bool operator==(const cfg::device::ZPiezo& a, const cfg::device::ZPiezo& b);
 
+  bool operator!=(const cfg::device::vDAQZPiezo& a, const cfg::device::vDAQZPiezo& b);
   bool operator!=(const cfg::device::NIDAQZPiezo& a, const cfg::device::NIDAQZPiezo& b);
   bool operator!=(const cfg::device::SimulatedZPiezo& a, const cfg::device::SimulatedZPiezo& b);
   bool operator!=(const cfg::device::ZPiezo& a, const cfg::device::ZPiezo& b);
@@ -39,6 +41,7 @@ namespace fetch
       virtual int moveTo(f64 z_um) = 0; // should return 1 on success, and 0 on error
     };
 
+
     template<class T>
     class ZPiezoBase:public IZPiezo,public IConfigurableDevice<T>
     {
@@ -47,7 +50,30 @@ namespace fetch
       ZPiezoBase(Agent *agent, Config *cfg) :IConfigurableDevice<T>(agent,cfg) {}
     };
 
-    class NIDAQZPiezo:public ZPiezoBase<cfg::device::NIDAQZPiezo>
+
+    class vDAQZPiezo :public ZPiezoBase<cfg::device::vDAQZPiezo>
+    {
+      IDAQPhysicalChannel _ao;
+    public:
+      vDAQZPiezo(Agent *agent);
+      vDAQZPiezo(Agent *agent, Config *cfg);
+
+      unsigned int on_attach();
+      unsigned int on_detach();
+
+      virtual void _set_config(Config IN *cfg) { _ao.setChannelId(cfg->channel()); }
+      virtual void _set_config(const Config& cfg) { *_config = cfg; _set_config(_config); }
+
+      virtual void computeConstWaveform(float64 z_um, float64 *data, int flyback, int n);
+      virtual void computeRampWaveform(float64 z_um, float64 step_um, float64 *data, int flyback, int n);
+
+      virtual IDAQPhysicalChannel* physicalChannel() { return &_ao; }
+
+      virtual int moveTo(f64 z_um);  // should return 1 on success, and 0 on error
+    };
+
+
+    class NIDAQZPiezo :public ZPiezoBase<cfg::device::NIDAQZPiezo>
     {
       NIDAQChannel daq;
       IDAQPhysicalChannel _ao;
@@ -58,16 +84,17 @@ namespace fetch
       unsigned int on_attach();
       unsigned int on_detach();
 
-      virtual void _set_config(Config IN *cfg)      {_ao.set(cfg->channel());}
-      virtual void _set_config(const Config& cfg)   {*_config=cfg; _set_config(_config); }
+      virtual void _set_config(Config IN *cfg) { _ao.set(cfg->channel()); }
+      virtual void _set_config(const Config& cfg) { *_config = cfg; _set_config(_config); }
 
       virtual void computeConstWaveform(float64 z_um, float64 *data, int flyback, int n);
       virtual void computeRampWaveform(float64 z_um, float64 step_um, float64 *data, int flyback, int n);
 
-      virtual IDAQPhysicalChannel* physicalChannel() {return &_ao;}
+      virtual IDAQPhysicalChannel* physicalChannel() { return &_ao; }
 
       virtual int moveTo(f64 z_um);  // should return 1 on success, and 0 on error
     };
+
 
     class SimulatedZPiezo:public ZPiezoBase<cfg::device::SimulatedZPiezo>
     {
@@ -90,8 +117,10 @@ namespace fetch
       virtual int moveTo(f64 z_um) {return 1; /* success */}
     };
 
+
     class ZPiezo:public ZPiezoBase<cfg::device::ZPiezo>
     {
+      vDAQZPiezo      *_vdaq;
       NIDAQZPiezo     *_nidaq;
       SimulatedZPiezo *_simulated;
       IDevice         *_idevice;

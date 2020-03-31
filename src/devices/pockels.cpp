@@ -24,41 +24,42 @@ const double PI  = 3.141592653589793238462;
 
 namespace fetch  {
 
-  bool operator==(const cfg::device::NIDAQPockels& a, const cfg::device::NIDAQPockels& b)         {return equals(&a,&b);}
+  bool operator==(const cfg::device::vDAQPockels& a, const cfg::device::vDAQPockels& b) {return equals(&a, &b);}
+  bool operator==(const cfg::device::NIDAQPockels& a, const cfg::device::NIDAQPockels& b) {return equals(&a,&b);}
   bool operator==(const cfg::device::SimulatedPockels& a, const cfg::device::SimulatedPockels& b) {return equals(&a,&b);}
-  bool operator==(const cfg::device::Pockels& a, const cfg::device::Pockels& b)                   {return equals(&a,&b);}
-  bool operator!=(const cfg::device::NIDAQPockels& a, const cfg::device::NIDAQPockels& b)         {return !(a==b);}
+  bool operator==(const cfg::device::Pockels& a, const cfg::device::Pockels& b) {return equals(&a, &b);}
+  bool operator!=(const cfg::device::vDAQPockels& a, const cfg::device::vDAQPockels& b) {return !(a == b);}
+  bool operator!=(const cfg::device::NIDAQPockels& a, const cfg::device::NIDAQPockels& b) {return !(a==b);}
   bool operator!=(const cfg::device::SimulatedPockels& a, const cfg::device::SimulatedPockels& b) {return !(a==b);}
-  bool operator!=(const cfg::device::Pockels& a, const cfg::device::Pockels& b)                   {return !(a==b);}
+  bool operator!=(const cfg::device::Pockels& a, const cfg::device::Pockels& b) {return !(a == b);}
 
 namespace device {
 
   //
   // NIDAQPockels
   //
-
   NIDAQPockels::NIDAQPockels(Agent *agent)
     :PockelsBase<cfg::device::NIDAQPockels>(agent)
-    ,daq(agent,"fetch_Pockels")
-    ,_ao(_config->ao_channel())
+    , daq(agent, "fetch_Pockels")
+    , _ao(_config->ao_channel())
   {}
 
-  NIDAQPockels::NIDAQPockels(Agent *agent, Config *cfg )
-    :PockelsBase<cfg::device::NIDAQPockels>(agent,cfg)
-    ,daq(agent,"fetch_Pockels")
-    ,_ao(cfg->ao_channel())
+  NIDAQPockels::NIDAQPockels(Agent *agent, Config *cfg)
+    : PockelsBase<cfg::device::NIDAQPockels>(agent, cfg)
+    , daq(agent, "fetch_Pockels")
+    , _ao(cfg->ao_channel())
   {}
 
   NIDAQPockels::NIDAQPockels(const char *name, Agent *agent)
-    :PockelsBase<cfg::device::NIDAQPockels>(agent)
-    ,daq(agent,(char*)name)
-    ,_ao(_config->ao_channel())
+    : PockelsBase<cfg::device::NIDAQPockels>(agent)
+    , daq(agent, (char*)name)
+    , _ao(_config->ao_channel())
   {}
 
-  NIDAQPockels::NIDAQPockels(const char* name, Agent *agent, Config *cfg )
-    :PockelsBase<cfg::device::NIDAQPockels>(agent,cfg)
-    ,daq(agent,(char*)name)
-    ,_ao(cfg->ao_channel())
+  NIDAQPockels::NIDAQPockels(const char* name, Agent *agent, Config *cfg)
+    : PockelsBase<cfg::device::NIDAQPockels>(agent, cfg)
+    , daq(agent, (char*)name)
+    , _ao(cfg->ao_channel())
   {}
 
   NIDAQPockels::~NIDAQPockels()
@@ -66,7 +67,8 @@ namespace device {
 
   int
     NIDAQPockels::isValidOpenVolts(f64 volts)
-  { return ( volts >= _config->v_lim_min() ) && (volts <= _config->v_lim_max() );
+  {
+    return (volts >= _config->v_lim_min()) && (volts <= _config->v_lim_max());
   }
 
   int
@@ -74,7 +76,7 @@ namespace device {
   {
     int sts = 0; //fail
     transaction_lock();
-    if(sts=isValidOpenVolts(volts))
+    if (sts = isValidOpenVolts(volts))
     {
       _config->set_v_open(volts);
       update();
@@ -89,7 +91,7 @@ namespace device {
   {
     int sts = 0; //fail
     Config cfg = get_config();
-    if(sts=isValidOpenVolts(volts))
+    if (sts = isValidOpenVolts(volts))
     {
       cfg.set_v_open(volts);
       set_config_nowait(cfg);
@@ -99,7 +101,88 @@ namespace device {
     return sts;
   }
 
-  void NIDAQPockels::computeVerticalBlankWaveform( float64 *data, int flyback, int n )
+  void NIDAQPockels::computeVerticalBlankWaveform(float64 *data, int flyback, int n)
+  {
+    int i;
+    float64 max = _config->v_open(),
+      min = _config->v_closed();
+    for (i = 0; i < flyback; ++i)
+      data[i] = max;           // step to max during y scan
+    for (; i < n; ++i)
+      data[i] = min;      // step to zero at end of scan
+  }
+
+
+
+  //
+  // vDAQPockels
+  //
+  vDAQPockels::vDAQPockels(Agent *agent)
+    :PockelsBase<cfg::device::vDAQPockels>(agent)
+    ,_ao("")
+  {
+    _ao.setChannelId(get_config().ao_channel());
+  }
+
+  vDAQPockels::vDAQPockels(Agent *agent, Config *cfg )
+    :PockelsBase<cfg::device::vDAQPockels>(agent,cfg)
+    , _ao("")
+  {
+    _ao.setChannelId(get_config().ao_channel());
+  }
+
+  vDAQPockels::vDAQPockels(const char *name, Agent *agent)
+    :PockelsBase<cfg::device::vDAQPockels>(agent)
+    , _ao("")
+  {
+    _ao.setChannelId(get_config().ao_channel());
+  }
+
+  vDAQPockels::vDAQPockels(const char* name, Agent *agent, Config *cfg )
+    :PockelsBase<cfg::device::vDAQPockels>(agent,cfg)
+    , _ao("")
+  {
+    _ao.setChannelId(get_config().ao_channel());
+  }
+
+  vDAQPockels::~vDAQPockels()
+  {}
+
+  int vDAQPockels::isValidOpenVolts(f64 volts)
+  { 
+    return ( volts >= _config->v_lim_min() ) && (volts <= _config->v_lim_max() );
+  }
+
+  int vDAQPockels::setOpenVolts(f64 volts)
+  {
+    int sts = 0; //fail
+    transaction_lock();
+    if(sts=isValidOpenVolts(volts))
+    {
+      _config->set_v_open(volts);
+      update();
+    }
+    else
+      warning("vDAQPockels: attempted to set v_open to an out of bounds value.\r\n");
+    transaction_unlock();
+    return sts;
+  }
+
+  int vDAQPockels::setOpenVoltsNoWait(f64 volts)
+  {
+    int sts = 0; //fail
+    Config cfg = get_config();
+    if(sts=isValidOpenVolts(volts))
+    {
+      cfg.set_v_open(volts);
+      set_config_nowait(cfg);
+    }
+    else
+      warning("vDAQPockels: attempted to set v_open to an out of bounds value.\r\n");
+    return sts;
+  }
+
+  void vDAQPockels::computeVerticalBlankWaveform( float64 *data, int flyback, int n )
   { int i;
     float64 max = _config->v_open(),
             min = _config->v_closed();
@@ -109,10 +192,11 @@ namespace device {
       data[i] = min;      // step to zero at end of scan
   }
 
+
+
   //
   // SimulatedPockels
   //
-
   SimulatedPockels::SimulatedPockels( Agent *agent )
     :PockelsBase<cfg::device::SimulatedPockels>(agent)
     ,_chan(agent,"Pockels")
@@ -150,13 +234,15 @@ namespace device {
     memset(data,0,sizeof(float64)*n);
   }
 
+
+
   //
   // Pockels
   //
-
   Pockels::Pockels( Agent *agent )
     :PockelsBase<cfg::device::Pockels>(agent)
-    ,_nidaq(NULL)
+    , _vdaq(NULL)
+    , _nidaq(NULL)
     ,_simulated(NULL)
     ,_idevice(NULL)
     ,_ipockels(NULL)
@@ -166,6 +252,7 @@ namespace device {
 
   Pockels::Pockels( Agent *agent, Config *cfg )
     :PockelsBase<cfg::device::Pockels>(agent,cfg)
+    ,_vdaq(NULL)
     ,_nidaq(NULL)
     ,_simulated(NULL)
     ,_idevice(NULL)
@@ -176,8 +263,9 @@ namespace device {
 
   Pockels::~Pockels()
   {
-    if(_nidaq)     { delete _nidaq;     _nidaq=NULL; }
-    if(_simulated) { delete _simulated; _simulated=NULL; }
+    if (_vdaq) { delete _vdaq;     _vdaq = NULL; }
+    if (_nidaq) { delete _nidaq;     _nidaq = NULL; }
+    if (_simulated) { delete _simulated; _simulated=NULL; }
   }
 
   void Pockels::setKind( Config::PockelsType kind )
@@ -194,6 +282,17 @@ namespace device {
       _idevice  = _nidaq;
       _ipockels = _nidaq;
       break;
+    case cfg::device::Pockels_PockelsType_vDAQ:
+      if (!_vdaq)
+      {
+        std::map<cfg::device::Pockels::LaserLineIdentifier, std::string> names; // tasks need distinct names
+        names[cfg::device::Pockels::Chameleon] = "Chameleon";
+        names[cfg::device::Pockels::Fianium] = "Fianium";
+        _vdaq = new vDAQPockels(names.at(_config->laser()).c_str(), _agent, _config->mutable_vdaq());
+      }
+      _idevice = _vdaq;
+      _ipockels = _vdaq;
+      break;
     case cfg::device::Pockels_PockelsType_Simulated:
       if(!_simulated)
         _simulated = new SimulatedPockels(_agent);
@@ -208,9 +307,10 @@ namespace device {
   void Pockels::_set_config( Config IN *cfg )
   { _config = cfg;
     setKind(cfg->kind());
-    Guarded_Assert(_nidaq||_simulated); // at least one device was instanced
-    if(_nidaq)     _nidaq->_set_config(cfg->mutable_nidaq());
-    if(_simulated) _simulated->_set_config(cfg->mutable_simulated());    
+    Guarded_Assert(_vdaq||_nidaq||_simulated); // at least one device was instanced
+    if (_vdaq)     _vdaq->_set_config(cfg->mutable_vdaq());
+    if (_nidaq)     _nidaq->_set_config(cfg->mutable_nidaq());
+    if (_simulated) _simulated->_set_config(cfg->mutable_simulated());    
   }
 
   void Pockels::_set_config( const Config &cfg )
@@ -220,6 +320,9 @@ namespace device {
     setKind(kind);
     switch(kind)
     {
+    case cfg::device::Pockels_PockelsType_vDAQ:
+      _vdaq->_set_config(const_cast<Config&>(cfg).mutable_vdaq());
+      break;
     case cfg::device::Pockels_PockelsType_NIDAQ:
       _nidaq->_set_config(const_cast<Config&>(cfg).mutable_nidaq());
       break;

@@ -16,16 +16,87 @@
 namespace fetch
 {
 
+  bool operator==(const cfg::device::vDAQZPiezo& a, const cfg::device::vDAQZPiezo& b)           {return equals(&a,&b);}
   bool operator==(const cfg::device::NIDAQZPiezo& a, const cfg::device::NIDAQZPiezo& b)         {return equals(&a,&b);}
   bool operator==(const cfg::device::SimulatedZPiezo& a, const cfg::device::SimulatedZPiezo& b) {return equals(&a,&b);}
   bool operator==(const cfg::device::ZPiezo& a, const cfg::device::ZPiezo& b)                   {return equals(&a,&b);}
 
+  bool operator!=(const cfg::device::vDAQZPiezo& a, const cfg::device::vDAQZPiezo& b)           {return !(a==b);}
   bool operator!=(const cfg::device::NIDAQZPiezo& a, const cfg::device::NIDAQZPiezo& b)         {return !(a==b);}
   bool operator!=(const cfg::device::SimulatedZPiezo& a, const cfg::device::SimulatedZPiezo& b) {return !(a==b);}
   bool operator!=(const cfg::device::ZPiezo& a, const cfg::device::ZPiezo& b)                   {return !(a==b);}
 
   namespace device
   {
+    //
+    // vDAQZPiezo ZPiezo
+    //
+
+    vDAQZPiezo::vDAQZPiezo(Agent *agent)
+      :ZPiezoBase<Config>(agent)
+      , _ao("")
+    {
+      _ao.setChannelId(get_config().channel());
+    }
+
+    vDAQZPiezo::vDAQZPiezo(Agent *agent, Config *cfg)
+      :ZPiezoBase<Config>(agent, cfg)
+      , _ao("")
+    {
+      _ao.setChannelId(get_config().channel());
+    }
+
+    unsigned int vDAQZPiezo::on_attach()
+    {
+      return 1;
+    }
+
+    unsigned int vDAQZPiezo::on_detach()
+    {
+      return 1;
+    }
+
+    /*
+     * Compute ZPiezo Waveform Constant:
+     * ----------------------------
+     *         0     N
+     *         |     |
+     *          ____________________ ,- z_um
+     *  _______|                     ,- z previous
+     */
+    void vDAQZPiezo::computeConstWaveform(float64 z_um, float64 *data, int flyback, int n)
+    {
+      f64 off = z_um * _config->um2v();
+      for (int i = 0; i < n; ++i)
+        data[i] = off; // linear ramp from off to off+A
+    }
+
+    /*
+     * Compute ZPiezo Waveform Ramp:
+     * ----------------------------
+     *
+     *           0    N
+     *           |    |____________  ,- z_um + z_step
+     *               /
+     *              /
+     *             /
+     *            /
+     *  _________/                   ,- z_um
+     *
+     *  Notice that N-1 is equiv. to z_step - z_step/N
+     */
+    void vDAQZPiezo::computeRampWaveform(float64 z_um, float64 step_um, float64 *data, int flyback, int n)
+    {
+    }
+
+    int vDAQZPiezo::moveTo(f64 z_um)     // FIXME: this is borke to all hell
+    {
+      // set ao
+      return 1;
+    }
+
+
+
     //
     // NIDAQ ZPiezo
     //
@@ -139,6 +210,8 @@ Error:
       goto Finalize;
     }
 
+
+
     //
     // Simulate ZPiezo
     //
@@ -171,6 +244,7 @@ Error:
 
     ZPiezo::ZPiezo( Agent *agent )
       :ZPiezoBase<cfg::device::ZPiezo>(agent)
+      ,_vdaq(NULL)
       ,_nidaq(NULL)
       ,_simulated(NULL)
       ,_idevice(NULL)
@@ -181,6 +255,7 @@ Error:
 
     ZPiezo::ZPiezo( Agent *agent, Config *cfg )
       :ZPiezoBase<cfg::device::ZPiezo>(agent,cfg)
+      ,_vdaq(NULL)
       ,_nidaq(NULL)
       ,_simulated(NULL)
       ,_idevice(NULL)
@@ -191,6 +266,7 @@ Error:
 
     ZPiezo::~ZPiezo()
     {
+      if(_vdaq)      { delete _vdaq;      _vdaq=NULL; }
       if(_nidaq)     { delete _nidaq;     _nidaq=NULL; }
       if(_simulated) { delete _simulated; _simulated=NULL; }
     }
@@ -199,6 +275,12 @@ Error:
     {
       switch(kind)
       {
+      case cfg::device::ZPiezo_ZPiezoType_vDAQ:
+        if(!_vdaq)
+          _vdaq = new vDAQZPiezo(_agent,_config->mutable_vdaq());
+        _idevice  = _vdaq;
+        _izpiezo = _vdaq;
+        break;
       case cfg::device::ZPiezo_ZPiezoType_NIDAQ:
         if(!_nidaq)
           _nidaq = new NIDAQZPiezo(_agent,_config->mutable_nidaq());
@@ -219,7 +301,8 @@ Error:
     void ZPiezo::_set_config( Config IN *cfg )
     {
       setKind(cfg->kind());
-      Guarded_Assert(_nidaq||_simulated); // at least one device was instanced
+      Guarded_Assert(_vdaq||_nidaq||_simulated); // at least one device was instanced
+      if(_vdaq)      _vdaq->_set_config(cfg->mutable_vdaq());
       if(_nidaq)     _nidaq->_set_config(cfg->mutable_nidaq());
       if(_simulated) _simulated->_set_config(cfg->mutable_simulated());
       _config = cfg;
@@ -230,7 +313,8 @@ Error:
       cfg::device::ZPiezo_ZPiezoType kind = cfg.kind();
       //_config->set_kind(kind);
       _config->CopyFrom(cfg);
-      Guarded_Assert(_nidaq||_simulated); // at least one device was instanced
+      Guarded_Assert(_vdaq||_nidaq||_simulated); // at least one device was instanced
+      if(_vdaq)      _vdaq->_set_config(_config->mutable_vdaq());
       if(_nidaq)     _nidaq->_set_config(_config->mutable_nidaq());
       if(_simulated) _simulated->_set_config(_config->mutable_simulated());
     }

@@ -18,49 +18,18 @@
 namespace fetch
 {
 
+  bool operator==(const cfg::device::vDAQShutter& a, const cfg::device::vDAQShutter& b)           { return equals(&a, &b); }
   bool operator==(const cfg::device::NIDAQShutter& a, const cfg::device::NIDAQShutter& b)         {return equals(&a,&b);}
   bool operator==(const cfg::device::SimulatedShutter& a, const cfg::device::SimulatedShutter& b) {return equals(&a,&b);}
   bool operator==(const cfg::device::Shutter& a, const cfg::device::Shutter& b)                   {return equals(&a,&b);}
+  bool operator!=(const cfg::device::vDAQShutter& a, const cfg::device::vDAQShutter& b)           { return !(a == b); }
   bool operator!=(const cfg::device::NIDAQShutter& a, const cfg::device::NIDAQShutter& b)         {return !(a==b);}
   bool operator!=(const cfg::device::SimulatedShutter& a, const cfg::device::SimulatedShutter& b) {return !(a==b);}
   bool operator!=(const cfg::device::Shutter& a, const cfg::device::Shutter& b)                   {return !(a==b);}
 
 
   namespace device
-  {        
-
-    //
-    // NIDAQ Shutter
-    //
-
-    NIDAQShutter::NIDAQShutter( Agent *agent )
-      :ShutterBase<Config>(agent)
-      ,daq(agent,"fetch_Shutter")
-      ,_do(_config->do_channel())
-    {
-    }
-
-    NIDAQShutter::NIDAQShutter( Agent *agent, Config *cfg )
-      :ShutterBase<Config>(agent,cfg)
-      ,daq(agent,"fetch_Shutter")
-      ,_do(cfg->do_channel())
-    {
-    }
-
-    unsigned int NIDAQShutter::on_attach()
-    {
-      unsigned int sts = daq.on_attach();
-      if(sts==0) // 0 is success
-        Bind();
-      return sts;
-    }
-
-    unsigned int NIDAQShutter::on_detach()
-    {
-      return daq.on_detach();
-    }
-
-
+  {
     /*
      * Note:
      * ----
@@ -75,41 +44,132 @@ namespace fetch
      * However, this class is used in a pretty specific context.  So far, this
      * simple implementation has been enough.
      */
-    void
-    NIDAQShutter::Set(u8 val)
-    { int32 written = 0;
-      DAQERR( DAQmxWriteDigitalLines( daq.daqtask,
-                                      1,                          // samples per channel,
-                                      0,                          // autostart
-                                      0,                          // timeout
-                                      DAQmx_Val_GroupByChannel,   // data layout,
-                                      &val,                       // buffer
-                                      &written,                   // (out) samples written
-                                      NULL ));                    // reserved
+
+
+
+
+     //
+     // vDAQ Shutter
+     //
+
+    vDAQShutter::vDAQShutter(Agent *agent)
+      :ShutterBase<Config>(agent)
+      , _do(_config->do_channel())
+    {
     }
 
-    void
-    NIDAQShutter::Open(void)
-    { Set(_config->open());
-      Sleep( SHUTTER_DEFAULT_OPEN_DELAY_MS );  // ensures shutter fully opens before an acquisition starts
+    vDAQShutter::vDAQShutter(Agent *agent, Config *cfg)
+      :ShutterBase<Config>(agent, cfg)
+      , _do(cfg->do_channel())
+    {
     }
 
-    void
-    NIDAQShutter::Shut(void)
-    { Set(_config->closed());
+    unsigned int vDAQShutter::on_attach()
+    {
+      // get dio num
+      Shut();
+      return 0;
     }
-    
-    void
-    NIDAQShutter::Bind(void)
-    { DAQERR( DAQmxClearTask(daq.daqtask) );
-      DAQERR( DAQmxCreateTask(daq._daqtaskname,&daq.daqtask));
-      DAQERR( DAQmxCreateDOChan( daq.daqtask,
-                                 _config->do_channel().c_str(),
-                                 "shutter-command",
-                                 DAQmx_Val_ChanPerLine ));
-      DAQERR( DAQmxStartTask( daq.daqtask ) );                    // go ahead and start it
+
+    unsigned int vDAQShutter::on_detach()
+    {
+      return 0;
+    }
+
+    void vDAQShutter::Set(u8 val)
+    {
+      // set dio output
+    }
+
+    void vDAQShutter::Open(void)
+    {
+      Set(_config->open());
+      Sleep(SHUTTER_DEFAULT_OPEN_DELAY_MS);  // ensures shutter fully opens before an acquisition starts
+    }
+
+    void vDAQShutter::Shut(void)
+    {
+      Set(_config->closed());
+    }
+
+    void vDAQShutter::Bind(void)
+    {
       Shut();                                                    // Close the shutter....
     }
+
+
+
+    //
+    // NIDAQ Shutter
+    //
+
+    NIDAQShutter::NIDAQShutter(Agent *agent)
+      :ShutterBase<Config>(agent)
+      , daq(agent, "fetch_Shutter")
+      , _do(_config->do_channel())
+    {
+    }
+
+    NIDAQShutter::NIDAQShutter(Agent *agent, Config *cfg)
+      :ShutterBase<Config>(agent, cfg)
+      , daq(agent, "fetch_Shutter")
+      , _do(cfg->do_channel())
+    {
+    }
+
+    unsigned int NIDAQShutter::on_attach()
+    {
+      unsigned int sts = daq.on_attach();
+      if (sts == 0) // 0 is success
+        Bind();
+      return sts;
+    }
+
+    unsigned int NIDAQShutter::on_detach()
+    {
+      return daq.on_detach();
+    }
+    void
+      NIDAQShutter::Set(u8 val)
+    {
+      int32 written = 0;
+      DAQERR(DAQmxWriteDigitalLines(daq.daqtask,
+        1,                          // samples per channel,
+        0,                          // autostart
+        0,                          // timeout
+        DAQmx_Val_GroupByChannel,   // data layout,
+        &val,                       // buffer
+        &written,                   // (out) samples written
+        NULL));                    // reserved
+    }
+
+    void
+      NIDAQShutter::Open(void)
+    {
+      Set(_config->open());
+      Sleep(SHUTTER_DEFAULT_OPEN_DELAY_MS);  // ensures shutter fully opens before an acquisition starts
+    }
+
+    void
+      NIDAQShutter::Shut(void)
+    {
+      Set(_config->closed());
+    }
+
+    void
+      NIDAQShutter::Bind(void)
+    {
+      DAQERR(DAQmxClearTask(daq.daqtask));
+      DAQERR(DAQmxCreateTask(daq._daqtaskname, &daq.daqtask));
+      DAQERR(DAQmxCreateDOChan(daq.daqtask,
+        _config->do_channel().c_str(),
+        "shutter-command",
+        DAQmx_Val_ChanPerLine));
+      DAQERR(DAQmxStartTask(daq.daqtask));                    // go ahead and start it
+      Shut();                                                    // Close the shutter....
+    }
+
+
 
     //
     // Simulate Shutter
@@ -150,6 +210,7 @@ namespace fetch
 
     Shutter::Shutter( Agent *agent )
       :ShutterBase<cfg::device::Shutter>(agent)
+      ,_vdaq(NULL)
       ,_nidaq(NULL)
       ,_simulated(NULL)
       ,_idevice(NULL)
@@ -160,6 +221,7 @@ namespace fetch
 
     Shutter::Shutter( Agent *agent, Config *cfg )
       :ShutterBase<cfg::device::Shutter>(agent,cfg)
+      ,_vdaq(NULL)
       ,_nidaq(NULL)
       ,_simulated(NULL)
       ,_idevice(NULL)
@@ -170,6 +232,7 @@ namespace fetch
 
     Shutter::~Shutter()
     {
+      if(_vdaq)      { delete _vdaq;      _vdaq=NULL; }
       if(_nidaq)     { delete _nidaq;     _nidaq=NULL; }
       if(_simulated) { delete _simulated; _simulated=NULL; }
     }
@@ -177,7 +240,13 @@ namespace fetch
     void Shutter::setKind( Config::ShutterType kind )
     {
       switch(kind)
-      {    
+      {
+      case cfg::device::Shutter_ShutterType_vDAQ:
+        if(!_vdaq)
+          _vdaq = new vDAQShutter(_agent,_config->mutable_vdaq());
+        _idevice  = _vdaq;
+        _ishutter = _vdaq;
+        break;
       case cfg::device::Shutter_ShutterType_NIDAQ:
         if(!_nidaq)
           _nidaq = new NIDAQShutter(_agent,_config->mutable_nidaq());
@@ -198,7 +267,8 @@ namespace fetch
     void Shutter::_set_config( Config IN *cfg )
     {
       setKind(cfg->kind());
-      Guarded_Assert(_nidaq||_simulated); // at least one device was instanced
+      Guarded_Assert(_vdaq||_nidaq||_simulated); // at least one device was instanced
+      if(_vdaq)      _vdaq->_set_config(cfg->mutable_vdaq());
       if(_nidaq)     _nidaq->_set_config(cfg->mutable_nidaq());
       if(_simulated) _simulated->_set_config(cfg->mutable_simulated());;
       _config = cfg;
@@ -210,7 +280,10 @@ namespace fetch
       _config->set_kind(kind);
       setKind(kind);
       switch(kind)
-      {    
+      {
+      case cfg::device::Shutter_ShutterType_vDAQ:
+        _vdaq->_set_config(const_cast<Config&>(cfg).mutable_vdaq());
+        break;
       case cfg::device::Shutter_ShutterType_NIDAQ:
         _nidaq->_set_config(const_cast<Config&>(cfg).mutable_nidaq());
         break;

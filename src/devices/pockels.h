@@ -74,12 +74,14 @@ namespace fetch
 {
 
 
-  bool operator==(const cfg::device::NIDAQPockels& a, const cfg::device::NIDAQPockels& b)        ;
+  bool operator==(const cfg::device::vDAQPockels& a, const cfg::device::vDAQPockels& b);
+  bool operator==(const cfg::device::NIDAQPockels& a, const cfg::device::NIDAQPockels& b);
   bool operator==(const cfg::device::SimulatedPockels& a, const cfg::device::SimulatedPockels& b);
-  bool operator==(const cfg::device::Pockels& a, const cfg::device::Pockels& b)                  ;
-  bool operator!=(const cfg::device::NIDAQPockels& a, const cfg::device::NIDAQPockels& b)        ;
+  bool operator==(const cfg::device::Pockels& a, const cfg::device::Pockels& b);
+  bool operator!=(const cfg::device::vDAQPockels& a, const cfg::device::vDAQPockels& b);
+  bool operator!=(const cfg::device::NIDAQPockels& a, const cfg::device::NIDAQPockels& b);
   bool operator!=(const cfg::device::SimulatedPockels& a, const cfg::device::SimulatedPockels& b);
-  bool operator!=(const cfg::device::Pockels& a, const cfg::device::Pockels& b)                  ;
+  bool operator!=(const cfg::device::Pockels& a, const cfg::device::Pockels& b);
 
 
   namespace device
@@ -106,10 +108,11 @@ namespace fetch
       PockelsBase(Agent *agent, Config *cfg) : IConfigurableDevice<T>(agent,cfg) {}
     };
 
+
+
     //
     // NIDAQPockels
     //
-
     class NIDAQPockels:public PockelsBase<cfg::device::NIDAQPockels>
     {
       NIDAQChannel daq;
@@ -137,7 +140,43 @@ namespace fetch
       virtual IDAQPhysicalChannel* physicalChannel() {return &_ao;}
     };
 
-class SimulatedPockels:public PockelsBase<cfg::device::SimulatedPockels>
+
+
+    //
+    // vDAQPockels
+    //
+    class vDAQPockels :public PockelsBase<cfg::device::vDAQPockels>
+    {
+      IDAQPhysicalChannel _ao;
+    public:
+      vDAQPockels(Agent *agent);
+      vDAQPockels(Agent *agent, Config *cfg);
+      vDAQPockels(const char* name, Agent *agent);
+      vDAQPockels(const char* name, Agent *agent, Config *cfg);
+
+      virtual ~vDAQPockels();
+
+      virtual unsigned int on_attach() { return 0; }
+      virtual unsigned int on_detach() { return 0; }
+
+      virtual void _set_config(Config IN *cfg) { _ao.setChannelId(cfg->ao_channel()); }
+
+      virtual int isValidOpenVolts(f64 volts);
+      virtual int setOpenVolts(f64 volts);
+      virtual int setOpenVoltsNoWait(f64 volts);
+      virtual f64 getOpenVolts() { return _config->v_open(); }
+
+      virtual void computeVerticalBlankWaveform(float64 *data, int flyback, int n);
+
+      virtual IDAQPhysicalChannel* physicalChannel() { return &_ao; }
+    };
+
+
+
+    //
+    // NIDAQPockels
+    //
+    class SimulatedPockels:public PockelsBase<cfg::device::SimulatedPockels>
     {
       SimulatedDAQChannel _chan;
       IDAQPhysicalChannel _ao;
@@ -158,8 +197,15 @@ class SimulatedPockels:public PockelsBase<cfg::device::SimulatedPockels>
       virtual IDAQPhysicalChannel* physicalChannel() {return &_ao;}
     };
 
+
+
+    //
+    // Pockels
+    //
+
     class Pockels:public PockelsBase<cfg::device::Pockels>
     {
+      vDAQPockels      *_vdaq;
       NIDAQPockels     *_nidaq;
       SimulatedPockels *_simulated;
       IDevice          *_idevice;

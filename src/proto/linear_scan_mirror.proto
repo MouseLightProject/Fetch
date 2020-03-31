@@ -19,7 +19,7 @@ message vDAQLinearScanMirror
   optional  double    v_lim_max   = 1 [default= 10.0];       // safety limit - high value
   optional  double    v_lim_min   = 2 [default=-10.0];       // safety limit - low  value
   optional  double    vpp         = 3 [default= 10.0];       // ??
-  optional  uint32    ao_channel  = 4 [default= 0];          // control channel
+  optional  int32     ao_channel  = 4 [default= 0];          // control channel
 }         
 
 message LinearScanMirror

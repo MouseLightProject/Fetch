@@ -24,12 +24,14 @@
 
 namespace fetch
 {
-  bool operator==(const cfg::device::NIDAQShutter& a, const cfg::device::NIDAQShutter& b)        ;
+  bool operator==(const cfg::device::vDAQShutter& a, const cfg::device::vDAQShutter& b);
+  bool operator==(const cfg::device::NIDAQShutter& a, const cfg::device::NIDAQShutter& b);
   bool operator==(const cfg::device::SimulatedShutter& a, const cfg::device::SimulatedShutter& b);
-  bool operator==(const cfg::device::Shutter& a, const cfg::device::Shutter& b)                  ;
-  bool operator!=(const cfg::device::NIDAQShutter& a, const cfg::device::NIDAQShutter& b)        ;
+  bool operator==(const cfg::device::Shutter& a, const cfg::device::Shutter& b);
+  bool operator!=(const cfg::device::vDAQShutter& a, const cfg::device::vDAQShutter& b);
+  bool operator!=(const cfg::device::NIDAQShutter& a, const cfg::device::NIDAQShutter& b);
   bool operator!=(const cfg::device::SimulatedShutter& a, const cfg::device::SimulatedShutter& b);
-  bool operator!=(const cfg::device::Shutter& a, const cfg::device::Shutter& b)                  ;
+  bool operator!=(const cfg::device::Shutter& a, const cfg::device::Shutter& b);
 
 
   namespace device
@@ -42,6 +44,7 @@ namespace fetch
       virtual void Open() = 0 ;
     }; 
 
+
     template<class T>
     class ShutterBase:public IShutter,public IConfigurableDevice<T>
     {
@@ -50,7 +53,28 @@ namespace fetch
       ShutterBase(Agent *agent, Config *cfg) :IConfigurableDevice<T>(agent,cfg) {}
     };
 
-    class NIDAQShutter:public ShutterBase<cfg::device::NIDAQShutter>      
+
+    class vDAQShutter :public ShutterBase<cfg::device::vDAQShutter>
+    {
+      IDAQPhysicalChannel _do;
+    public:
+      vDAQShutter(Agent *agent);
+      vDAQShutter(Agent *agent, Config *cfg);
+
+      unsigned int on_attach();
+      unsigned int on_detach();
+
+      virtual void _set_config(Config IN *cfg) { _do.set(cfg->do_channel()); }
+
+      void Set(u8 val);
+      void Shut(void);
+      void Open(void);
+
+      void Bind(void);   // Binds the digital output channel to the daq task. - called by on_attach()
+    };
+
+
+    class NIDAQShutter :public ShutterBase<cfg::device::NIDAQShutter>
     {
       NIDAQChannel daq;
       IDAQPhysicalChannel _do;
@@ -60,15 +84,16 @@ namespace fetch
 
       unsigned int on_attach();
       unsigned int on_detach();
-      
-      virtual void _set_config(Config IN *cfg) {_do.set(cfg->do_channel());}
 
-      void Set          (u8 val);
-      void Shut         (void);
-      void Open         (void);
-      
-      void Bind         (void);   // Binds the digital output channel to the daq task. - called by on_attach()
+      virtual void _set_config(Config IN *cfg) { _do.set(cfg->do_channel()); }
+
+      void Set(u8 val);
+      void Shut(void);
+      void Open(void);
+
+      void Bind(void);   // Binds the digital output channel to the daq task. - called by on_attach()
     };
+
 
     class SimulatedShutter:public ShutterBase<cfg::device::SimulatedShutter>
     {
@@ -86,8 +111,10 @@ namespace fetch
       void Open         (void);
     };
 
+
     class Shutter:public ShutterBase<cfg::device::Shutter>
     {
+      vDAQShutter      *_vdaq;
       NIDAQShutter     *_nidaq;
       SimulatedShutter *_simulated;
       IDevice          *_idevice;
