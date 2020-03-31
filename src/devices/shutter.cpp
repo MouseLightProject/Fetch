@@ -55,30 +55,59 @@ namespace fetch
     vDAQShutter::vDAQShutter(Agent *agent)
       :ShutterBase<Config>(agent)
       , _do(_config->do_channel())
+      , m_pDevice(NULL)
+      , m_channelId(-1)
     {
     }
 
     vDAQShutter::vDAQShutter(Agent *agent, Config *cfg)
       :ShutterBase<Config>(agent, cfg)
       , _do(cfg->do_channel())
+      , m_pDevice(NULL)
+      , m_channelId(-1)
     {
     }
 
     unsigned int vDAQShutter::on_attach()
     {
-      // get dio num
+
+      uint16_t numDevices;
+      int16_t deviceNum = _config->device_num();
+
+      if (m_pDevice)
+        delete m_pDevice;
+      m_pDevice = NULL;
+
+      rdi::Device::getDriverInfo(&numDevices);
+
+      if (numDevices > deviceNum) {
+        m_pDevice = new vdaq::Device(deviceNum, true);
+
+        // for now we will assume this is the same vDAQ used as a digitizer.
+        // we are opening a dublicate handle to the same device. that is ok.
+        // in this case though we do not need to load the bitfile.
+
+        m_channelId = m_pDevice->getDioIndex(_config->do_channel().c_str());
+      }
+
       Shut();
       return 0;
     }
 
     unsigned int vDAQShutter::on_detach()
     {
+      if (m_pDevice)
+        delete m_pDevice;
+      m_pDevice = NULL;
+
       return 0;
     }
 
     void vDAQShutter::Set(u8 val)
     {
-      // set dio output
+      if (m_pDevice) {
+        m_pDevice->setDioOuputLevel(m_channelId, val);
+      }
     }
 
     void vDAQShutter::Open(void)

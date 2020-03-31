@@ -15,7 +15,8 @@ message vDAQShutter
 { 
   optional uint32 open       = 1 [default=1];                   // set point for an open shutter
   optional uint32 closed     = 2 [default=0];                   // set point for an open shutter 
-  optional string do_channel = 3 [default="D2.4"]; // control channel
+  optional int32  device_num = 3 [default=0];                   // vDAQ device number
+  optional string do_channel = 4 [default="D2.4"];              // control channel
 }
 
 message Shutter

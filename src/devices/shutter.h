@@ -15,6 +15,7 @@
 #include "object.h"
 #include "DAQChannel.h"
 #include "shutter.pb.h"
+#include "vdaq.h"
 
 #define SHUTTER_DEFAULT_TIMEOUT           INFINITY
 #define SHUTTER_MAX_CHAN_STRING                 32
@@ -71,6 +72,10 @@ namespace fetch
       void Open(void);
 
       void Bind(void);   // Binds the digital output channel to the daq task. - called by on_attach()
+
+    private:
+      vdaq::Device *m_pDevice;
+      int16_t m_channelId;
     };
 
 
