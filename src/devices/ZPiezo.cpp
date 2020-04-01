@@ -34,6 +34,8 @@ namespace fetch
 
     vDAQZPiezo::vDAQZPiezo(Agent *agent)
       :ZPiezoBase<Config>(agent)
+      , m_pDevice(NULL)
+      , m_pAoTask(NULL)
       , _ao("")
     {
       _ao.setChannelId(get_config().channel());
@@ -41,6 +43,8 @@ namespace fetch
 
     vDAQZPiezo::vDAQZPiezo(Agent *agent, Config *cfg)
       :ZPiezoBase<Config>(agent, cfg)
+      , m_pDevice(NULL)
+      , m_pAoTask(NULL)
       , _ao("")
     {
       _ao.setChannelId(get_config().channel());
@@ -48,12 +52,44 @@ namespace fetch
 
     unsigned int vDAQZPiezo::on_attach()
     {
-      return 1;
+      uint16_t numDevices;
+      int16_t deviceNum = _config->device_num();
+
+      if (m_pAoTask)
+        delete m_pAoTask;
+      m_pAoTask = NULL;
+
+      if (m_pDevice)
+        delete m_pDevice;
+      m_pDevice = NULL;
+
+      rdi::Device::getDriverInfo(&numDevices);
+
+      if (numDevices > deviceNum) {
+        m_pDevice = new vdaq::Device(deviceNum, true);
+
+        // for now we will assume this is the same vDAQ used as a digitizer.
+        // we are opening a dublicate handle to the same device. that is ok.
+        // in this case though we do not need to load the bitfile.
+        if (_ao.channelId() >= 0) {
+          m_pAoTask = new ddi::AnalogOutputTask(m_pDevice);
+          m_pAoTask->addChannel(_ao.channelId());
+        }
+      }
+      return 0;
     }
 
     unsigned int vDAQZPiezo::on_detach()
     {
-      return 1;
+      if (m_pAoTask)
+        delete m_pAoTask;
+      m_pAoTask = NULL;
+
+      if (m_pDevice)
+        delete m_pDevice;
+      m_pDevice = NULL;
+
+      return 0;
     }
 
     /*
@@ -87,11 +123,20 @@ namespace fetch
      */
     void vDAQZPiezo::computeRampWaveform(float64 z_um, float64 step_um, float64 *data, int flyback, int n)
     {
+      f64   A = step_um * _config->um2v(),
+        off = z_um * _config->um2v(),
+        N = flyback;
+      int i;
+      for (i = 0; i < flyback; ++i)
+        data[i] = A * (i / (N - 1)) + off; // linear ramp from off to off+A
+      for (; i < n; ++i)
+        data[i] = A + off;
     }
 
-    int vDAQZPiezo::moveTo(f64 z_um)     // FIXME: this is borke to all hell
+    int vDAQZPiezo::moveTo(f64 z_um)
     {
-      // set ao
+      if (m_pAoTask)
+        m_pAoTask->setOutputChannelValues(&z_um);
       return 1;
     }
 

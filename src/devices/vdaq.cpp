@@ -23,17 +23,13 @@ vdaq::Device::Device(int16_t deviceNum, bool designLoadAccess) :
 
 
 vdaq::Device::~Device() {
-  while (!pWavegenIp.empty()) {
-    auto pIp = pWavegenIp.begin();
-    delete *pIp;
-    pWavegenIp.erase(pIp);
-  }
+  auto pIp = pWavegenIp.begin();
+  while (pIp != pWavegenIp.end())
+    delete *pIp++;
 
-  while (!pChannelFifos.empty()) {
-    auto pFifo = pWavegenIp.begin();
-    delete *pFifo;
-    pWavegenIp.erase(pFifo);
-  }
+  auto pFifo = pChannelFifos.begin();
+  while (pFifo != pChannelFifos.end())
+    delete *pFifo++;
 }
 
 
@@ -88,19 +84,46 @@ bool vdaq::Device::initMsadc() {
 }
 
 
-int16_t vdaq::Device::getDioIndex(const char *channelName) {
-  return 0;
+int16_t vdaq::Device::getDioOutputIndex(const char *channelName) {
+  if (strlen(channelName) != 4) throw "Invalid channel name.";
+  if (channelName[0] != 'D') throw "Invalid channel name.";
+  if (channelName[2] != '.') throw "Invalid channel name.";
+
+  char prtNm[2] = { channelName[1], 0 };
+  int port = atoi(prtNm);
+
+  prtNm[0] = channelName[3];
+  int line = atoi(prtNm);
+
+  if ((port == 1) || (port > 2)) throw "Invalid port selection.";
+  if ((line < 0) || (line > 7)) throw "Invalid line selection.";
+
+  return port * 8 + line;
 }
 
 
 void vdaq::Device::setDioOuputLevel(const char *channelName, bool level) {
-
+  int16_t dioIdx = getDioOutputIndex(channelName);
+  setDioOuputLevel(dioIdx, level);
 }
 
 
 void vdaq::Device::setDioOuputLevel(int16_t channelId, bool level) {
-
+  writeRegU32(0x400000 + 200 + 4 * channelId, ((int)level) + 1);
 }
+
+
+void  vdaq::Device::setDioOuputTristate(const char *channelName) {
+  int16_t dioIdx = getDioOutputIndex(channelName);
+}
+
+
+void  vdaq::Device::setDioOuputTristate(int16_t channelId) {
+  if (channelId > 7) throw "Selected digital line cannot be tristated.";
+  writeRegU32(0x400000 + 200 + 4 * channelId, 0);
+}
+
+
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

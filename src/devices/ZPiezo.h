@@ -14,6 +14,7 @@
 #include "DAQChannel.h"
 #include "zpiezo.pb.h"
 #include "object.h"
+#include "vdaq.h"
 
 namespace fetch
 {
@@ -70,6 +71,10 @@ namespace fetch
       virtual IDAQPhysicalChannel* physicalChannel() { return &_ao; }
 
       virtual int moveTo(f64 z_um);  // should return 1 on success, and 0 on error
+
+    private:
+      vdaq::Device *m_pDevice;
+      ddi::AnalogOutputTask *m_pAoTask;
     };
 
 

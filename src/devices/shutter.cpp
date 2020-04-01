@@ -87,7 +87,7 @@ namespace fetch
         // we are opening a dublicate handle to the same device. that is ok.
         // in this case though we do not need to load the bitfile.
 
-        m_channelId = m_pDevice->getDioIndex(_config->do_channel().c_str());
+        m_channelId = m_pDevice->getDioOutputIndex(_config->do_channel().c_str());
       }
 
       Shut();

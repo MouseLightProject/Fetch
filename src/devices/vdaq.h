@@ -194,9 +194,11 @@ namespace vdaq {
     bool verifyMsadcData();
     bool initMsadc();
 
-    int16_t getDioIndex(const char *channelName);
+    int16_t getDioOutputIndex(const char *channelName);
     void setDioOuputLevel(const char *channelName, bool level);
     void setDioOuputLevel(int16_t channelId, bool level);
+    void setDioOuputTristate(const char *channelName);
+    void setDioOuputTristate(int16_t channelId);
 
     // base regs
     REG_U32_R(PcieClkT, 0x400000 + 0);

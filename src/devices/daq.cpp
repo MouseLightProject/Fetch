@@ -410,13 +410,13 @@ Error:
     {
       int error = 0;
 
-      if (m_pDevice)
-        delete m_pDevice;
-      m_pDevice = NULL;
-
       if (m_pAoTask)
         delete m_pAoTask;
       m_pAoTask = NULL;
+
+      if (m_pDevice)
+        delete m_pDevice;
+      m_pDevice = NULL;
 
       return error;
     }

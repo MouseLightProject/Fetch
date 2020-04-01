@@ -54,30 +54,31 @@ namespace fetch
   namespace device
   {
 
-//TODO: move this into it's own header and out of namespace fetch::device (move to fetch::)
+    //TODO: move this into it's own header and out of namespace fetch::device (move to fetch::)
     struct FileSeriesListener
-    { virtual void update(const std::string& path) = 0;
+    {
+      virtual void update(const std::string& path) = 0;
     };
 
     class FileSeries
     {
       typedef std::set<FileSeriesListener*> TListeners;
     public:
-	  FileSeries() :_desc(&__default_desc), _is_valid(false) {};
-	  FileSeries(cfg::FileSeries *desc) :_desc(desc), _is_valid(false) { Guarded_Assert(_desc != NULL);}
+      FileSeries() :_desc(&__default_desc), _is_valid(false) {};
+      FileSeries(cfg::FileSeries *desc) :_desc(desc), _is_valid(false) { Guarded_Assert(_desc != NULL); }
 
       FileSeries& inc(bool increment = true); //DGA: Added boolean for setting whether or not to increment seriesno; if not, then just checking date for resetting seriesno
       const std::string getFullPath(const std::string& prefix, const std::string& ext);
       const std::string getPath();
       bool updateDesc(cfg::FileSeries *desc);
       bool ensurePathExists();
-      inline bool is_valid()  {return _is_valid;};
+      inline bool is_valid() { return _is_valid; };
 
-      void addListener(FileSeriesListener *x) {_listeners.insert(x);}
+      void addListener(FileSeriesListener *x) { _listeners.insert(x); }
 
     private:
-      void renderSeriesNo( char * strSeriesNo, int maxbytes );
-      void tryCreateDirectory( LPCTSTR root_date, const char* description, LPCTSTR root );
+      void renderSeriesNo(char * strSeriesNo, int maxbytes);
+      void tryCreateDirectory(LPCTSTR root_date, const char* description, LPCTSTR root);
       void updateDate(void);
       std::string _lastpath;
       cfg::FileSeries __default_desc;
@@ -121,7 +122,7 @@ namespace fetch
       const std::string stack_filename();                                  // get the current file
       const std::string config_filename();                                 // get the current file
       const std::string metadata_filename();
-                   void write_stack_metadata();
+      void write_stack_metadata();
 
     public:
       device::Scanner3D                     scanner;
@@ -145,58 +146,58 @@ namespace fetch
       task::microscope::AutoTileAcquisition auto_tile_task;
       task::microscope::TiledSurfacescan    surface_scan_task;
       task::microscope::TimeSeries          time_series_task;
-	  int _cut_count;
+      int _cut_count;
 
-      mylib::Array* snapshot(float dz_um,unsigned timeout_ms);
+      mylib::Array* snapshot(float dz_um, unsigned timeout_ms);
 
-      inline Chan*  getVideoChannel()    {if(_end_of_pipeline && _end_of_pipeline->_out) return _end_of_pipeline->_out->contents[0]; else return NULL;}
-      inline LinearScanMirror*  LSM()    {return &scanner._scanner2d._LSM;}
+      inline Chan*  getVideoChannel() { if (_end_of_pipeline && _end_of_pipeline->_out) return _end_of_pipeline->_out->contents[0]; else return NULL; }
+      inline LinearScanMirror*  LSM() { return &scanner._scanner2d._LSM; }
 
-      Pockels* pockels(const std::string& k)                        {return scanner.get2d()->pockels(k);}
-      Pockels* pockels(unsigned k)                                  {return scanner.get2d()->pockels(k);}
-      Pockels* pockels(cfg::device::Pockels::LaserLineIdentifier k) {return scanner.get2d()->pockels(k);}
+      Pockels* pockels(const std::string& k) { return scanner.get2d()->pockels(k); }
+      Pockels* pockels(unsigned k) { return scanner.get2d()->pockels(k); }
+      Pockels* pockels(cfg::device::Pockels::LaserLineIdentifier k) { return scanner.get2d()->pockels(k); }
 
-      inline ZPiezo*         zpiezo()    {return &scanner._zpiezo;}
-      inline Stage*           stage()    {return &stage_;}
-      inline Vibratome*   vibratome()    {return &vibratome_;}
-      inline Probe*    surfaceProbe()    {return &surface_probe_;}
+      inline ZPiezo*         zpiezo() { return &scanner._zpiezo; }
+      inline Stage*           stage() { return &stage_; }
+      inline Vibratome*   vibratome() { return &vibratome_; }
+      inline Probe*    surfaceProbe() { return &surface_probe_; }
 
-      int updateFovFromStackDepth(int nowait=0);  // These also account for cut thickness, returns 0 if overlap is not positive.
-      int updateStackDepthFromFov(int nowait=0);
-	  
-	  unsigned int moveToNewPosThroughSafeZ(Vector3f pos); //DGA: Move to a new position by first moving the stage to a safe z location
+      int updateFovFromStackDepth(int nowait = 0);  // These also account for cut thickness, returns 0 if overlap is not positive.
+      int updateStackDepthFromFov(int nowait = 0);
 
-	  float safeZtoLowerTo_mm(float current_z); //DGA: This will output the z height for the stage to be lowered to based on the minimum z stage height and the desired backup distance
+      unsigned int moveToNewPosThroughSafeZ(Vector3f pos); //DGA: Move to a new position by first moving the stage to a safe z location
 
-	  void scheduleStopCheckBoxToggledSoUpdateConfig(bool setChecked); //DGA: Function setter prototype for updating schedule stop after nth cut properties
-	  void cutCountSinceScheduledStopChangedSoUpdateConfig(int cutCountSinceScheduledStop); //DGA: Function setter prototype for cut count since scheduled stop changed
-	  void updateScheduleStopCutCountProgress(device::Microscope::Config c); //DGA: Change cut count progress text
+      float safeZtoLowerTo_mm(float current_z); //DGA: This will output the z height for the stage to be lowered to based on the minimum z stage height and the desired backup distance
 
-	  bool getSkipSurfaceFindOnImageResume() {return skipSurfaceFindOnImageResume_;}; //DGA: Getter for skipSurfaceFindOnImageResume_
-	  void setSkipSurfaceFindOnImageResume(bool setValue); //DGA: Function setter prototype for skipSurfaceFindOnImageResume_
+      void scheduleStopCheckBoxToggledSoUpdateConfig(bool setChecked); //DGA: Function setter prototype for updating schedule stop after nth cut properties
+      void cutCountSinceScheduledStopChangedSoUpdateConfig(int cutCountSinceScheduledStop); //DGA: Function setter prototype for cut count since scheduled stop changed
+      void updateScheduleStopCutCountProgress(device::Microscope::Config c); //DGA: Change cut count progress text
 
-	  bool getAcquireCalibrationStack() {return acquireCalibrationStack_;}; //DGA: Getter for acquireCalibrationStack_
-	  void setAcquireCalibrationStack(bool setValue); //DGA: Function setter prototype for acquireCalibrationStack_
+      bool getSkipSurfaceFindOnImageResume() { return skipSurfaceFindOnImageResume_; }; //DGA: Getter for skipSurfaceFindOnImageResume_
+      void setSkipSurfaceFindOnImageResume(bool setValue); //DGA: Function setter prototype for skipSurfaceFindOnImageResume_
 
-	  void scheduledStopReached() { scheduledStopReachedSignaler.signaler(false); scheduledStopReachedSignaler.signaler(); }; //DGA: Function to call signaler which stops the task
-	  void cutCountChanged(int cutCount, int cutCountSinceScheduledStop) { cutCountChangedSignaler.signaler(QString("Current Cut Count: %1. Reset Cut Count To 0?").arg(cutCount)); if (cutCountSinceScheduledStop > 0) { cutCountChangedSignaler.signaler(cutCountSinceScheduledStop); } }; //DGA: Function to call signaler when vibratome completes cut
+      bool getAcquireCalibrationStack() { return acquireCalibrationStack_; }; //DGA: Getter for acquireCalibrationStack_
+      void setAcquireCalibrationStack(bool setValue); //DGA: Function setter prototype for acquireCalibrationStack_
+
+      void scheduledStopReached() { scheduledStopReachedSignaler.signaler(false); scheduledStopReachedSignaler.signaler(); }; //DGA: Function to call signaler which stops the task
+      void cutCountChanged(int cutCount, int cutCountSinceScheduledStop) { cutCountChangedSignaler.signaler(QString("Current Cut Count: %1. Reset Cut Count To 0?").arg(cutCount)); if (cutCountSinceScheduledStop > 0) { cutCountChangedSignaler.signaler(cutCountSinceScheduledStop); } }; //DGA: Function to call signaler when vibratome completes cut
 
     public:
       FileSeries file_series;
 
     public:
       IDevice* _end_of_pipeline;
-	  ui::simpleSignalerClass skipSurfaceFindOnImageResumeCheckBoxUpdater, scheduledStopReachedSignaler, acquireCalibrationStackCheckBoxUpdater, cutCountChangedSignaler, updateScheduledStopCutCountProgressSignaler; //DGA: Updater for skipSurfaceFindOnImageResumeCheckBox, acquireCalibrationStackCheckBox and signaler for scheduledStopReachedSignaler and cutCountChangedSignaler
-	
+      ui::simpleSignalerClass skipSurfaceFindOnImageResumeCheckBoxUpdater, scheduledStopReachedSignaler, acquireCalibrationStackCheckBoxUpdater, cutCountChangedSignaler, updateScheduledStopCutCountProgressSignaler; //DGA: Updater for skipSurfaceFindOnImageResumeCheckBox, acquireCalibrationStackCheckBox and signaler for scheduledStopReachedSignaler and cutCountChangedSignaler
+
       Agent __self_agent;
       Agent __scan_agent;
       Agent __io_agent;
       Agent __vibratome_agent;
-	  float    minimumBackupDistance_mm = 0.5, minimumSafeZHeightToDropTo_mm = 8;
-	  bool cutButtonWasPressed = true; //DGA: By default, set cutButtonWasPressed to true so that when it is pressed, this is correct; if the cut occurs during autotile cutBottonWasPressed will have been set to false
-	  fetch::cfg::device::Microscope*      cfg_as_set_by_file; //DGA: Keep track of configuration as set by file
-	private:
-		bool skipSurfaceFindOnImageResume_, acquireCalibrationStack_; //DGA: Private variables storing whether or not to skip surface find or schedule a stop or acquire a calibration stack
+      float    minimumBackupDistance_mm = 0.5, minimumSafeZHeightToDropTo_mm = 8;
+      bool cutButtonWasPressed = true; //DGA: By default, set cutButtonWasPressed to true so that when it is pressed, this is correct; if the cut occurs during autotile cutBottonWasPressed will have been set to false
+      fetch::cfg::device::Microscope*      cfg_as_set_by_file; //DGA: Keep track of configuration as set by file
+    private:
+      bool skipSurfaceFindOnImageResume_, acquireCalibrationStack_; //DGA: Private variables storing whether or not to skip surface find or schedule a stop or acquire a calibration stack
     };
     //end namespace fetch::device
   }
