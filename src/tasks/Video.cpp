@@ -526,9 +526,8 @@ namespace fetch
           : d(d), tid(tid), running(1), ok(1) {}
       };
 
-      DWORD vdaq_fetch_video_thread(void *ctx_)
+      DWORD vdaq_fetch_video_thread(vdaq_fetch_thread_ctx_t *ctx)
       {
-        vdaq_fetch_thread_ctx_t *ctx = (vdaq_fetch_thread_ctx_t*)ctx_;
         device::Scanner2D *d = ctx->d->get2d();
         Chan *q = Chan_Open(d->_out->contents[0], CHAN_WRITE);
         device::vDaqDigitizer *dig = d->_digitizer._vdaq;
@@ -570,6 +569,8 @@ namespace fetch
         HANDLE fetch_thread = 0;
         vdaq_fetch_thread_ctx_t ctx(d, TypeID<TPixel>());
         TS_OPEN("timer-video_ao.f32");
+
+        d->get2d()->_daq.setAOLength(1);
         d->generateAO();
         d->writeAO();
         d->get2d()->_shutter.Open();

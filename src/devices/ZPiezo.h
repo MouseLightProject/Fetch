@@ -62,7 +62,7 @@ namespace fetch
       unsigned int on_attach();
       unsigned int on_detach();
 
-      virtual void _set_config(Config IN *cfg) { _ao.setChannelId(cfg->channel()); }
+      virtual void _set_config(Config IN *cfg) { _ao.setChannelId(cfg->ao_channel()); }
       virtual void _set_config(const Config& cfg) { *_config = cfg; _set_config(_config); }
 
       virtual void computeConstWaveform(float64 z_um, float64 *data, int flyback, int n);

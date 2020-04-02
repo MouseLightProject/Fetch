@@ -209,14 +209,6 @@ void ddi::AnalogOutputTask::setOutputBufferLength(uint64_t nSamplesPerChannel) {
 
 
 
-void ddi::AnalogOutputTask::writeOutputBuffer(double *data_volts, uint64_t nSamplesPerChannel, uint64_t sampleOffset) {
-  writeOutputBufferInternal(NULL, nSamplesPerChannel, sampleOffset, data_volts);
-}
-
-void ddi::AnalogOutputTask::writeOutputBuffer(int16_t *data_counts, uint64_t nSamplesPerChannel, uint64_t sampleOffset) {
-  writeOutputBufferInternal(data_counts, nSamplesPerChannel, sampleOffset);
-}
-
 int16_t *ddi::AnalogOutputTask::convertSamples(double *data_volts, uint64_t nSamples) {
   int16_t *data_i = new int16_t[nSamples];
 
@@ -227,6 +219,14 @@ int16_t *ddi::AnalogOutputTask::convertSamples(double *data_volts, uint64_t nSam
 }
 
 
+
+void ddi::AnalogOutputTask::writeOutputBuffer(double *data_volts, uint64_t nSamplesPerChannel, uint64_t sampleOffset) {
+  writeOutputBufferInternal(NULL, nSamplesPerChannel, sampleOffset, data_volts);
+}
+
+void ddi::AnalogOutputTask::writeOutputBuffer(int16_t *data_counts, uint64_t nSamplesPerChannel, uint64_t sampleOffset) {
+  writeOutputBufferInternal(data_counts, nSamplesPerChannel, sampleOffset);
+}
 
 void ddi::AnalogOutputTask::writeOutputBufferInternal(int16_t *data_counts, uint64_t nSamplesPerChannel, uint64_t sampleOffset, double *data_volts) {
   if (!m_channels.size())

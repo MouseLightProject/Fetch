@@ -38,7 +38,7 @@ namespace fetch
       , m_pAoTask(NULL)
       , _ao("")
     {
-      _ao.setChannelId(get_config().channel());
+      _ao.setChannelId(get_config().ao_channel());
     }
 
     vDAQZPiezo::vDAQZPiezo(Agent *agent, Config *cfg)
@@ -47,7 +47,7 @@ namespace fetch
       , m_pAoTask(NULL)
       , _ao("")
     {
-      _ao.setChannelId(get_config().channel());
+      _ao.setChannelId(get_config().ao_channel());
     }
 
     unsigned int vDAQZPiezo::on_attach()

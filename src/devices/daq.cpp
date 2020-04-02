@@ -255,7 +255,7 @@ Error:
       DAQERR(DAQmxConnectTerms(term_gate,term_arm_out,DAQmx_Val_DoNotInvertPolarity));
     }
 
-    void NationalInstrumentsDAQ::setupAO( float64 nrecords, float64 record_frequency_Hz, int nslices)
+    void NationalInstrumentsDAQ::setupAO( float64 nrecords, float64 record_frequency_Hz)
     {
 
       float64 freq = computeSampleFrequency(nrecords, record_frequency_Hz);
@@ -422,7 +422,7 @@ Error:
     }
 
 
-    void vDAQ::setupAO(float64 nrecords, float64 record_frequency_Hz, int nslices)
+    void vDAQ::setupAO(float64 nrecords, float64 record_frequency_Hz)
     {
       if (m_pAoTask)
         delete m_pAoTask;
@@ -437,8 +437,16 @@ Error:
         m_pAoTask->startTriggerIndex = 44;
         m_pAoTask->allowRetrigger = true;
 
-        m_pAoTask->setOutputBufferLength(samplesPerRecordAO(nrecords) * nslices);
+        m_nRecords = nrecords;
+
       }
+    }
+
+
+    void vDAQ::setAOLength(int nslices)
+    {
+      if (m_pAoTask)
+        m_pAoTask->setOutputBufferLength(samplesPerRecordAO(m_nRecords) * nslices);
     }
 
 

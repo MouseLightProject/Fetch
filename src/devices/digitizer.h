@@ -191,7 +191,7 @@ namespace fetch
 		  unsigned int on_attach();
 		  unsigned int on_detach();
 		  unsigned int on_disarm();
-		  int start();
+		  int start(int nframes = 0);
 		  int stop();
 		  int fetch(Frame* frm);
 

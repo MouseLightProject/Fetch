@@ -18,7 +18,7 @@ message vDAQZPiezo
   optional double v_lim_min  = 3 [default=-3.0];         // V    - Minimum permissible value
   optional double v_offset   = 4 [default=0.0];          // V    - Voltage corresponding to the spatial zero point
   optional int32  device_num = 5 [default=0];            // vDAQ device number
-  optional int32  channel    = 6 [default=4];            // DAQ terminal: should be connected to command input on galvo controller
+  optional int32  ao_channel = 6 [default=4];            // DAQ terminal: should be connected to command input on galvo controller
 }
 
 message ZPiezo

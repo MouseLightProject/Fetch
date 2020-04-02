@@ -42,7 +42,7 @@ namespace fetch
       virtual int waitForDone(DWORD timeout_ms = INFINITE) = 0;                    ///<\returns 1 on fail, 0 on success
 
       virtual void setupCLK(float64 nrecords, float64 record_frequency_Hz) = 0;
-      virtual void setupAO(float64 nrecords, float64 record_frequency_Hz, int nslices = 1) = 0;
+      virtual void setupAO(float64 nrecords, float64 record_frequency_Hz) = 0;
       virtual void setupAOChannels(float64 nrecords,
         float64 record_frequency_Hz,
         float64 vmin,
@@ -88,7 +88,7 @@ namespace fetch
       int waitForDone(DWORD timeout_ms = INFINITE);
 
       void setupCLK(float64 nrecords, float64 record_frequency_Hz);
-      void setupAO(float64 nrecords, float64 record_frequency_Hz, int nslices = 1);
+      void setupAO(float64 nrecords, float64 record_frequency_Hz);
       void setupAOChannels(float64 nrecords, float64 record_frequency_Hz, float64 vmin, float64 vmax, IDAQPhysicalChannel **channels, int nchannels);
 
       int writeAO(float64 *data);
@@ -122,7 +122,7 @@ namespace fetch
       int waitForDone(DWORD timeout_ms = INFINITE) { return 0; }
 
       void setupCLK(float64 nrecords, float64 record_frequency_Hz) {}
-      void setupAO(float64 nrecords, float64 record_frequency_Hz, int nslices) {}
+      void setupAO(float64 nrecords, float64 record_frequency_Hz) {}
       void setupAOChannels(float64 nrecords, float64 record_frequency_Hz, float64 vmin, float64 vmax, IDAQPhysicalChannel **channels, int nchannels) {}
 
       int writeAO(float64 *data) { return 0; }
@@ -150,7 +150,8 @@ namespace fetch
       int waitForDone(DWORD timeout_ms = INFINITE);
 
       void setupCLK(float64 nrecords, float64 record_frequency_Hz) {} // our clocking is handled by the digitizer acquisition engine
-      void setupAO(float64 nrecords, float64 record_frequency_Hz, int nslices = 1);
+      void setupAO(float64 nrecords, float64 record_frequency_Hz);
+      void setAOLength(int nslices);
       void setupAOChannels(float64 nrecords, float64 record_frequency_Hz, float64 vmin, float64 vmax, IDAQPhysicalChannel **channels, int nchannels);
 
       int writeAO(float64 *data);
@@ -168,6 +169,7 @@ namespace fetch
     private:
       vdaq::Device *m_pDevice;
       ddi::AnalogOutputTask *m_pAoTask;
+      int m_nRecords;
     };
 
     class DAQ :public DAQBase<cfg::device::DAQ>
@@ -192,9 +194,10 @@ namespace fetch
       int waitForDone(DWORD timeout_ms = INFINITE) { return _idaq->waitForDone(timeout_ms); }
 
       void setupCLK(float64 nrecords, float64 record_frequency_Hz) { _idaq->setupCLK(nrecords, record_frequency_Hz); }
-      void setupAO(float64 nrecords, float64 record_frequency_Hz, int nslices = 1) { _idaq->setupAO(nrecords, record_frequency_Hz, nslices); }
+      void setupAO(float64 nrecords, float64 record_frequency_Hz) { _idaq->setupAO(nrecords, record_frequency_Hz); }
       void setupAOChannels(float64 nrecords, float64 record_frequency_Hz, float64 vmin, float64 vmax, IDAQPhysicalChannel **channels, int nchannels)
         {_idaq->setupAOChannels(nrecords, record_frequency_Hz, vmin, vmax, channels, nchannels);}
+      void setAOLength(int nslices) { _vdaq->setAOLength(nslices); }
 
       int writeAO(float64 *data) { return _idaq->writeAO(data); }
       int writeOneToAO(float64 *data) { return _idaq->writeOneToAO(data); }

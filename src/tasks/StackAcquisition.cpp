@@ -614,9 +614,8 @@ namespace fetch
           : d(d), nframes(nframes), tid(tid), running(1), ok(1) {}
       };
 
-      DWORD vdaq_fetch_stack_thread(void *ctx_)
+      DWORD vdaq_fetch_stack_thread(vdaq_fetch_thread_ctx_t *ctx)
       {
-        vdaq_fetch_thread_ctx_t *ctx = (vdaq_fetch_thread_ctx_t*)ctx_;
         device::Scanner3D *d = ctx->d;
         Chan *q = Chan_Open(d->_out->contents[0], CHAN_WRITE);
         device::vDaqDigitizer *dig = d->_scanner2d._digitizer._vdaq;
@@ -631,7 +630,7 @@ namespace fetch
         Chan_Resize(q, nbytes);
         frm = (Frame*)Chan_Token_Buffer_Alloc(q);
         ref.format(frm);
-        TRY(dig->start());
+        TRY(dig->start(ctx->nframes));
 
         // not sure what the purpose or reason for this was
   //      TRY(dig->fetch(frm)); // first dead frame to set to zmin
@@ -662,14 +661,16 @@ namespace fetch
       template<class TPixel>
       unsigned int fetch::task::scanner::ScanStack<TPixel>::run_vdaq(device::Scanner3D *d)
       {
-        int ecode = 0; // ecode == 0 implies success, error otherwise
+        int ecode = 0, nslices; // ecode == 0 implies success, error otherwise
         f64 z_um, ummax, ummin, umstep;
         HANDLE fetch_thread = 0;
         TS_OPEN("timer-stack_ao.f32");
 
         d->_zpiezo.getScanRange(&ummin, &ummax, &umstep);
-        vdaq_fetch_thread_ctx_t ctx(d, ((ummax - ummin) / umstep) + 1, TypeID<TPixel>());     /* ummin to ummax inclusive */
-        
+        nslices = ((ummax - ummin) / umstep);
+        vdaq_fetch_thread_ctx_t ctx(d, nslices + 1, TypeID<TPixel>());     /* ummin to ummax inclusive */
+
+        d->get2d()->_daq.setAOLength(nslices);
         d->generateAOCompleteRampZ(ummin, ummax);
         TRY(!d->writeAO());
         TRY(!d->_scanner2d._daq.startAO());

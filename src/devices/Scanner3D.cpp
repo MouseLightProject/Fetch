@@ -122,10 +122,9 @@ ESCAN2D:
         _scanner2d._pockels2.physicalChannel(),
         _zpiezo.physicalChannel()
       };
-      int nslices = (_zpiezo.getMax() - _zpiezo.getMin()) / _zpiezo.getStep();
-
+      
       _scanner2d._daq.setupCLK(nscans,scan_freq_Hz);
-      _scanner2d._daq.setupAO(nscans,scan_freq_Hz,nslices);
+      _scanner2d._daq.setupAO(nscans,scan_freq_Hz);
       _scanner2d._daq.setupAOChannels(nscans,scan_freq_Hz,-10,10,chans,countof(chans));
 
       _scanner2d._shutter.Shut();

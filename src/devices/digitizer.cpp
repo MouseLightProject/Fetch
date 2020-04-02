@@ -808,7 +808,7 @@ namespace fetch
       *h = (unsigned)m_nRecords;
     }
 
-    int vDaqDigitizer::start()
+    int vDaqDigitizer::start(int nframes)
     {
       if (m_pDevice) {
         m_pDevice->acqEngine.resetStateMachine();
@@ -818,6 +818,7 @@ namespace fetch
 
         lce.QuadPart = 0;
 
+        m_pDevice->acqEngine.setAcqParamVolumesPerAcq(nframes);
         m_pDevice->acqEngine.enableStateMachine();
         m_pDevice->acqEngine.softTrigger();
       }

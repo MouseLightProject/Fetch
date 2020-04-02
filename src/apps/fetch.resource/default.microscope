@@ -91,7 +91,7 @@ scanner3d {
         v_open: 0
         v_closed: 0
         ao_channel: 2
-        ai_channel: 2
+        ai_channel: 1
       }
     }
     pockels {
@@ -108,7 +108,7 @@ scanner3d {
         v_lim_min: 0
         v_open: 0
         v_closed: 0
-        ao_channel: 3
+        ao_channel: 2
       }
     }
     shutter {
@@ -153,7 +153,7 @@ scanner3d {
       v_lim_max:  12
       v_lim_min: -3
       v_offset:   0
-      channel:    4
+      ao_channel: 3
     }
     um_max:     5
     um_min:     0
