@@ -122,8 +122,10 @@ ESCAN2D:
         _scanner2d._pockels2.physicalChannel(),
         _zpiezo.physicalChannel()
       };
+      int nslices = (_zpiezo.getMax() - _zpiezo.getMin()) / _zpiezo.getStep();
+
       _scanner2d._daq.setupCLK(nscans,scan_freq_Hz);
-      _scanner2d._daq.setupAO(nscans,scan_freq_Hz);
+      _scanner2d._daq.setupAO(nscans,scan_freq_Hz,nslices);
       _scanner2d._daq.setupAOChannels(nscans,scan_freq_Hz,-10,10,chans,countof(chans));
 
       _scanner2d._shutter.Shut();
@@ -190,6 +192,46 @@ ESCAN2D:
 #if 0
       vector_f64_dump(_ao_workspace,"Scanner3D_generateAORampZ.f64");
 #endif
+    }
+
+    void Scanner3D::generateAOCompleteRampZ(float z_start, float z_end)
+    {
+      int nSlices, samplesPerSlice, f;
+
+      transaction_lock();
+
+      nSlices = floor(abs(z_end - z_start) / _zpiezo.get_config().um_step());
+      samplesPerSlice = _scanner2d._daq.samplesPerRecordAO(_config->scanner2d().nscans());
+
+      f = _scanner2d._daq.flybackSampleIndex(_config->scanner2d().nscans());
+
+      vector_f64_request(_ao_workspace, nSlices * 4 * samplesPerSlice - 1/*max index*/);
+
+      f64 *m = _ao_workspace->contents,
+        *p1 = m + samplesPerSlice * nSlices,
+        *p2 = p1 + samplesPerSlice * nSlices,
+        *zBuffer = p2 + samplesPerSlice * nSlices;
+
+      _scanner2d._LSM.computeSawtooth(m, f, samplesPerSlice);
+      replicateWaveform(m, samplesPerSlice, nSlices);
+
+      _scanner2d._pockels1.computeVerticalBlankWaveform(p1, f, samplesPerSlice);
+      replicateWaveform(p1, samplesPerSlice, nSlices);
+
+      _scanner2d._pockels2.computeVerticalBlankWaveform(p2, f, samplesPerSlice);
+      replicateWaveform(p2, samplesPerSlice, nSlices);
+
+      _zpiezo.computeCompleteRampWaveform(zBuffer, z_start, f, samplesPerSlice, nSlices);
+      transaction_unlock();
+#if 0
+      vector_f64_dump(_ao_workspace, "Scanner3D_generateAOCompleteRampZ.f64");
+#endif
+    }
+
+    void Scanner3D::replicateWaveform(f64 *bufferZero, int samplesPerSlice, int nSlices)
+    {
+      for (int i = 1; i < nSlices; i++)
+        memcpy(bufferZero, bufferZero + samplesPerSlice * i, samplesPerSlice * sizeof(f64));
     }
 
     void Scanner3D::__common_setup()

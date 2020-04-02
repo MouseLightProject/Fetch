@@ -113,6 +113,7 @@ namespace fetch
         case cfg::device::Digitizer::NIScope:
           return d->__scan_agent.arm(&grabstack_i16, &d->scanner) == 0;
         case cfg::device::Digitizer::Alazar:
+        case cfg::device::Digitizer::vDAQ:
         default:
           return d->__scan_agent.arm(&grabstack_u16, &d->scanner) == 0;
         }
@@ -668,32 +669,23 @@ namespace fetch
 
         d->_zpiezo.getScanRange(&ummin, &ummax, &umstep);
         vdaq_fetch_thread_ctx_t ctx(d, ((ummax - ummin) / umstep) + 1, TypeID<TPixel>());     /* ummin to ummax inclusive */
-        d->generateAOConstZ(ummin);                                           // first frame is a dead frame to lock to ummin
+        
+        d->generateAOCompleteRampZ(ummin, ummax);
         TRY(!d->writeAO());
-        TRY(!d->_scanner2d._daq.startCLK());
-        d->_scanner2d._shutter.Open();
         TRY(!d->_scanner2d._daq.startAO());
-        Guarded_Assert_WinErr(fetch_thread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)vdaq_fetch_stack_thread, &ctx, 0, NULL));
-        for (z_um = ummin; ((ummax - z_um) / umstep) >= -0.5f && ctx.running; z_um += umstep)
-        {
-          TS_TIC;
-          d->generateAORampZ(z_um);
-          TRY(!d->writeAO());
-          TS_TOC;
-        }
-        d->generateAOConstZ(ummin);                                           // last frame is a dead frame to lock to ummin
-        TRY(!d->writeAO());
-        if (ctx.ok)
-          Guarded_Assert_WinErr(WAIT_OBJECT_0 == WaitForSingleObject(fetch_thread, INFINITE));
+
+        d->_zpiezo.moveTo(ummin);
+        d->_scanner2d._shutter.Open();
+
+        vdaq_fetch_stack_thread(&ctx);
+
         TRY(ctx.ok);
+
       Finalize:
         TS_CLOSE;
         d->_scanner2d._shutter.Shut();
         d->_scanner2d._digitizer._vdaq->stop();
-        d->get2d()->_daq.waitForDone(1000/*ms*/); // will make sure the last frame finishes generating before it times out.
-        d->_scanner2d._daq.stopCLK();
         d->_scanner2d._daq.stopAO();
-        if (fetch_thread) CloseHandle(fetch_thread);
         return ecode; // ecode == 0 implies success, error otherwise
       Error:
         warning("Error occurred during ScanStack<%s> task."ENDL, TypeStr<TPixel>());

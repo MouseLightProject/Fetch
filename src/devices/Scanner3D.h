@@ -89,6 +89,8 @@ namespace fetch
               void generateAOConstZ(float z_um);
               void generateAORampZ();
               void generateAORampZ(float z_um);
+              void generateAOCompleteRampZ(float z_start, float z_end);
+              void replicateWaveform(f64 *bufferZero, int samplesPerSlice, int nSlices);
       virtual int  writeAO();                                                    ///< \returns 0 on success, 1 on failure
       virtual int  writeLastAOSample();
 

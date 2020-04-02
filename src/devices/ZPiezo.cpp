@@ -372,5 +372,13 @@ Error:
       *step_um = c.um_step();
     }
 
+    void ZPiezo::computeCompleteRampWaveform(float64 *data, float64 z_start, int nslices, int flyback, int n)
+    {
+      float64 zStep = _config->um_step();
+
+      for (int i = 0; i < nslices; i++)
+        computeRampWaveform(z_start, data + i * n, flyback, n);
+    }
+
   }
 }

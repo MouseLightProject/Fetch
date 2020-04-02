@@ -145,6 +145,7 @@ namespace fetch
       virtual void computeConstWaveform(float64 z_um, float64 *data, int flyback, int n) {_izpiezo->computeConstWaveform(z_um,data,flyback,n);}
       virtual void computeRampWaveform(float64 z_um, float64 step_um, float64 *data, int flyback, int n)  {_izpiezo->computeRampWaveform(z_um,step_um,data,flyback,n);}
       virtual void computeRampWaveform(float64 z_um, float64 *data, int flyback, int n)  {_izpiezo->computeRampWaveform(z_um,_config->um_step(),data,flyback,n);}
+      void computeCompleteRampWaveform(float64 *data, float64 z_start, int nslices, int flyback, int n);
 
       virtual IDAQPhysicalChannel* physicalChannel() {return _izpiezo->physicalChannel();}
 
