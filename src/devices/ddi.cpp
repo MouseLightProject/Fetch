@@ -166,8 +166,6 @@ void ddi::AnalogOutputTask::setOutputChannelValuesInt(int16_t *data_counts, doub
 
   if (!nChans)
     throw "Cannot write task without channels.";
-  if (!checkIpOwners())
-    throw "Another task is using the requested channel.";
 
   int16_t *data_actual = data_counts;
 

@@ -113,6 +113,17 @@ void vdaq::Device::setDioOuputLevel(int16_t channelId, bool level) {
 }
 
 
+void vdaq::Device::setDioOuputSignal(const char *channelName, uint32_t signal) {
+  int16_t dioIdx = getDioOutputIndex(channelName);
+  setDioOuputSignal(dioIdx, signal);
+}
+
+
+void vdaq::Device::setDioOuputSignal(int16_t channelId, uint32_t signal) {
+  writeRegU32(0x400000 + 200 + 4 * channelId, signal);
+}
+
+
 void  vdaq::Device::setDioOuputTristate(const char *channelName) {
   int16_t dioIdx = getDioOutputIndex(channelName);
 }

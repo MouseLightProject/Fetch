@@ -667,8 +667,8 @@ namespace fetch
         TS_OPEN("timer-stack_ao.f32");
 
         d->_zpiezo.getScanRange(&ummin, &ummax, &umstep);
-        nslices = ((ummax - ummin) / umstep);
-        vdaq_fetch_thread_ctx_t ctx(d, nslices + 1, TypeID<TPixel>());     /* ummin to ummax inclusive */
+        nslices = ((ummax - ummin) / umstep) + 1;
+        vdaq_fetch_thread_ctx_t ctx(d, nslices, TypeID<TPixel>());     /* ummin to ummax inclusive */
 
         d->get2d()->_daq.setAOLength(nslices);
         d->generateAOCompleteRampZ(ummin, ummax);
@@ -690,8 +690,6 @@ namespace fetch
         return ecode; // ecode == 0 implies success, error otherwise
       Error:
         warning("Error occurred during ScanStack<%s> task."ENDL, TypeStr<TPixel>());
-        d->generateAOConstZ(ummin); // try one last time to reset AO
-        d->writeAO();
         ctx.ok = 0;
         while (fetch_thread && ctx.running)
           Guarded_Assert_WinErr__NoPanic(WAIT_OBJECT_0 == WaitForSingleObject(fetch_thread, 100)); // need to make sure thread is stopped before exiting this function so ctx remains live

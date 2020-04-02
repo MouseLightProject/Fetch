@@ -197,6 +197,8 @@ namespace vdaq {
     int16_t getDioOutputIndex(const char *channelName);
     void setDioOuputLevel(const char *channelName, bool level);
     void setDioOuputLevel(int16_t channelId, bool level);
+    void setDioOuputSignal(const char *channelName, uint32_t signal);
+    void setDioOuputSignal(int16_t channelId, uint32_t signal);
     void setDioOuputTristate(const char *channelName);
     void setDioOuputTristate(int16_t channelId);
 

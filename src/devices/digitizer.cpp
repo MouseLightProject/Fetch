@@ -762,6 +762,8 @@ namespace fetch
         uint32_t samplesPerPeriod = daqCfg.vdaq().ao_samples_per_period();
         m_pDevice->acqEngine.setAcqParamSampleClkPulsesPerPeriod(samplesPerPeriod);
 
+        // Output frame clock on D2.5
+        m_pDevice->setDioOuputSignal("D2.5", 8);
 
         // configure fifo to hold 250ms worth of data
         uint64_t desiredBufferSize = 60000000; // 0.25s * 120 MSPS * 2 bytes per sample for each channel

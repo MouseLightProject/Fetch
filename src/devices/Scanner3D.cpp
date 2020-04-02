@@ -199,7 +199,7 @@ ESCAN2D:
 
       transaction_lock();
 
-      nSlices = floor(abs(z_end - z_start) / _zpiezo.get_config().um_step());
+      nSlices = floor(abs(z_end - z_start) / _zpiezo.get_config().um_step()) + 1;
       samplesPerSlice = _scanner2d._daq.samplesPerRecordAO(_config->scanner2d().nscans());
 
       f = _scanner2d._daq.flybackSampleIndex(_config->scanner2d().nscans());
@@ -220,7 +220,7 @@ ESCAN2D:
       _scanner2d._pockels2.computeVerticalBlankWaveform(p2, f, samplesPerSlice);
       replicateWaveform(p2, samplesPerSlice, nSlices);
 
-      _zpiezo.computeCompleteRampWaveform(zBuffer, z_start, f, samplesPerSlice, nSlices);
+      _zpiezo.computeCompleteRampWaveform(zBuffer, z_start, nSlices, f, samplesPerSlice);
       transaction_unlock();
 #if 0
       vector_f64_dump(_ao_workspace, "Scanner3D_generateAOCompleteRampZ.f64");
@@ -230,7 +230,7 @@ ESCAN2D:
     void Scanner3D::replicateWaveform(f64 *bufferZero, int samplesPerSlice, int nSlices)
     {
       for (int i = 1; i < nSlices; i++)
-        memcpy(bufferZero, bufferZero + samplesPerSlice * i, samplesPerSlice * sizeof(f64));
+        memcpy(bufferZero + samplesPerSlice * i, bufferZero, samplesPerSlice * sizeof(f64));
     }
 
     void Scanner3D::__common_setup()

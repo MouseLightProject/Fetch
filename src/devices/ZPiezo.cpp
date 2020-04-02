@@ -374,10 +374,21 @@ Error:
 
     void ZPiezo::computeCompleteRampWaveform(float64 *data, float64 z_start, int nslices, int flyback, int n)
     {
+      float64 *dataBegin = data;
       float64 zStep = _config->um_step();
 
-      for (int i = 0; i < nslices; i++)
-        computeRampWaveform(z_start, data + i * n, flyback, n);
+      for (int i = 0; i < (nslices - 1); i++) {
+        computeRampWaveform(z_start, data, flyback, n);
+        z_start += zStep;
+        data += n;
+      }
+
+      // last slice is flat
+      computeConstWaveform(z_start, data, flyback, n);
+
+      //send piezo back to start for last flyback
+      for (int i = flyback; i < n; i++)
+        data[i] = *dataBegin;
     }
 
   }

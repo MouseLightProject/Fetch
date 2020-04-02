@@ -171,9 +171,9 @@ scanner3d {
       v_offset: 0
       ao_channel: 3
     }
-    um_max: 5
+    um_max: 25
     um_min: 0
-    um_step: 1
+    um_step: 5
   }
   zref_um: 0
 }
