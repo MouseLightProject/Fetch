@@ -206,6 +206,7 @@ namespace fetch
 
     private:
       vdaq::Device *m_pDevice;
+      rdi::FifoGroup m_channelFifos;
 
       int m_nRecords;
       size_t m_recordSize;

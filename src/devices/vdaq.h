@@ -1,7 +1,6 @@
 #pragma once
 
 #include "ddi.h"
-#include <vector>
 
 
 namespace vdaq {

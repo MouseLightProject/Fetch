@@ -682,6 +682,12 @@ namespace fetch
 
           error("Failed to initialize vDAQ AFE.");
         }
+
+        m_channelFifos.clear();
+        m_channelFifos.addFifo(m_pDevice->pChannelFifos[0]);
+        m_channelFifos.addFifo(m_pDevice->pChannelFifos[1]);
+        m_channelFifos.addFifo(m_pDevice->pChannelFifos[2]);
+        m_channelFifos.addFifo(m_pDevice->pChannelFifos[3]);
       }
       else {
         // cache data for simulated generation
@@ -698,10 +704,7 @@ namespace fetch
 
     unsigned int vDaqDigitizer::on_detach() {
       if (m_pDevice) {
-        m_pDevice->pChannelFifos[0]->close();
-        m_pDevice->pChannelFifos[1]->close();
-        m_pDevice->pChannelFifos[2]->close();
-        m_pDevice->pChannelFifos[3]->close();
+        m_channelFifos.clear();
 
         delete m_pDevice;
       }
@@ -767,8 +770,7 @@ namespace fetch
 
         // configure fifo to hold 250ms worth of data
         uint64_t desiredBufferSize = 60000000; // 0.25s * 120 MSPS * 2 bytes per sample for each channel
-        for (int i = 0; i < 4; i++)
-          success = success && (m_pDevice->pChannelFifos[i]->configureOrFlush(desiredBufferSize) >= desiredBufferSize);
+        success = success && (m_channelFifos.configureOrFlush(desiredBufferSize) >= desiredBufferSize);
 
         // intermediate buffer for reading interleaved channel data
         if (m_pIntFrameBuffer)
@@ -814,8 +816,7 @@ namespace fetch
     {
       if (m_pDevice) {
         m_pDevice->acqEngine.resetStateMachine();
-        for (int i = 0; i < 4; i++)
-          m_pDevice->pChannelFifos[i]->flush();
+        m_channelFifos.flush();
         m_DiscardNeeded = 0;
 
         lce.QuadPart = 0;
@@ -851,18 +852,18 @@ namespace fetch
     {
       int frameAquired = 0;
       int16_t *pData = (int16_t*)frm->data;
-      int16_t *pChanData[4];
       LARGE_INTEGER currentTime;
       LARGE_INTEGER timeoutTime;
 
       QueryPerformanceCounter(&currentTime);
       timeoutTime.QuadPart = currentTime.QuadPart + (LONGLONG)(m_pcFrequency * 5);
 
-      for (int j = 0; j < 4; j++)
-        pChanData[j] = pData + (m_nRecords * m_recordSize * j);
-
       if (!m_pDevice) {
         // go ahead and sim the frame data now
+        int16_t *pChanData[4];
+
+        for (int j = 0; j < 4; j++)
+          pChanData[j] = pData + (m_nRecords * m_recordSize * j);
 
         for (uint32_t ch = 0; ch < 4; ch++) {
           memcpy(pChanData[ch], &m_pSimBuffer[simBufferFramePtr++], m_nRecords * m_recordSize * 2);
@@ -900,39 +901,19 @@ namespace fetch
           uint64_t nRead = 0;
 
           if (m_DiscardNeeded) {
-            bool canDiscard = true;
-
-            for (int iif = 0; iif < 4; iif++)
-              canDiscard = canDiscard && (m_pDevice->pChannelFifos[iif]->getUnreadCount() >= m_BytesToDiscard);
-
-            m_DiscardNeeded = !canDiscard;
-
-            if (canDiscard)
-              for (int iif = 0; iif < 4; iif++)
-                m_pDevice->pChannelFifos[iif]->discard(m_BytesToDiscard);
+            uint64_t bytesDiscarded;
+            m_channelFifos.discard(m_BytesToDiscard, &bytesDiscarded);
+            m_DiscardNeeded = !bytesDiscarded;
           }
 
           uint64_t oc = m_pDevice->acqEngine.getAcqStatusDataFifoOverflowCount();
           if (oc)
             return 0; //data lost; abort
 
-          bool canRead = true;
           if (!m_DiscardNeeded)
-            for (int iif = 0; iif < 4; iif++)
-              canRead = canRead && (m_pDevice->pChannelFifos[iif]->getUnreadCount() > (m_nRecords * m_recordSize * 2));
+            m_channelFifos.read(pData, m_nRecords * m_recordSize * 2, &nRead);
 
-          if (canRead) {
-            LARGE_INTEGER t1, t2;
-            double d, t;
-            QueryPerformanceCounter(&t1);
-
-            for (int iif = 0; iif < 4; iif++)
-              m_pDevice->pChannelFifos[iif]->read(pChanData[iif], m_nRecords * m_recordSize * 2);
-
-            QueryPerformanceCounter(&t2);
-            d = t2.QuadPart - t1.QuadPart;
-            t = d * 1000 / m_pcFrequency;
-
+          if (nRead){
             m_DiscardNeeded = 1;
             frameAquired = 1;
             break;

@@ -1,7 +1,6 @@
 #pragma once
 
 #include "rdiLib.h"
-#include <list>
 
 
 #define DDI_MAX(a,b) ((a > b) ? a : b)
