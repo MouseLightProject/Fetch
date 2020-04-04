@@ -193,6 +193,7 @@ namespace vdaq {
     bool verifyMsadcData();
     bool initMsadc();
 
+    int16_t getDioIndex(const char *channelName, bool mustBeOutput = false);
     int16_t getDioOutputIndex(const char *channelName);
     void setDioOuputLevel(const char *channelName, bool level);
     void setDioOuputLevel(int16_t channelId, bool level);
@@ -200,6 +201,8 @@ namespace vdaq {
     void setDioOuputSignal(int16_t channelId, uint32_t signal);
     void setDioOuputTristate(const char *channelName);
     void setDioOuputTristate(int16_t channelId);
+    bool getDioInputLevel(const char *channelName);
+    bool getDioInputLevel(int16_t channelId);
 
     // base regs
     REG_U32_R(PcieClkT, 0x400000 + 0);
@@ -208,8 +211,9 @@ namespace vdaq {
     REG_U32_RW(AfeSelection, 0x400000 + 64);
 
   protected:
-    REG_U32_Command(cacheSystemClockT, 8);
-    REG_U64_R(SystemClockTReg, 8);
+    REG_U32_Command(cacheSystemClockT, 0x400000 + 8);
+    REG_U64_R(SystemClockTReg, 0x400000 + 8);
+    REG_U32_R(DioInputVals, 0x400000 + 24);
   };
 
 }

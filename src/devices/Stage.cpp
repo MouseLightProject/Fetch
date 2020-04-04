@@ -88,10 +88,12 @@
 
 namespace fetch  {
 
+  bool operator==(const cfg::device::C884StageController& a, const cfg::device::C884StageController& b) {return equals(&a,&b);}
   bool operator==(const cfg::device::C843StageController& a, const cfg::device::C843StageController& b) {return equals(&a,&b);}
   bool operator==(const cfg::device::SimulatedStage& a, const cfg::device::SimulatedStage& b)           {return equals(&a,&b);}
   bool operator==(const cfg::device::Stage& a, const cfg::device::Stage& b)                             {return equals(&a,&b);}
 
+  bool operator!=(const cfg::device::C884StageController& a, const cfg::device::C884StageController& b) {return !(a==b);}
   bool operator!=(const cfg::device::C843StageController& a, const cfg::device::C843StageController& b) {return !(a==b);}
   bool operator!=(const cfg::device::SimulatedStage& a, const cfg::device::SimulatedStage& b)           {return !(a==b);}
   bool operator!=(const cfg::device::Stage& a, const cfg::device::Stage& b)                             {return !(a==b);}
@@ -805,6 +807,12 @@ Error:
       _idevice  = _c843;
       _istage   = _c843;
       break;
+    case cfg::device::Stage_StageType_C884:
+      if (!_c884)
+        _c884 = new C884Stage(_agent, _config->mutable_c884());
+      _idevice = _c884;
+      _istage = _c884;
+      break;
     case cfg::device::Stage_StageType_Simulated:
       if(!_simulated)
         _simulated = new SimulatedStage(_agent,_config->mutable_simulated());
@@ -841,8 +849,9 @@ Error:
   void Stage::_set_config( Config IN *cfg )
   {
     setKind(cfg->kind());
-    Guarded_Assert(_c843||_simulated); // at least one device was instanced
+    Guarded_Assert(_c843|| _c884 || _simulated); // at least one device was instanced
     if(_c843)      _c843->_set_config(cfg->mutable_c843());
+    if(_c884)      _c884->_set_config(cfg->mutable_c884());
     if(_simulated) _simulated->_set_config(cfg->mutable_simulated());
     _config = cfg;
 
@@ -859,6 +868,9 @@ Error:
       {
       case cfg::device::Stage_StageType_C843:
         _c843->_set_config(cfg.c843());
+        break;
+      case cfg::device::Stage_StageType_C884:
+        _c884->_set_config(cfg.c884());
         break;
       case cfg::device::Stage_StageType_Simulated:
         _simulated->_set_config(cfg.simulated());

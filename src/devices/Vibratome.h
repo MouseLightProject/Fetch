@@ -49,6 +49,7 @@
 #include "object.h"
 #include "agent.h"
 #include "ui/simpleSignalerClass.h"
+#include "vdaq.h"
 
 namespace fetch
 {
@@ -77,6 +78,8 @@ namespace fetch
 
       virtual int start() = 0;
       virtual int stop()  = 0;
+
+      virtual bool getState() = 0;
     };
 
     template<class T>
@@ -115,6 +118,8 @@ namespace fetch
       virtual int start();
       virtual int stop();
 
+      virtual bool getState();
+
     private:
       unsigned int _close();
 
@@ -126,6 +131,9 @@ namespace fetch
       int qAMP();
       int START();
       int STOP();
+
+      vdaq::Device *m_pDevice;
+      int16_t m_channelId;
     };   
 
 	class SimulatedVibratome:public VibratomeBase<cfg::device::SimulatedVibratome>
@@ -148,6 +156,8 @@ namespace fetch
 
       virtual int start()                        {int r=_is_running==0; _is_running=1; return r;}
       virtual int stop()                         {int r=_is_running==1; _is_running=0; return r;}
+
+      virtual bool getState()                    {return false;};
     };
 
     class Vibratome:public VibratomeBase<cfg::device::Vibratome>
@@ -157,9 +167,10 @@ namespace fetch
                                                               
       IDevice          *_idevice;
       IVibratome       *_ivibratome;
-	  float    sliceThicknessCorrectionUm_; //DGA: private member that is the slice thickness correction in microns to be used to adjust to get the desired thickness
+	    float    sliceThicknessCorrectionUm_; //DGA: private member that is the slice thickness correction in microns to be used to adjust to get the desired thickness
+
     public:
-	  Vibratome(Agent *agent);
+	    Vibratome(Agent *agent);
       Vibratome(Agent *agent, Config *cfg);
       ~Vibratome();
 
@@ -179,6 +190,8 @@ namespace fetch
                                                    
       virtual int start()                          {return _ivibratome->start();}
       virtual int stop()                           {return _ivibratome->stop();}
+
+      virtual bool getState()                      {return _ivibratome->getState();}
                                                    
               void  feed_begin_pos_mm(float *x, float *y);
               void  feed_end_pos_mm(float *x, float *y);

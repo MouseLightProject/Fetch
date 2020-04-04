@@ -81,7 +81,7 @@ namespace fetch
       rdi::Device::getDriverInfo(&numDevices);
 
       if (numDevices > deviceNum) {
-        m_pDevice = new vdaq::Device(deviceNum, true);
+        m_pDevice = new vdaq::Device(deviceNum, false);
 
         // for now we will assume this is the same vDAQ used as a digitizer.
         // we are opening a dublicate handle to the same device. that is ok.
