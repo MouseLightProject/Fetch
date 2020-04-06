@@ -25,7 +25,7 @@ message C884StageController
     optional string stage = 2 [default="NOSTAGE"]; //M-511.DD (XY), M-501.DG (Z)
   }
   
-  optional uint32 id   = 1 [default=1];
+  optional string id   = 1 [default="NOSTAGE"];
   repeated Axis   axis = 2;
   optional double cut_proportional_gain = 3 [default=30.0];
   optional double cut_integration_gain  = 4 [default=50.0];

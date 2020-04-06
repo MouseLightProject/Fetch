@@ -145,12 +145,12 @@ namespace device {
 #define C843WRAP( expr )  NOTINCLUDED(expr)
 #endif
 
-#define  CHKJMP( expr )  if(!(expr)) {warning("C843:"ENDL "%s(%d): %s"ENDL "Expression evaluated as false"ENDL,__FILE__,__LINE__,#expr); goto Error;}
-#define  CHKWRN( expr )  if(!(expr)) {warning("C843:"ENDL "%s(%d): %s"ENDL "Expression evaluated as false"ENDL,__FILE__,__LINE__,#expr); }
-#define  CHKERR( expr )  if(!(expr)) {error  ("C843:"ENDL "%s(%d): %s"ENDL "Expression evaluated as false"ENDL,__FILE__,__LINE__,#expr); goto Error;}
+#define  CHKJMP( expr )  if(!(expr)) {warning("Stage:"ENDL "%s(%d): %s"ENDL "Expression evaluated as false"ENDL,__FILE__,__LINE__,#expr); goto Error;}
+#define  CHKWRN( expr )  if(!(expr)) {warning("Stage:"ENDL "%s(%d): %s"ENDL "Expression evaluated as false"ENDL,__FILE__,__LINE__,#expr); }
+#define  CHKERR( expr )  if(!(expr)) {error  ("Stage:"ENDL "%s(%d): %s"ENDL "Expression evaluated as false"ENDL,__FILE__,__LINE__,#expr); goto Error;}
 
 #define WARN(msg) warning("Stage:"ENDL "\t%s(%d)"ENDL "\t%s"ENDL,__FILE__,__LINE__,msg)
-#define PANIC(e)  if(!(e)) {error  ("C843:"ENDL "%s(%d): %s"ENDL "Expression evaluated as false"ENDL,__FILE__,__LINE__,#e);}
+#define PANIC(e)  if(!(e)) {error  ("Stage:"ENDL "%s(%d): %s"ENDL "Expression evaluated as false"ENDL,__FILE__,__LINE__,#e);}
 
   /// Interprets return codes from C843 API calls.
   /// Usually called from a macro.  See, for example, \ref C843JMP.
@@ -161,8 +161,7 @@ namespace device {
   /// \param[in] line   The line number where the error was generated.
   /// \param[in] report The reporter function to use e.g. debug(), warning(), or error().  May be NULL, in which case no message will be output.
   /// \returns 0 if no error, otherwise 1
-  static
-  bool c843_error_handler(long handle, BOOL ok, const char* expr, const char* file, const int line, pf_reporter report)
+  static bool c843_error_handler(long handle, BOOL ok, const char* expr, const char* file, const int line, pf_reporter report)
   {
   #ifdef HAVE_C843
     char buf[1024];
@@ -200,10 +199,58 @@ namespace device {
 #endif
   }
 
+
+
+
+  //
+  // C884Stage
+  //
+
+#define C884WRN( expr )  {BOOL _v; lock_(); _v=(expr); unlock_(); (c884_error_handler( m_handle, _v, #expr, __FILE__, __LINE__, warning ));}
+#define C884ERR( expr )  {BOOL _v; lock_(); _v=(expr); unlock_(); (c884_error_handler( m_handle, _v, #expr, __FILE__, __LINE__, error   ));}
+#define C884JMP( expr )  {BOOL _v; lock_(); _v=(expr); unlock_(); if(c884_error_handler( m_handle, _v, #expr, __FILE__, __LINE__, warning)) goto Error;}
+#define C884JMPSILENT( expr )  {BOOL _v; lock_(); _v=(expr); unlock_(); if(c884_error_handler( m_handle, _v, #expr, __FILE__, __LINE__, NULL)) goto Error;}
+
+
+  static bool c884_error_handler(long handle, BOOL ok, const char* expr, const char* file, const int line, pf_reporter report)
+  {
+    char buf[1024];
+    long e;
+    if (handle < 0)
+    {
+      if (report) report(
+        "(%s:%d) C884 Error:"ENDL
+        "\t%s"ENDL
+        "\tInvalid device id (Got %d)."ENDL,
+        file, line, expr, handle);
+      return true;
+    }
+    else if (!ok)
+    {
+      e = PI_GetError(handle);
+
+      if (PI_TranslateError(e, buf, sizeof(buf)))
+      {
+        if (report) report(
+          "(%s:%d) C884 Error %d:"ENDL
+          "\t%s"ENDL
+          "\t%s"ENDL,
+          file, line, e, expr, buf);
+      }
+      else
+        error(
+          "(%s:%d) Problem with C884 (error %d) but error message was too long for buffer."ENDL,
+          "\t%s"ENDL
+          __FILE__, __LINE__, e, expr);
+      return true;
+    }
+    return false; //this should be something corresponding to "no error"...guessing zero
+  }
+
 #pragma warning(push)
 #pragma warning(disable:4244) // lots of float <-- double conversions
 
-  static const char c843_stage_position_log_file[] =  "../stage_position.f64";  ///< The polled stage position gets cached here.
+  static const char stage_position_log_file[] =  "../stage_position.f64";  ///< The polled stage position gets cached here.
 
   /** Writes current position and velocity to a cache file with a time since last log.
 
@@ -213,7 +260,7 @@ namespace device {
   static
   int log_(double r[3], double v[3], double dt)
   { FILE *fp = NULL;
-    CHKJMP( fp=fopen(c843_stage_position_log_file,"wb"));
+    CHKJMP( fp=fopen(stage_position_log_file,"wb"));
     fwrite(r  ,sizeof(double),3,fp);
     fwrite(v  ,sizeof(double),3,fp);
     fwrite(&dt,sizeof(double),1,fp);
@@ -234,7 +281,7 @@ Error:
   {
     FILE *fp = NULL;
     double v[3],dt;
-    CHKJMP(fp=fopen(c843_stage_position_log_file,"rb"));
+    CHKJMP(fp=fopen(stage_position_log_file,"rb"));
     fread(r  ,sizeof(double),3,fp);
     fread(v  ,sizeof(double),3,fp);
     fread(&dt,sizeof(double),1,fp);
@@ -257,8 +304,52 @@ Error:
       The cached file gets written in the working directory.
       It records a time between position queries,the stage velocity and the current position.
   */
-  static
-  void *poll_and_cache_stage_position(void* self_)
+  static void *c884_poll_and_cache_stage_position(void* self_)
+  {
+    C884Stage *self = (C884Stage*)self_;
+    double r[3] = { 0 }, v[3] = { 0 }, dt = 0.0;
+    TicTocTimer clock = tic();
+    char szAxes[7] = "1 2 3";
+    double dPos[3];
+    bool success;
+
+    while (1)
+    {
+      Sleep(10);
+
+      self->lock_();
+      success = PI_qPOS(self->m_handle, szAxes, dPos);
+      self->unlock_();
+      if (!success)
+      {
+        warning("%s(%d): C884 Failed to query stage position."ENDL, __FILE__, __LINE__);
+        goto Error;
+      }
+      
+      dt = toc(&clock);
+      if (!log_(r, v, dt))
+      {
+        warning("%s(%d): C884 Failed to write to position log."ENDL, __FILE__, __LINE__);
+        goto Error;
+      }
+    }
+  Error:
+    debug("%s(%d): "ENDL "\t!!!! STAGE POSITION POLLING THREAD GOING DOWN !!!!"ENDL, __FILE__, __LINE__);
+    return NULL;
+  }
+
+  /** Stage position polling/logging thread.
+
+      \param[in] self_ A pointer to a C843Stage instance.
+
+      The thread should be started after the stage is attached.
+      The thread will stop when the position query fails, presumably because the stage's handle
+      was closed.
+
+      The cached file gets written in the working directory.
+      It records a time between position queries,the stage velocity and the current position.
+  */
+  static void *c843_poll_and_cache_stage_position(void* self_)
   { C843Stage *self = (C843Stage*)self_;
     double r[3]={0},v[3]={0},dt=0.0;
     TicTocTimer clock = tic();
@@ -346,7 +437,7 @@ Error:
       if(maybe_read_position_from_log(r,0.2/*mm*/))
         CHKWRN(setKnownReference(r[0],r[1],r[2]));
     }
-    CHKJMP(logger_=Thread_Alloc(poll_and_cache_stage_position,this));
+    CHKJMP(logger_=Thread_Alloc(c843_poll_and_cache_stage_position,this));
     return 0; // ok
 Error:
     debug("%s(%d): %s()\n"
@@ -678,6 +769,432 @@ Error:
 #pragma warning(pop)
 
 
+
+
+
+  //
+  // C884
+  //
+
+  C884Stage::C884Stage(Agent *agent)
+    :StageBase<cfg::device::C884StageController>(agent)
+    , m_handle(-1)
+    , m_pLogger(0)
+  {
+    InitializeCriticalSection(&m_lock);
+  }
+
+  C884Stage::C884Stage(Agent *agent, Config *cfg)
+    :StageBase<cfg::device::C884StageController>(agent, cfg)
+    , m_handle(-1)
+    , m_pLogger(0)
+  {
+    InitializeCriticalSection(&m_lock);
+  }
+
+  C884Stage::~C884Stage()
+  {
+    DeleteCriticalSection(&m_lock);
+  }
+
+  void C884Stage::lock_()
+  {
+    EnterCriticalSection(&m_lock);
+  }
+
+  void C884Stage::unlock_()
+  {
+    LeaveCriticalSection(&m_lock);
+  }
+
+
+  /** The attach callback for this device.
+      Connects to the controller, and tries to load axes.  Attempts to set the last known stage position, so the stage is
+      ready for absolute moves.
+      \return 0 on success, 1 otherwise
+      \todo Should do some validation.  Make sure stage name is in database.  I suppose CST does this though.
+  */
+  unsigned int C884Stage::on_attach()
+  {
+    long ready = 0;
+    int	iError;
+    char szErrorMesage[1024];
+    char szUsbController[1024];
+
+    // connect to the controller over USB
+    PI_EnumerateUSB(szUsbController, 1024, "PI C-884");
+    m_handle = PI_ConnectUSB(szUsbController);
+
+    if (m_handle < 0)
+    {
+      iError = PI_GetError(m_handle);
+      PI_TranslateError(iError, szErrorMesage, 1024);
+      debug("PI C884 connection error %d: %s\n", iError, szErrorMesage);
+      return(1);
+    }
+
+    // get the name of the connected axes
+    char szAxes[17];
+    if (!PI_qSAI(m_handle, szAxes, 16))
+    {
+      iError = PI_GetError(m_handle);
+      PI_TranslateError(iError, szErrorMesage, 1024);
+      debug("PI C884 SAI?: error %d: %s\n", iError, szErrorMesage);
+      PI_CloseConnection(m_handle);
+      return(1);
+    }
+    // use only the first 3 axes.
+    strcpy(szAxes, "1 2 3");
+
+    // close the servo loop
+    BOOL bFlags[3];
+    bFlags[0] = true;
+    bFlags[1] = true;
+    bFlags[2] = true;
+
+    // call the SerVO mode command.
+    if (!PI_SVO(m_handle, szAxes, bFlags))
+    {
+      iError = PI_GetError(m_handle);
+      PI_TranslateError(iError, szErrorMesage, 1024);
+      debug("SVO: ERROR %d: %s\n", iError, szErrorMesage);
+      PI_CloseConnection(m_handle);
+      return(1);
+    }
+
+    {
+      double r[3];
+      if (maybe_read_position_from_log(r, 0.2/*mm*/))
+        CHKWRN(setKnownReference(r[0], r[1], r[2]));
+    }
+    CHKJMP(m_pLogger = Thread_Alloc(c884_poll_and_cache_stage_position, this));
+    return 0; // ok
+  Error:
+    debug("%s(%d): %s()\n"
+      "If the stage database could not be found copy the installed database to where the fetch exectuable is located.\n",
+      __FILE__, __LINE__, __FUNCTION__);
+    return 1; // fail
+  }
+
+  // return 0 on success
+  unsigned int C884Stage::on_detach()
+  {
+    Thread_Free(m_pLogger);
+    lock_();
+    PI_CloseConnection(m_handle);
+    m_handle = -1;
+    unlock_();
+
+    return 0;
+  }
+
+  int C884Stage::getTravel(StageTravel* out)
+  {
+    /* NOTES:
+       o  qTMN and q TMX I think
+       o  There's a section in the manual on travel range adjustment (section 5.4)
+       o  Assume that (xyz) <==> "1 2 3"
+       */
+    double t[3];
+    C884JMP(PI_qTMN(m_handle, "1 2 3", t));
+
+    out->x.min = t[0];
+    out->y.min = t[1];
+    out->z.min = t[2];
+
+    C884JMP(PI_qTMX(m_handle, "1 2 3", t));
+    out->x.max = t[0];
+    out->y.max = t[1];
+    out->z.max = t[2];
+    return 1;
+  Error:
+    return 0;
+  }
+
+  int C884Stage::getVelocity(float *vx, float *vy, float *vz)
+  {
+    double t[3];
+    C884JMP(PI_qVEL(m_handle, "1 2 3", t));
+    *vx = t[0];
+    *vy = t[1];
+    *vz = t[2];
+    return 1;
+  Error:
+    return 0;
+  }
+
+  int C884Stage::setVelocity(float vx, float vy, float vz)
+  {
+    getSafeVelocity(&vx, &vy, &vz); //DGA: Ensure velocities are in acceptable range
+    const double t[3] = { vx,vy,vz };
+    C884JMP(PI_VEL(m_handle, "1 2 3", t));
+    return 1; // success
+  Error:
+    return 0;
+  }
+
+  void C884Stage::setVelocityNoWait(float vx, float vy, float vz)
+  {
+    setVelocity(vx, vy, vz); // doesn't block
+  }
+
+  int C884Stage::getPos(float *x, float *y, float *z)
+  {
+    double t[3];
+    C884JMPSILENT(PI_qPOS(m_handle, "1 2 3", t));
+    *x = t[0];
+    *y = t[1];
+    *z = t[2];
+    return 1;
+  Error:
+    return 0;
+  }
+
+  int C884Stage::getTarget(float *x, float *y, float *z)
+  {
+    double t[3];
+    C884JMPSILENT(PI_qMOV(m_handle, "1 2 3", t)); //DGA: Equivalent to MOV?, (p.39 in manual): read target position
+    *x = t[0];
+    *y = t[1];
+    *z = t[2];
+    return 1;
+  Error:
+    return 0;
+  }
+
+
+  /** Moves the stage to the indicated position.  Will not return till finished (or error).
+    \todo  better error handling in case I hit limits
+    \todo  what is behavior around limits?
+  */
+  int C884Stage::setPos(float x, float y, float z, int sleep_ms/*=500*/)
+  {
+    getSafeZ(&z); //DGA: Ensure z is at least 8 mm
+    double t[3] = { x,y,z };
+    BOOL ontarget[] = { 0,0,0 };
+    { StageTravel t;
+    CHKJMP(getTravel(&t));
+    CHKJMP(is_in_bounds(&t, x, y, z));
+    }
+
+    { float vx, vy, vz; //DGA: Added this back to see if the stage somehow gets a weird velocity
+    getVelocity(&vx, &vy, &vz);
+    debug("(%s:%d): C884 Velocity %f %f %f"ENDL, __FILE__, __LINE__, vx, vy, vz);
+    }
+    C884JMP(PI_HLT(m_handle, "1 2 3"));              // Stop any motion in progress
+    C884JMP(PI_MOV(m_handle, "1 2 3", t));            // Move!
+    waitForMove_();                                  // Block here until not moving (or error)
+
+    while (!all(ontarget, 3))
+    {
+      C884JMP(PI_qONT(m_handle, "1 2 3", ontarget));    // Ensure controller is on-target (if there was an error before, will repeat here?)
+      Sleep(20);
+    }
+    if (sleep_ms > 0)
+      Sleep(sleep_ms); // let the bath soln settle. commented by Vadim on 6/15/13
+
+    { double a[3];
+    C884JMP(PI_qMOV(m_handle, "1 2 3", a));
+    if (!same(a, t, 3))
+    {
+      double b[3] = { 0.0,0.0,0.0 };
+      lock_();
+      PI_qPOS(m_handle, "1 2 3", b);
+      unlock_();
+      warning(
+        "%s(%d): C884 Move command was interupted for a new destination."ENDL
+        "\t  Original Target: %f %f %f"ENDL
+        "\t   Current Target: %f %f %f"ENDL
+        "\t Current Position: %f %f %f"ENDL,
+        __FILE__, __LINE__,
+        t[0], t[1], t[2],
+        a[0], a[1], a[2],
+        b[0], b[1], b[2]);
+      goto Error;
+    }
+    }
+    return 1; // success
+  Error:
+    return 0;
+  }
+
+  void C884Stage::setPosNoWait(float x, float y, float z)
+  {
+    getSafeZ(&z); //DGA: Ensure z is at least 8 mm
+    double t[3] = { x,y,z };
+
+    { float vx, vy, vz; //DGA: Added this back to see if the stage somehow gets a weird velocity
+    getVelocity(&vx, &vy, &vz);
+    debug("(%s:%d): C884 Velocity %f %f %f"ENDL, __FILE__, __LINE__, vx, vy, vz);
+    }
+    C884JMP(PI_HLT(m_handle, "1 2 3"));              // Stop any motion in progress
+    C884JMP(PI_MOV(m_handle, "1 2 3", t));            // Move!
+  Error:
+    return;
+  }
+
+  bool C884Stage::isMoving()
+  {
+    BOOL b;
+    C884JMPSILENT(PI_IsMoving(m_handle, "", &b));
+    return b;
+  Error:
+    return false; // if there's an error state, it's probably not moving
+  }
+
+
+  bool C884Stage::isOnTarget()
+  {
+    BOOL b[] = { 0,0,0 };
+    C884JMPSILENT(PI_qONT(m_handle, "1 2 3", b));
+    if (all(b, 3))
+      return true;
+  Error:
+    return false; // if there's an error state, it's probably not on target
+  }
+
+  bool C884Stage::isServoOn()
+  {
+    BOOL b[] = { 0,0,0 };
+    C884JMPSILENT(PI_qSVO(m_handle, "1 2 3", b));
+    if (all(b, 3))
+      return true;
+  Error:
+    return false; // if there's an error state, it's probably not on
+  }
+
+  bool C884Stage::clear()
+  {
+    return true;
+  }
+
+  bool C884Stage::prepareForCut(unsigned axis)
+  {
+    unsigned int pid[] = { 0x1,0x2,0x3 };
+    double vals[3] = { 0 };
+    CHKJMP(axis == 0 || axis == 1); // x or y
+    { const char a = axis ? '2' : '1';
+    const char axiscode[] = { a,a,a,0 };
+    C884JMP(PI_qSPA(m_handle, axiscode, pid, vals, NULL, 0));
+    P_ = vals[0];
+    I_ = vals[1];
+    D_ = vals[2];
+    vals[0] = _config->cut_proportional_gain();
+    vals[1] = _config->cut_integration_gain();
+    vals[2] = _config->cut_derivative_gain();
+    C884JMP(PI_SPA(m_handle, axiscode, pid, vals, NULL));
+    cut_mode_active_ = true;
+    }
+    return true;
+  Error:
+    cut_mode_active_ = false;
+    return false;
+  }
+  bool C884Stage::doneWithCut(unsigned axis)
+  {
+    const unsigned int pid[] = { 0x1,0x2,0x3 };
+    double vals[3] = { 0 };
+    CHKJMP(axis == 0 || axis == 1); // x or y
+    { const char a = axis ? '2' : '1';
+    const char axiscode[] = { a,a,a,0 };
+    vals[0] = P_;
+    vals[1] = I_;
+    vals[2] = D_;
+    C884JMP(PI_SPA(m_handle, axiscode, pid, vals, NULL));
+    }
+    cut_mode_active_ = false;
+    return true;
+  Error:
+    return false;
+  }
+
+  void C884Stage::waitForController_()
+  {
+    int ready = 0;
+    while (!ready)
+    {
+      C884ERR(PI_IsControllerReady(m_handle, &ready));
+      Sleep(20); // check ~ 50x/sec
+    }
+  }
+
+  void C884Stage::waitForMove_()
+  {
+    BOOL isMoving = TRUE;
+    while (isMoving == TRUE)
+    {
+      C884JMP(PI_IsMoving(m_handle, "", &isMoving));
+      Sleep(20); // check ~ 50x/sec
+    }
+  Error:
+    return;
+  }
+
+  bool C884Stage::setRefMode_(bool ison)
+  {
+    BOOL ons[3] = { ison,ison,ison };
+    C884JMP(PI_RON(m_handle, "1 2 3", ons));
+    return 1;
+  Error:
+    return 0;
+  }
+
+  bool C884Stage::isReferenced(bool *isok/*=NULL*/)
+  {
+    BOOL isrefd[3] = { 0,0,0 };
+    BOOL isrefg[3] = { 0,0,0 };
+    BOOL ismvng[3] = { 0,0,0 };
+    BOOL iserr[3] = { 0,0,0 };
+    if (isok) *isok = 1;
+    C884JMPSILENT(PI_GetErrorStatus(m_handle, isrefd, isrefg, ismvng, iserr));
+    return all(isrefd, 3);
+  Error:
+    if (isok) *isok = 0;
+    return false;
+  }
+
+  bool C884Stage::reference()
+  {
+    bool isok = 1;
+    CHKJMP(setRefMode_(1));
+    C884JMP(PI_FRF(m_handle, "1 2 3"));  //fast reference
+    waitForController_();
+    if (isReferenced(&isok) && isok)
+      return true;
+  Error:
+    warning("%s(%d)"ENDL "\tReferencing failed for one or more axes."ENDL, __FILE__, __LINE__);
+    return false;
+  }
+
+  void C884Stage::referenceNoWait()
+  {
+    bool isok = 1;
+    CHKJMP(setRefMode_(1));
+    C884JMP(PI_FRF(m_handle, "1 2 3"));  //fast reference
+    return;
+  Error:
+    warning("%s(%d)"ENDL "\tReferencing failed for one or more axes."ENDL, __FILE__, __LINE__);
+    return;
+  }
+
+  bool C884Stage::setKnownReference(float x, float y, float z)
+  {
+    double r[3] = { x,y,z };
+    bool isok;
+    if (isReferenced(&isok))  return true;  // ignore if referenced
+    CHKJMP(isok);
+    CHKJMP(setRefMode_(0));
+    C884JMP(PI_POS(m_handle, "1 2 3", r));
+    if (isReferenced(&isok) && isok)
+      return true;
+  Error:
+    warning("%s(%d)"ENDL "setKnownReference failed for one or more axes."ENDL, __FILE__, __LINE__);
+    return false;
+  }
+#pragma warning(pop)
+
+
+
   //
   // Simulated
   //
@@ -767,6 +1284,7 @@ Error:
 
   Stage::Stage( Agent *agent )
     :StageBase<cfg::device::Stage>(agent)
+    ,_c884(NULL)
     ,_c843(NULL)
     ,_simulated(NULL)
     ,_idevice(NULL)
@@ -781,6 +1299,7 @@ Error:
 
   Stage::Stage( Agent *agent, Config *cfg )
     :StageBase<cfg::device::Stage>(agent,cfg)
+    ,_c884(NULL)
     ,_c843(NULL)
     ,_simulated(NULL)
     ,_idevice(NULL)

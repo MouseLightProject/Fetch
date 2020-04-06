@@ -134,7 +134,7 @@ namespace fetch {
     public: //pseudo-private
       int                m_handle;          ///< handle to the controller board.
       CRITICAL_SECTION   m_lock;       ///< Assuming the C884 library isn't thread safe.  This mutex is needed to keep things from crashing.
-      Thread            *m_plogger;          ///< thread responsible for saving the latest stage position to disk
+      Thread            *m_pLogger;          ///< thread responsible for saving the latest stage position to disk
 
       bool   cut_mode_active_;
       double P_, I_, D_;
