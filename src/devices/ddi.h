@@ -30,6 +30,8 @@ namespace ddi {
     void writeChannelOutputValue(int16_t value_counts);
     void writeChannelOutputValue(double value_volts);
 
+	bool initialReadIsPending();
+
     REG_U32_Command(softTrigger, 52);
     REG_U32_CommandV(startBufferedOutput, 4, 1);
     REG_U32_Command(stopBufferedOutput, 4);
@@ -56,6 +58,7 @@ namespace ddi {
     REG_U32_R(IpIdentifier, 0);
     REG_U32_R(SgMaxNumPages, 204);
     REG_U32_RW(OutputValueReg, 20);
+    REG_U32_R(InternalData1, 148);
 
     rdi::DmaBuffer m_waveformDmaBuffer;
     uint64_t m_waveBufferSizeBytes;
