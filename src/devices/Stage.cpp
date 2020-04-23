@@ -539,7 +539,10 @@ Error:
   }
 
   static BOOL all(BOOL* bs, int n)
-  { while(n--) if(!bs[n]) return 0;
+  {
+    while(n--)
+      if(!bs[n])
+        return 0;
     return 1;
   }
   static BOOL any(BOOL *bs, int n)
@@ -822,7 +825,7 @@ Error:
     char szUsbController[1024];
 
     // connect to the controller over USB
-    PI_EnumerateUSB(szUsbController, 1024, "PI C-884");
+    PI_EnumerateUSB(szUsbController, 1024, _config->id().c_str());
     m_handle = PI_ConnectUSB(szUsbController);
 
     if (m_handle < 0)
@@ -833,34 +836,27 @@ Error:
       return(1);
     }
 
-    // get the name of the connected axes
+    // get the name of the connected axes. sanity check
     char szAxes[17];
-    if (!PI_qSAI(m_handle, szAxes, 16))
-    {
-      iError = PI_GetError(m_handle);
-      PI_TranslateError(iError, szErrorMesage, 1024);
-      debug("PI C884 SAI?: error %d: %s\n", iError, szErrorMesage);
-      PI_CloseConnection(m_handle);
-      return(1);
-    }
-    // use only the first 3 axes.
-    strcpy(szAxes, "1 2 3");
+    C884JMP(PI_qSAI(m_handle, szAxes, 16));
+    
 
-    // close the servo loop
-    BOOL bFlags[3];
-    bFlags[0] = true;
-    bFlags[1] = true;
-    bFlags[2] = true;
+    // skipping this because lets assume controller is cfgd
+    // perhaps unnecessary for C-884
+	  //for (int i = 0; i < _config->axis_size(); ++i)
+	  //{
+		 // char id[10];
+		 // const char *name;
+		 // itoa(_config->axis(i).id(), id, 10);
+		 // name = _config->axis(i).stage().c_str();
+		 // C884JMP(PI_CST(m_handle, id, name));  //configure selected axes
+	  //}
+
 
     // call the SerVO mode command.
-    if (!PI_SVO(m_handle, szAxes, bFlags))
-    {
-      iError = PI_GetError(m_handle);
-      PI_TranslateError(iError, szErrorMesage, 1024);
-      debug("SVO: ERROR %d: %s\n", iError, szErrorMesage);
-      PI_CloseConnection(m_handle);
-      return(1);
-    }
+    BOOL bFlags[3] = { true, true, true, };
+    C884JMP(PI_SVO(m_handle, "1 2 3", bFlags));
+	  waitForController_();
 
     {
       double r[3];
@@ -873,6 +869,9 @@ Error:
     debug("%s(%d): %s()\n"
       "If the stage database could not be found copy the installed database to where the fetch exectuable is located.\n",
       __FILE__, __LINE__, __FUNCTION__);
+    if (m_handle >= 0)
+      PI_CloseConnection(m_handle);
+    m_handle = -1;
     return 1; // fail
   }
 
@@ -1141,12 +1140,12 @@ Error:
 
   bool C884Stage::isReferenced(bool *isok/*=NULL*/)
   {
-    BOOL isrefd[3] = { 0,0,0 };
-    BOOL isrefg[3] = { 0,0,0 };
-    BOOL ismvng[3] = { 0,0,0 };
-    BOOL iserr[3] = { 0,0,0 };
+    BOOL isrefd[10] = { 0,0,0 };
+    BOOL isrefg = false;
+    BOOL ismvng[10] = { 0,0,0 };
+    BOOL iserr[10] = { 0,0,0 };
     if (isok) *isok = 1;
-    C884JMPSILENT(PI_GetErrorStatus(m_handle, isrefd, isrefg, ismvng, iserr));
+    C884JMPSILENT(PI_GetErrorStatus(m_handle, isrefd, &isrefg, ismvng, iserr));
     return all(isrefd, 3);
   Error:
     if (isok) *isok = 0;

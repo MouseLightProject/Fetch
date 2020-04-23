@@ -178,20 +178,20 @@ scanner3d {
   zref_um: 0
 }
 stage {
-  kind: Simulated
-  c843 {
-    id: 1
+  kind: C884
+  c884 {
+	id: "C-884 SN 120017558"
     axis {
       id: 1
-      stage: "M-511.DD_NEW"
+      stage: "M-511.DD"
     }
     axis {
       id: 2
-      stage: "M-511.DD_NEW"
+      stage: "M-511.DD"
     }
     axis {
       id: 3
-      stage: "M-501.1DG"
+      stage: "M-405.CG"
     }
   }
   simulated {
