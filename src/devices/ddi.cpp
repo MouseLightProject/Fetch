@@ -80,7 +80,12 @@ void ddi::WaveformGenIp::writeChannelOutputValue(int16_t value_counts) {
 
 
 void ddi::WaveformGenIp::writeChannelOutputValue(double value_volts) {
-  writeChannelOutputValue(ddi::vToCounts(value_volts));
+	writeChannelOutputValue(ddi::vToCounts(value_volts));
+}
+
+
+bool ddi::WaveformGenIp::initialReadIsPending() {
+	return getInternalData1() & 0x2;
 }
 
 
@@ -353,6 +358,16 @@ void ddi::AnalogOutputTask::start(bool triggerImmediately) {
 
   if (startTriggerIndex >= 0)
     pMasterIp->setExtTriggerId(startTriggerIndex);
+
+  DWORD startT = GetTickCount();
+  i = m_pChanIp.begin();
+  do {
+	  while ((*i)->initialReadIsPending()) {
+		  Sleep(1);
+		  if ((GetTickCount() - startT) > 100)
+			  throw "Timeout while waiting for device to be ready.";
+	  }
+  } while (++i != m_pChanIp.end());
 
   if (triggerImmediately)
     pMasterIp->softTrigger();

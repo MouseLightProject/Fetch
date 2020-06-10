@@ -81,7 +81,8 @@ bool vdaq::Device::initMsadc() {
 }
 
 
-int16_t vdaq::Device::getDioOutputIndex(const char *channelName) {
+
+int16_t vdaq::Device::getDioIndex(const char *channelName, bool mustBeOutput) {
   if (strlen(channelName) != 4) throw "Invalid channel name.";
   if (channelName[0] != 'D') throw "Invalid channel name.";
   if (channelName[2] != '.') throw "Invalid channel name.";
@@ -92,10 +93,16 @@ int16_t vdaq::Device::getDioOutputIndex(const char *channelName) {
   prtNm[0] = channelName[3];
   int line = atoi(prtNm);
 
-  if ((port == 1) || (port > 2)) throw "Invalid port selection.";
+  if (mustBeOutput && (port == 1)) throw "Selected port does not support output.";
+  if ((port < 0) || (port > 2)) throw "Invalid port selection.";
   if ((line < 0) || (line > 7)) throw "Invalid line selection.";
 
   return port * 8 + line;
+}
+
+
+int16_t vdaq::Device::getDioOutputIndex(const char *channelName) {
+  return getDioIndex(channelName, true);
 }
 
 
@@ -129,6 +136,16 @@ void  vdaq::Device::setDioOuputTristate(const char *channelName) {
 void  vdaq::Device::setDioOuputTristate(int16_t channelId) {
   if (channelId > 7) throw "Selected digital line cannot be tristated.";
   writeRegU32(0x400000 + 200 + 4 * channelId, 0);
+}
+
+
+bool vdaq::Device::getDioInputLevel(const char *channelName) {
+  return getDioInputLevel(getDioIndex(channelName));
+}
+
+
+bool vdaq::Device::getDioInputLevel(int16_t channelId) {
+  return ((bool)(getDioInputVals() & (1 << channelId)));
 }
 
 

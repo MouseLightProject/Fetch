@@ -47,12 +47,14 @@ namespace device {
   SerialControlVibratome::SerialControlVibratome(Agent* agent)
     : VibratomeBase<cfg::device::SerialControlVibratome>(agent)
     , _h(INVALID_HANDLE_VALUE)
+    , m_pDevice(NULL)
   {}
 
 
   SerialControlVibratome::SerialControlVibratome(Agent* agent,Config *cfg)
     : VibratomeBase<cfg::device::SerialControlVibratome>(agent,cfg)
     , _h(INVALID_HANDLE_VALUE)
+    , m_pDevice(NULL)
   {}
 
   SerialControlVibratome::~SerialControlVibratome() 
@@ -92,51 +94,73 @@ namespace device {
   }
 
   unsigned int SerialControlVibratome::on_attach()
-  { debug("Vibratome: on_attach"ENDL);
+  {
+    debug("Vibratome: on_attach"ENDL);
     Config c = get_config();
     unsigned int sts = 0;
-    COMMTIMEOUTS timeouts={0};                      // all times are in ms
-    DCB dcb={0};
+    COMMTIMEOUTS timeouts = { 0 };                      // all times are in ms
+    DCB dcb = { 0 };
 
-    CHKLBL( INVALID_HANDLE_VALUE!=( 
-        _h=CreateFile(c.port().c_str()              // file name
-                     ,GENERIC_READ | GENERIC_WRITE  // desired access
-                     ,0                             // share mode
-                     ,0                             // security attributes
-                     ,OPEN_EXISTING                 // creation disposition
-                     ,FILE_ATTRIBUTE_NORMAL         // flags and attr
-                     ,0)                            // template file
-        ),ESERIAL);
+    CHKLBL(INVALID_HANDLE_VALUE != (
+      _h = CreateFile(c.port().c_str()              // file name
+        , GENERIC_READ | GENERIC_WRITE  // desired access
+        , 0                             // share mode
+        , 0                             // security attributes
+        , OPEN_EXISTING                 // creation disposition
+        , FILE_ATTRIBUTE_NORMAL         // flags and attr
+        , 0)                            // template file
+      ), ESERIAL);
 
-    dcb.DCBlength=sizeof(dcb);
+    dcb.DCBlength = sizeof(dcb);
 
-    Guarded_Assert_WinErr( GetCommState(_h,&dcb) );
-    dcb.BaudRate = closestCBR( c.baud() );          //  baud rate               
+    Guarded_Assert_WinErr(GetCommState(_h, &dcb));
+    dcb.BaudRate = closestCBR(c.baud());          //  baud rate               
     dcb.ByteSize = 8;                               //  data size, xmit and rcv 
-    dcb.Parity   = NOPARITY;                        //  parity bit              
+    dcb.Parity = NOPARITY;                        //  parity bit              
     dcb.StopBits = ONESTOPBIT;                      //  stop bit                
-    Guarded_Assert_WinErr( SetCommState(_h,&dcb) );
-    
-    timeouts.ReadIntervalTimeout         =50;
-    timeouts.ReadTotalTimeoutMultiplier  =10;
-    timeouts.ReadTotalTimeoutConstant    =50;
-    timeouts.WriteTotalTimeoutMultiplier =50;
-    timeouts.WriteTotalTimeoutConstant   =10;
-    Guarded_Assert_WinErr( SetCommTimeouts(_h,&timeouts) );
+    Guarded_Assert_WinErr(SetCommState(_h, &dcb));
 
-    CHKLBL(AMP(_config->amplitude()),EAMP);
+    timeouts.ReadIntervalTimeout = 50;
+    timeouts.ReadTotalTimeoutMultiplier = 10;
+    timeouts.ReadTotalTimeoutConstant = 50;
+    timeouts.WriteTotalTimeoutMultiplier = 50;
+    timeouts.WriteTotalTimeoutConstant = 10;
+    Guarded_Assert_WinErr(SetCommTimeouts(_h, &timeouts));
+
+    CHKLBL(AMP(_config->amplitude()), EAMP);
     _lastAttachedPort = c.port();
     stop(); // In case it was turned on via another serial interface (e.g. PuTTY). Want consistent initial state.
+
+    if (m_pDevice)
+      delete m_pDevice;
+    m_pDevice = NULL;
+    
+    if (c.sensor_type() == cfg::device::SerialControlVibratome_StateSensorType_vDAQ_DI) {
+      uint16_t numDevices;
+
+      rdi::Device::getDriverInfo(&numDevices);
+
+      if (numDevices) {
+        m_pDevice = new vdaq::Device(0, false);
+
+        // for now we will assume this is the same vDAQ used as a digitizer.
+        // we are opening a dublicate handle to the same device. that is ok.
+        // in this case though we do not need to load the bitfile.
+        m_channelId = m_pDevice->getDioIndex(c.sensor_channel().c_str());
+      }
+    }
+
     return 0;
-EAMP:
+  EAMP:
     _close();
-ESERIAL:
+  ESERIAL:
     _lastAttachedPort.clear();
     return 1; // failure
   }
   
   unsigned int SerialControlVibratome::_close()
-  { debug("Vibratome: _close"ENDL);    
+  {
+    debug("Vibratome: _close"ENDL);    
     if( _h!=INVALID_HANDLE_VALUE )
     { Guarded_Assert_WinErr( CloseHandle(_h) );
       _h = INVALID_HANDLE_VALUE;
@@ -145,7 +169,12 @@ ESERIAL:
   }
 
   unsigned int SerialControlVibratome::on_detach()
-  { stop(); 
+  {
+    if (m_pDevice)
+      delete m_pDevice;
+    m_pDevice = NULL;
+
+    stop(); 
     return _close(); 
   }
 
@@ -213,6 +242,10 @@ Error:
   int SerialControlVibratome::stop()
   { debug("Vibratome: stop"ENDL);
     return STOP();
+  }
+
+  bool SerialControlVibratome::getState() {
+    return m_pDevice && m_pDevice->getDioInputLevel(m_channelId);
   }
                         
   ///// SERIAL COMMANDS

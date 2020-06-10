@@ -1,15 +1,23 @@
 package fetch.cfg.device;
 
 message SimulatedVibratome
-{ optional string token = 1 [default="Simulated"];
+{
+  optional string token = 1 [default="Simulated"];
 }
 
 message SerialControlVibratome
 {
-  optional string port          = 1 [default="COM3"];      // serial communications port for controller.  
-  optional uint32 baud          = 2 [default=9600];        // baud rate - not sure this matters.          
-  optional uint32 amplitude     = 3 [default=255];         // amplitude in controller units (0-255)       
-  optional double amp2mm        = 4 [default=0.000392156]; // (units/percent) - Convert controller units to length.  amplitude * pct2mm = amplitude in mm.
+  enum StateSensorType
+  {
+    None    = 0;
+    vDAQ_DI = 1;
+  }
+  optional string                   port = 1 [default="COM3"];      // serial communications port for controller.  
+  optional uint32                   baud = 2 [default=9600];        // baud rate - not sure this matters.          
+  optional uint32              amplitude = 3 [default=255];         // amplitude in controller units (0-255)       
+  optional double                 amp2mm = 4 [default=0.000392156]; // (units/percent) - Convert controller units to length.  amplitude * pct2mm = amplitude in mm.
+  optional StateSensorType   sensor_type = 5 [default = vDAQ_DI];
+  optional string         sensor_channel = 6 [default = "D1.1"];
 }
 
 message Point2d
@@ -24,7 +32,8 @@ message VibratomeGeometry
 }
 
 message Vibratome
-{ enum VibratomeType
+{
+  enum VibratomeType
   {
     Simulated = 0;
     Serial    = 1;
