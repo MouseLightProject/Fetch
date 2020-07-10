@@ -16,9 +16,6 @@ vdaq::Device::Device(int16_t deviceNum, bool designLoadAccess) :
   pChannelFifos.resize(4);
   for (int ctr = 0; ctr < 4; ctr++)
     pChannelFifos[ctr] = new rdi::Fifo(this, 0x470000 + 0x1000 * ctr);
-
-  DWORD p = pChannelFifos[0]->getProtocolVersion();
-  p = 2;
 }
 
 
