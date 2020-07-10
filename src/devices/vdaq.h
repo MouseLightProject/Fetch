@@ -20,6 +20,9 @@ namespace vdaq {
     void getRawChannelOffsets(int16_t *vals);
     void setRawChannelOffsets(int16_t *vals);
 
+    int16_t getAnalogResonantPhaseThreshold();
+    void setAnalogResonantPhaseThreshold(int16_t threshold);
+
     // AE Cmd
     REG_U32_CommandV(resetStateMachine, 100, 38);
     REG_U32_CommandV(enableStateMachine, 100, 37);
@@ -64,6 +67,7 @@ namespace vdaq {
     REG_U32_RW(AcqParamAuxTriggerInvert, 288);
 
     REG_U32_RW(AcqParamPeriodTriggerMaxPeriod, 236);
+    REG_U32_RW(AcqParamPeriodTriggerMinPeriod, 368);
     REG_U32_RW(AcqParamPeriodTriggerSettledThresh, 240);
     REG_U32_RW(AcqParamSimulatedResonantPeriod, 284);
 
@@ -76,6 +80,8 @@ namespace vdaq {
     REG_U32_RW(AcqParamLinearFrameClkLowTime, 272);
     REG_U32_RW(AcqParamUniformSampling, 276);
     REG_U32_RW(AcqParamUniformBinSize, 280);
+
+    REG_U32_RW(EnableAnalogResonantPhaseSensor, 332);
 
     REG_U32_RW(I2cEnable, 348);
     REG_U32_RW(I2cDebounce, 352);
@@ -113,6 +119,8 @@ namespace vdaq {
 
     REG_U32_R(AcqStatusRawChannelDataReg1, 500);
     REG_U32_R(AcqStatusRawChannelDataReg2, 504);
+
+    REG_U32_RW(AnalogResonantPhaseThresholdReg, 336);
   };
 
 
