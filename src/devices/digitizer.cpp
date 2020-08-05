@@ -746,15 +746,16 @@ namespace fetch
         //m_pDevice->acqEngine.setAcqParamSimulatedResonantPeriod(15152); // 8k
 
         // period trigger settings for digital period trigger (D1.0)
-        //m_pDevice->acqEngine.setAcqParamPeriodTriggerChIdx(8);
-        //m_pDevice->acqEngine.setAcqParamPeriodTriggerDebounce(500);
-        //m_pDevice->acqEngine.setAcqParamTriggerHoldoff(0); // todo: variable holdoff to eliminate delay box
-
-        // period trigger settings for digital period trigger (D1.0)
-        m_pDevice->acqEngine.setEnableAnalogResonantPhaseSensor(1);
-        m_pDevice->acqEngine.setAnalogResonantPhaseThreshold(0);
+        m_pDevice->acqEngine.setEnableAnalogResonantPhaseSensor(0);
+        m_pDevice->acqEngine.setAcqParamPeriodTriggerChIdx(8);
         m_pDevice->acqEngine.setAcqParamPeriodTriggerDebounce(500);
         m_pDevice->acqEngine.setAcqParamTriggerHoldoff(0); // todo: variable holdoff to eliminate delay box
+
+        // period trigger settings for analog period trigger HSAI-3
+        //m_pDevice->acqEngine.setEnableAnalogResonantPhaseSensor(1);
+        //m_pDevice->acqEngine.setAnalogResonantPhaseThreshold(0);
+        //m_pDevice->acqEngine.setAcqParamPeriodTriggerDebounce(500);
+        //m_pDevice->acqEngine.setAcqParamTriggerHoldoff(0); // todo: variable holdoff to eliminate delay box
 
         // period trigger filtering
         m_pDevice->acqEngine.setAcqParamPeriodTriggerMaxPeriod(1.1 * 120e6 / record_frequency_Hz);
