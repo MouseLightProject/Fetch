@@ -14,6 +14,7 @@ message vDAQDigitizer
   optional double sample_rate            = 2 [default = 120000000];
   optional TriggerSource trigger_source  = 3 [default = TRIGGER_SOURCE_D1_0];
   optional uint32 trigger_analog_thresh  = 4 [default = 5000];
+  optional uint32 trigger_holdoff        = 5 [default = 2270];
 }
 
 

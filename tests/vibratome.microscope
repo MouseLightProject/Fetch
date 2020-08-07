@@ -181,7 +181,7 @@ scanner3d {
 stage {
   kind: C884
   c884 {
-	id: "C-884 SN 120017558"
+    id: "C-884 SN 120017558"
     axis {
       id: 1
       stage: "M-511.DD"
@@ -215,9 +215,9 @@ stage {
     z: 0.2
   }
   last_target_mm {
-    x: 0.5
-    y: 0.5
-    z: 8
+    x: 53.5057
+    y: 53.5102
+    z: 26.46
   }
   tilemode: PixelAligned
   tile_z_offset_mm: 0
@@ -250,8 +250,8 @@ pipeline {
 }
 file_series {
   root: "C:\\FetchTemp"
-  date: "2020-03-19"
-  seriesno: 1
+  date: "2020-08-07"
+  seriesno: 0
   pathsep: "\\"
 }
 file_prefix: "derp"

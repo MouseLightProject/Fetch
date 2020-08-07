@@ -181,7 +181,7 @@ scanner3d {
 stage {
   kind: C884
   c884 {
-	id: "C-884 SN 120017558"
+    id: "C-884 SN 120017558"
     axis {
       id: 1
       stage: "M-511.DD"
@@ -223,12 +223,13 @@ stage {
   tile_z_offset_mm: 0
 }
 vibratome {
-  kind: Simulated
+  kind: Serial
   serial {
-  }
-  simulated {
+    port: "COM3"
+    amplitude: 255
   }
   feed_axis: Y
+  feed_vel_mm_per_sec: 0.1
   geometry {
     dz_mm: 1
   }
@@ -250,8 +251,8 @@ pipeline {
 }
 file_series {
   root: "C:\\FetchTemp"
-  date: "2020-03-19"
-  seriesno: 1
+  date: "2020-06-12"
+  seriesno: 0
   pathsep: "\\"
 }
 file_prefix: "derp"

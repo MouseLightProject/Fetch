@@ -742,24 +742,27 @@ namespace fetch
         m_pDevice->acqEngine.addAcqPlanStep(true, nrecords);
         m_pDevice->acqEngine.addAcqPlanStep(false, flybackPeriods);
 
-        // period trigger settings for simulated mirror
-        //m_pDevice->acqEngine.setAcqParamSimulatedResonantPeriod(15152); // 8k
-
-        // period trigger settings for digital period trigger (D1.0)
         m_pDevice->acqEngine.setEnableAnalogResonantPhaseSensor(0);
-        m_pDevice->acqEngine.setAcqParamPeriodTriggerChIdx(8);
-        m_pDevice->acqEngine.setAcqParamPeriodTriggerDebounce(500);
-        m_pDevice->acqEngine.setAcqParamTriggerHoldoff(0); // todo: variable holdoff to eliminate delay box
+        m_pDevice->acqEngine.setAcqParamSimulatedResonantPeriod(0);
+        switch (_config->trigger_source()) {
+        case cfg::device::vDAQDigitizer_TriggerSource::vDAQDigitizer_TriggerSource_TRIGGER_SOURCE_D1_0:
+          m_pDevice->acqEngine.setAcqParamPeriodTriggerChIdx(8);
+          break;
 
-        // period trigger settings for analog period trigger HSAI-3
-        //m_pDevice->acqEngine.setEnableAnalogResonantPhaseSensor(1);
-        //m_pDevice->acqEngine.setAnalogResonantPhaseThreshold(0);
-        //m_pDevice->acqEngine.setAcqParamPeriodTriggerDebounce(500);
-        //m_pDevice->acqEngine.setAcqParamTriggerHoldoff(0); // todo: variable holdoff to eliminate delay box
+        case cfg::device::vDAQDigitizer_TriggerSource::vDAQDigitizer_TriggerSource_TRIGGER_SOURCE_AI3:
+          m_pDevice->acqEngine.setEnableAnalogResonantPhaseSensor(1);
+          m_pDevice->acqEngine.setAnalogResonantPhaseThreshold(0);
+          break;
+
+        case cfg::device::vDAQDigitizer_TriggerSource::vDAQDigitizer_TriggerSource_TRIGGER_SOURCE_SIM:
+          m_pDevice->acqEngine.setAcqParamSimulatedResonantPeriod(15152); // 7.930 kHz
+          break;
+        }
+        m_pDevice->acqEngine.setAcqParamTriggerHoldoff(_config->trigger_holdoff());
 
         // period trigger filtering
         m_pDevice->acqEngine.setAcqParamPeriodTriggerMaxPeriod(1.1 * 120e6 / record_frequency_Hz);
-        m_pDevice->acqEngine.setAcqParamPeriodTriggerMinPeriod(0.8 * 120e6 / record_frequency_Hz);
+        m_pDevice->acqEngine.setAcqParamPeriodTriggerMinPeriod(0.5 * 120e6 / record_frequency_Hz);
         m_pDevice->acqEngine.setAcqParamPeriodTriggerSettledThresh(10);
 
         m_pDevice->acqEngine.setAcqParamChannelsInvertReg(0);
