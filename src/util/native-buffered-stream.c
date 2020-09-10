@@ -87,8 +87,14 @@ stream_t native_buffered_stream_open(const char *filename,stream_mode_t mode)
   ZERO(struct _nbs_stream_t,ctx,1);
   switch(mode)
   { case STREAM_MODE_WRITE:
-      TIME( TRY(ctx->fd=CreateFile(filename,GENERIC_WRITE,0,NULL,CREATE_ALWAYS,FILE_ATTRIBUTE_NORMAL|FILE_FLAG_OVERLAPPED,NULL)) );
+      TIME( ctx->fd = CreateFile(filename, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL | FILE_FLAG_OVERLAPPED, NULL) );
+      if (!ctx->fd || (ctx->fd == INVALID_HANDLE_VALUE)) {
+        DWORD err = GetLastError();
+        ctx->fd = NULL;
+      }
+      TRY(ctx->fd);
       break;
+
     default:
       FAIL("Not implemented");
   }
@@ -158,7 +164,13 @@ static DWORD WINAPI writer(void* p)
                      n=(chunk>rem)?rem:chunk;
   //LOG("Piece: %3llu - offset %20llu\tchunk %20llu\n",i,offset,n);
   ResetEvent(nbs->overlapped[i].hEvent);
-  TRY(WriteFileEx(nbs->fd,((char*)nbs->buf)+offset,n,nbs->overlapped+i,done));
+
+  BOOL e = WriteFileEx(nbs->fd, ((char*)nbs->buf) + offset, n, nbs->overlapped + i, done);
+  if (!e) {
+    DWORD err = GetLastError();
+  }
+  TRY(e);
+
   WaitForSingleObjectEx(nbs->overlapped[i].hEvent,INFINITE,TRUE);
   return 0;
 Error:
@@ -292,7 +304,7 @@ DWORD WINAPI defered_close(LPVOID p)
   if(ctx && ctx->buf && ctx->free) ctx->free(ctx->buf);
   for(i=0;i<NTHREADS;++i) CloseHandle(ctx->evts[i]);
   if(ctx->fd) CloseHandle(ctx->fd);
-  free(ctx);
+  ctx->fd = NULL;
   return 0;
 }
 
@@ -300,5 +312,14 @@ void   nbs_close   (stream_t stream)
 { DECL_CTX;
   stream_set_user_data(stream,0,0);
   TRY(QueueUserWorkItem(defered_close,ctx,WT_EXECUTEDEFAULT));
+
+  // wait for file to actually close
+  int ctr = 0;
+  while (ctx->fd) {
+    ctr++;
+    Sleep(10);
+    TRY(ctr < 1000);
+  }
+  free(ctx);
 Error:;
 }
