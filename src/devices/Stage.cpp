@@ -313,7 +313,7 @@ Error:
     double dPos[3];
     bool success;
 
-    while (1)
+    while (self->runPollThread)
     {
       Sleep(10);
 
@@ -863,6 +863,7 @@ Error:
       if (maybe_read_position_from_log(r, 0.2/*mm*/))
         CHKWRN(setKnownReference(r[0], r[1], r[2]));
     }
+    runPollThread = true;
     CHKJMP(m_pLogger = Thread_Alloc(c884_poll_and_cache_stage_position, this));
     return 0; // ok
   Error:
@@ -878,6 +879,7 @@ Error:
   // return 0 on success
   unsigned int C884Stage::on_detach()
   {
+    runPollThread = false;
     Thread_Free(m_pLogger);
     lock_();
     PI_CloseConnection(m_handle);
