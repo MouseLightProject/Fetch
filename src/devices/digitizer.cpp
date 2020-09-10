@@ -684,10 +684,8 @@ namespace fetch
         }
 
         m_channelFifos.clear();
-        m_channelFifos.addFifo(m_pDevice->pChannelFifos[0]);
-        m_channelFifos.addFifo(m_pDevice->pChannelFifos[1]);
-        m_channelFifos.addFifo(m_pDevice->pChannelFifos[2]);
-        m_channelFifos.addFifo(m_pDevice->pChannelFifos[3]);
+        for (int ii = 0; ii < nchan(); ii++)
+          m_channelFifos.addFifo(m_pDevice->pChannelFifos[ii]);
       }
       else {
         // cache data for simulated generation
@@ -965,7 +963,7 @@ namespace fetch
 
     size_t vDaqDigitizer::nchan()
     {
-      return 4;
+      return 2;
     }
 
   } // namespace device
