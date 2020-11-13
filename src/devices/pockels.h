@@ -159,7 +159,7 @@ namespace fetch
       virtual unsigned int on_attach() { return 0; }
       virtual unsigned int on_detach() { return 0; }
 
-      virtual void _set_config(Config IN *cfg) { _ao.setChannelId(cfg->ao_channel()); }
+      virtual void _set_config(Config IN *cfg);
 
       virtual int isValidOpenVolts(f64 volts);
       virtual int setOpenVolts(f64 volts);
@@ -174,7 +174,7 @@ namespace fetch
 
 
     //
-    // NIDAQPockels
+    // SimulatedPockels
     //
     class SimulatedPockels:public PockelsBase<cfg::device::SimulatedPockels>
     {

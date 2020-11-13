@@ -687,6 +687,7 @@ namespace fetch
         d->_scanner2d._shutter.Shut();
         d->_scanner2d._digitizer._vdaq->stop();
         d->_scanner2d._daq.stopAO();
+        d->writeLastAOSample();
         return ecode; // ecode == 0 implies success, error otherwise
       Error:
         warning("Error occurred during ScanStack<%s> task."ENDL, TypeStr<TPixel>());

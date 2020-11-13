@@ -783,7 +783,8 @@ namespace fetch
         m_pDevice->setDioOuputSignal("D2.5", 8);
 
         // configure fifo to hold 250ms worth of data
-        uint64_t desiredBufferSize = 60000000; // 0.25s * 120 MSPS * 2 bytes per sample for each channel
+        //uint64_t desiredBufferSize = 60000000; // 0.25s * 120 MSPS * 2 bytes per sample for each channel
+        uint64_t desiredBufferSize = 240000000; // 1s * 120 MSPS * 2 bytes per sample for each channel
         success = success && (m_channelFifos.configureOrFlush(desiredBufferSize) >= desiredBufferSize);
 
         // intermediate buffer for reading interleaved channel data
