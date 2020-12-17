@@ -45,13 +45,19 @@ template<> QString ValueToQString(f64   v) {return QString().setNum(v);}
    These help me make polymorphic controllers (that generate a QDoubleSpinBox).
    Add more on demand.
 */
+template<> double intToValue(int v) { return (double) v; }
+template<> float  intToValue(int v) { return (float)v; }
+template<> int intToValue(int v) { return v; }
+template<> unsigned int intToValue(int v) { return (unsigned int)v; }
+template<> bool intToValue(int v) { return (bool)v; } //DGA: This is a template specialization required in creating checkboxes
+template<> cfg::device::Vibratome::VibratomeFeedAxis intToValue(int v) { return (v>0.5) ? cfg::device::Vibratome_VibratomeFeedAxis_X : cfg::device::Vibratome_VibratomeFeedAxis_Y; }
+
 template<> double doubleToValue(double v){return v;}
 template<> float  doubleToValue(double v){return v;}
 template<> int doubleToValue(double v){return (int)v;}
 template<> unsigned int doubleToValue(double v){return (unsigned int)v;}
 template<> bool doubleToValue(double v){return (bool)v;} //DGA: This is a template specialization required in creating checkboxes
 template<> cfg::device::Vibratome::VibratomeFeedAxis doubleToValue(double v) { return (v>0.5)?cfg::device::Vibratome_VibratomeFeedAxis_X:cfg::device::Vibratome_VibratomeFeedAxis_Y;}
-
 void DevicePropControllerBase::report() 
 { 
   if(le_)
@@ -164,6 +170,41 @@ unsigned int GetSetFrameAverageCount::Get_(device::Microscope *dc)
 }          
 QValidator* GetSetFrameAverageCount::createValidator_(QObject* parent)
 { return new QIntValidator(1,10000,parent);
+}
+
+//DGA: Digitizer, Set the getter, setter and validator for trigger holdoff
+void GetSetTriggerHoldoff::Set_(device::Microscope *dc, unsigned int &v)
+{
+	device::Microscope::Config c = dc->get_config();	
+	int kind = dc->scanner._scanner2d._digitizer.get_config().kind();
+
+	if (kind == cfg::device::Digitizer_DigitizerType_vDAQ) {
+		c.mutable_scanner3d()->mutable_scanner2d()->mutable_digitizer()->mutable_vdaq()->set_trigger_holdoff(v);
+	}
+	else if(kind == cfg::device::Digitizer_DigitizerType_Simulated) {
+		c.mutable_scanner3d()->mutable_scanner2d()->mutable_digitizer()->mutable_simulated()->set_trigger_holdoff(v);
+	}
+
+	Guarded_Assert(dc->set_config_nowait(c));
+}
+unsigned int GetSetTriggerHoldoff::Get_(device::Microscope *dc)
+{
+	device::Microscope::Config c = dc->get_config();
+	int kind = dc->scanner._scanner2d._digitizer.get_config().kind();
+
+	int trigger_holdoff = 0;
+	if (kind == cfg::device::Digitizer_DigitizerType_vDAQ) {
+		trigger_holdoff = c.mutable_scanner3d()->mutable_scanner2d()->mutable_digitizer()->mutable_vdaq()->trigger_holdoff();
+	}
+	else if (kind == cfg::device::Digitizer_DigitizerType_Simulated) {
+		trigger_holdoff = c.mutable_scanner3d()->mutable_scanner2d()->mutable_digitizer()->mutable_simulated()->trigger_holdoff();
+	}
+
+	return trigger_holdoff;
+}
+QValidator* GetSetTriggerHoldoff::createValidator_(QObject* parent)
+{
+	return new QIntValidator(0, 1000000, parent);
 }
 
 // Vibratome

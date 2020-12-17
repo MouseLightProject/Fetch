@@ -248,9 +248,9 @@ qt5_wrap_cpp(MOC_SRCS
   src/ui/VibratomeDockWidget.h
   src/ui/StageDockWidget.h
   src/ui/AgentController.h
-  src/ui/VibratomeController.h
-  src/ui/StageController.h
   src/ui/MicroscopeController.h
+  src/ui/StageController.h
+  src/ui/VibratomeController.h
   src/ui/DevicePropController.h
   src/ui/qcustomplot.h
   src/ui/HistogramDockWidget.h

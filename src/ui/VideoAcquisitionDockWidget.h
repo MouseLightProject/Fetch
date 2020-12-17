@@ -12,12 +12,14 @@ namespace fetch{
 
     public:
       typedef device::Microscope::Config Config;
-
       VideoAcquisitionDockWidget(device::Microscope *dc, MainWindow* parent);
+	  QSpinBox * trigger_holdoff_spinbox; //DGA
         
     signals:
       void onRun();
 
+	public slots:
+		void setTriggerHoldoffStep(int v);
     //private:      
     //  void createForm();
     };

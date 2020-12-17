@@ -136,6 +136,7 @@ fetch::ui::MainWindow::MainWindow(device::Microscope *dc)
   _pockels_controllers[0]    = new PockelsController(dc->pockels("Chameleon"),"&Chameleon Pockels (%)",this);
   _pockels_controllers[1]    = new PockelsController(dc->pockels("Fianium"),"&Fianium Pockels (%)",this);
   _frame_average_count_controller = new FrameAverageCountController(dc, "Frame Average Count", this); //DGA: Dynamically allocate _frame_average_count_controller to point to instance of FrameAverageCountController
+  _trigger_holdoff_controller = new TriggerHoldoffController(dc, "Trigger Holdoff", this); //DGA: Dynamically allocate _trigger_holdoff_controller to point to instance of TriggerHoldoff
 
   _zpiezo_max_control       = new ZPiezoMaxController(dc->zpiezo(), "Z Ma&x (um)",this);
   _zpiezo_min_control       = new ZPiezoMinController(dc->zpiezo(), "Z Mi&n (um)",this);

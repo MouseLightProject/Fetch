@@ -109,6 +109,7 @@ public: // semi-private
   ResonantTurnController       *_resonant_turn_controller;
   LinesController              *_vlines_controller;
   FrameAverageCountController  *_frame_average_count_controller; //DGA: _frame_average_count_controller is a pointer to an instance of FrameAverageCountController
+  TriggerHoldoffController     *_trigger_holdoff_controller; //DGA: _trigger_holdoff is a pointer to an instangce of TriggerHoldoffController
   LSMVerticalRangeController   *_lsm_vert_range_controller;
   PockelsController            *_pockels_controllers[2];
   VibratomeAmplitudeController *_vibratome_amp_controller;

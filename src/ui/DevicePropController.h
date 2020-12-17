@@ -65,6 +65,8 @@ namespace ui {
       virtual void updateLineEdit(QWidget *source) =0;
       virtual void setByComboBox (QWidget *source) =0;
       virtual void updateComboBox(QWidget *source) =0;
+	  virtual void setBySpinBox(QWidget *source) = 0; //DGA: Virtual function setBySpinBox that takes in as argument source, a pointer to type QWidget; used to set the configuration by setting spin box. "=0" means it is a pure virtual function: derived classes will have to override it, else they will be abstract (be a base class). These are slots
+	  virtual void updateSpinBox(QWidget *source) = 0; //DGA: Virtual function updateSpinBox that takes in as argument source, a pointer to type QWidget; used to update the spinbox if changes occur in configuration ''
       virtual void setByDoubleSpinBox   (QWidget *source) =0;
       virtual void updateByDoubleSpinBox(QWidget *source) =0;
 	  virtual void setByCheckBox(QWidget *source) =0; //DGA: Virtual function setByCheckBox that takes in as argument source, a pointer to type QWidget; used to set the configuration by clicking the checkbox. "=0" means it is a pure virtual function: derived classes will have to override it, else they will be abstract (be a base class). These are slots
@@ -81,10 +83,12 @@ namespace ui {
       QLabel         *createLabel();
       QLineEdit      *createLineEdit();
       QDoubleSpinBox *createDoubleSpinBox();
+	  QSpinBox		 *createSpinBox();
       QComboBox      *createComboBox();
 	  QCheckBox      *createCheckBox(); //DGA: Declaration of *createCheckBox function (*createCheckBox is a function, createCheckBox is a pointer to the function)
       QLabel         *createLabelAndAddToLayout(QFormLayout *layout);
       QLineEdit      *createLineEditAndAddToLayout(QFormLayout *layout);
+	  QSpinBox		 *createSpinBoxAndAddToLayout(QFormLayout *layout); //DGA
       QDoubleSpinBox *createDoubleSpinBoxAndAddToLayout(QFormLayout *layout);
       QComboBox      *createComboBoxAndAddToLayout(QFormLayout *layout);
 	  QCheckBox      *createCheckBoxAndAddToLayout(QFormLayout *layout); //DGA: Declaration of *createCheckBoxAndAddToLayout function, which takes in *layout which is of type QFormLayout
@@ -95,6 +99,8 @@ namespace ui {
       void updateLineEdit       (QWidget *source);
       void setByComboBox        (QWidget *source);
       void updateComboBox       (QWidget *source);
+	  void setBySpinBox			(QWidget *source); //DGA: Overriding virtual function
+	  void updateSpinBox		(QWidget *source); //DGA: Overriding virtual function
       void setByDoubleSpinBox   (QWidget *source);
       void updateByDoubleSpinBox(QWidget *source);
 	  void setByCheckBox		(QWidget *source); //DGA: Overriding virtual function
@@ -110,6 +116,7 @@ namespace ui {
       QSignalMapper labelSignalMapper_;
       QSignalMapper lineEditSignalMapper_;
       QSignalMapper comboBoxSignalMapper_;
+	  QSignalMapper spinBoxSignalMapper_; //DGA: spin box signal mapper
       QSignalMapper doubleSpinBoxSignalMapper_;
 	  QSignalMapper checkBoxSignalMapper_; //DGA: checkBoxSignalMapper is of type QSignalMapper; collects parameterless signals and re-emits them with integer, string or widget parameters corresponding to the objec that sent the signal (doc.qt.io/qt-5/qsignalmapper.html)
       QSignalMapper configUpdateSignalMapper_;
@@ -118,6 +125,7 @@ namespace ui {
 
   template<typename TConfig> inline QString  ValueToQString(TConfig v);
   template<typename TConfig>        TConfig  QStringToValue(QString &s,bool *ok);
+  template<typename TConfig>        TConfig  intToValue(int v);
   template<typename TConfig>        TConfig  doubleToValue(double v);
 
   /* Note:
@@ -164,6 +172,11 @@ namespace ui {
   //Pipeline
   DECL_GETSET_CLASS(GetSetFrameAverageCount, device::Microscope, unsigned int); //DGA: Added to get/set the frame average count
   typedef DevicePropController<device::Microscope, unsigned int, GetSetFrameAverageCount>      FrameAverageCountController; //DGA: Added to get/set the frame average count
+
+  //Digitizer
+  DECL_GETSET_CLASS(GetSetTriggerHoldoff, device::Microscope, unsigned int); //DGA: Added to get/set the trigger holdoff
+  typedef DevicePropController<device::Microscope, unsigned int, GetSetTriggerHoldoff>      TriggerHoldoffController; //DGA: Added to get/set the trigger holdoff 
+
 
   // Vibratome
   DECL_GETSET_CLASS(GetSetVibratomeAmplitude,device::Vibratome,u32);
@@ -272,6 +285,9 @@ namespace ui {
     connect(&comboBoxSignalMapper_,SIGNAL(mapped(QWidget*)),this,SLOT(setByComboBox(QWidget*)));
     connect(&configUpdateSignalMapper_,SIGNAL(mapped(QWidget*)),this,SLOT(updateComboBox(QWidget*)));
 
+	connect(&spinBoxSignalMapper_, SIGNAL(mapped(QWidget*)), this, SLOT(setBySpinBox(QWidget*))); //DGA
+	connect(&configUpdateSignalMapper_, SIGNAL(mapped(QWidget*)), this, SLOT(updateSpinBox(QWidget*))); //DGA
+
     connect(&doubleSpinBoxSignalMapper_,SIGNAL(mapped(QWidget*)),this,SLOT(setByDoubleSpinBox(QWidget*)));
     connect(&configUpdateSignalMapper_,SIGNAL(mapped(QWidget*)),this,SLOT(updateByDoubleSpinBox(QWidget*)));    
 
@@ -345,6 +361,30 @@ namespace ui {
         error("%s(%d) Did not recognize value.",__FILE__,__LINE__); // getting here is probably a logic error in the code
       w->setCurrentIndex(i);
     }
+  }
+
+  template<typename TDevice, typename TConfig, class TGetSetInterface>
+  void DevicePropController<TDevice, TConfig, TGetSetInterface>::
+	  setBySpinBox(QWidget* source)
+  {
+	  QSpinBox* w = qobject_cast<QSpinBox*>(source);
+	  if (!w) return;
+	  TConfig vv = intToValue<TConfig>(w->value());
+	  interface_.Set_(dc_, vv);
+  }
+
+  template<typename TDevice, typename TConfig, class TGetSetInterface>
+  void DevicePropController<TDevice, TConfig, TGetSetInterface>::
+	  updateSpinBox(QWidget* source)
+  {
+	  QSpinBox* w = qobject_cast<QSpinBox*>(source);
+	  if (w)
+	  {
+		  int v = interface_.Get_(dc_);
+		  w->blockSignals(true);
+		  w->setValue(v);
+		  w->blockSignals(false);
+	  }
   }
 
   template<typename TDevice, typename TConfig, class TGetSetInterface>
@@ -433,6 +473,28 @@ namespace ui {
   }
 
   template<typename TDevice, typename TConfig, class TGetSetInterface>
+  QSpinBox*
+	  DevicePropController<TDevice, TConfig, TGetSetInterface>::
+	  createSpinBox()
+  {
+	  TConfig vv = interface_.Get_(dc_);
+	  QString s = ValueToQString(vv);
+	  //QValidator *v = interface_.createValidator_(le_);
+	  QSpinBox *w = new QSpinBox();
+	  w->setRange(0, INT_MAX);
+	  w->setKeyboardTracking(false);
+	  w->setValue(vv);
+	  //w->lineEdit()->setValidator(v);
+
+	  spinBoxSignalMapper_.setMapping(w, w);
+	  connect(w, SIGNAL(valueChanged(int)), &spinBoxSignalMapper_, SLOT(map()));
+
+	  configUpdateSignalMapper_.setMapping(this, w);
+	  connect(this, SIGNAL(configUpdated()), &configUpdateSignalMapper_, SLOT(map()));
+	  return w;
+  }
+
+  template<typename TDevice, typename TConfig, class TGetSetInterface>
   QDoubleSpinBox* 
     DevicePropController<TDevice,TConfig,TGetSetInterface>::
     createDoubleSpinBox()
@@ -507,6 +569,17 @@ namespace ui {
     return le;
   }
   
+
+  template<typename TDevice, typename TConfig, class TGetSetInterface>
+  QSpinBox*
+	  DevicePropController<TDevice, TConfig, TGetSetInterface>::
+	  createSpinBoxAndAddToLayout(QFormLayout *layout)
+  {
+	  QSpinBox *w = createSpinBox();
+	  layout->addRow(label_, w);
+	  return w;
+  }
+
   template<typename TDevice, typename TConfig, class TGetSetInterface>
   QDoubleSpinBox* 
     DevicePropController<TDevice,TConfig,TGetSetInterface>::
