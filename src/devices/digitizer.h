@@ -92,6 +92,8 @@ namespace fetch
       virtual size_t nchan() = 0;
       virtual unsigned sample_rate_MHz()=0; // in principle, there's no reason why this has to be MHz. see pipeline.
 
+      virtual void updateTriggerHoldoff(unsigned int v) {};
+
       virtual bool   aux_info(int *n, size_t **sizes) { *n=0; return 0; }
       virtual void   onUpdate() {};
     };
@@ -204,6 +206,8 @@ namespace fetch
 
 		  double sample_rate();
 
+      void updateTriggerHoldoff(unsigned int v);
+
     private:
       vdaq::Device *m_pDevice;
       rdi::FifoGroup m_channelFifos;
@@ -258,6 +262,8 @@ namespace fetch
       virtual unsigned sample_rate_MHz() {return _idigitizer->sample_rate_MHz();}
 
       virtual bool aux_info(int *n, size_t **sizes) {return _idigitizer->aux_info(n,sizes);}
+
+      virtual void updateTriggerHoldoff(unsigned int v) { _idigitizer->updateTriggerHoldoff(v); };
 
       // XXX: These are pretty useless, consider deleting?
       virtual void set_config(const NIScopeDigitizer::Config &cfg);

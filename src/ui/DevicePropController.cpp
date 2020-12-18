@@ -180,6 +180,9 @@ void GetSetTriggerHoldoff::Set_(device::Microscope *dc, unsigned int &v)
 
 	if (kind == cfg::device::Digitizer_DigitizerType_vDAQ) {
 		c.mutable_scanner3d()->mutable_scanner2d()->mutable_digitizer()->mutable_vdaq()->set_trigger_holdoff(v);
+
+    // also live update the param
+    dc->scanner.get2d()->digitizer()->updateTriggerHoldoff(v);
 	}
 	else if(kind == cfg::device::Digitizer_DigitizerType_Simulated) {
 		c.mutable_scanner3d()->mutable_scanner2d()->mutable_digitizer()->mutable_simulated()->set_trigger_holdoff(v);

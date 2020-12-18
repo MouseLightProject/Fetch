@@ -988,5 +988,11 @@ namespace fetch
       return 2;
     }
 
+    void vDaqDigitizer::updateTriggerHoldoff(unsigned int v)
+    {
+      if (m_pDevice)
+        m_pDevice->acqEngine.setAcqParamTriggerHoldoff(v);
+    }
+
   } // namespace device
 } // namespace fetch
