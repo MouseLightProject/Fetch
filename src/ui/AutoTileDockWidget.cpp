@@ -52,8 +52,16 @@ namespace ui{
 	QCheckBox * acquireCalibrationStackCheckBox = parent->_microscopeController->createAcquireCalibrationStackCheckBox(); //DGA: create acquireCalibrationStackCheckBox
 	acquireCalibrationStackCheckBox->setText("Acquire Calibration Stack"); //DGA: Set the text then add the checkbox so that is aligned properly with other widgets
 	form->addRow("", acquireCalibrationStackCheckBox);
+	
+	QLabel * currentLatticePosition = new QLabel("Last Completed Lattice Position (x, y, z) : (N/A)"); //DGA: Last completed lattice position
+	currentLatticePosition->setTextInteractionFlags(Qt::TextSelectableByMouse);
+
+	connect(&(dc->updateCurrentLatticePositionSignaler), SIGNAL(signaler(QString)), currentLatticePosition, SLOT(setText(QString)), Qt::QueuedConnection);
+	form->addRow("", currentLatticePosition);
 
     AgentControllerButtonPanel *btns = new AgentControllerButtonPanel(&parent->_scope_state_controller,&dc->auto_tile_task);
     form->addRow(btns);
+	
+
   }
 }}//fetch::ui

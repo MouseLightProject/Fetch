@@ -182,13 +182,15 @@ namespace fetch
       void scheduledStopReached() { scheduledStopReachedSignaler.signaler(false); scheduledStopReachedSignaler.signaler(); }; //DGA: Function to call signaler which stops the task
       void cutCountChanged(int cutCount, int cutCountSinceScheduledStop) { cutCountChangedSignaler.signaler(QString("Current Cut Count: %1. Reset Cut Count To 0?").arg(cutCount)); if (cutCountSinceScheduledStop > 0) { cutCountChangedSignaler.signaler(cutCountSinceScheduledStop); } }; //DGA: Function to call signaler when vibratome completes cut
 
+
+
     public:
       FileSeries file_series;
 
     public:
       IDevice* _end_of_pipeline;
-      ui::simpleSignalerClass skipSurfaceFindOnImageResumeCheckBoxUpdater, scheduledStopReachedSignaler, acquireCalibrationStackCheckBoxUpdater, cutCountChangedSignaler, updateScheduledStopCutCountProgressSignaler; //DGA: Updater for skipSurfaceFindOnImageResumeCheckBox, acquireCalibrationStackCheckBox and signaler for scheduledStopReachedSignaler and cutCountChangedSignaler
-
+	  ui::simpleSignalerClass skipSurfaceFindOnImageResumeCheckBoxUpdater, scheduledStopReachedSignaler, acquireCalibrationStackCheckBoxUpdater, cutCountChangedSignaler, updateScheduledStopCutCountProgressSignaler, updateCurrentLatticePositionSignaler; //DGA: Updater for skipSurfaceFindOnImageResumeCheckBox, acquireCalibrationStackCheckBox and signaler for scheduledStopReachedSignaler and cutCountChangedSignaler currentLatticePositionSignaler
+	
       Agent __self_agent;
       Agent __scan_agent;
       Agent __io_agent;
