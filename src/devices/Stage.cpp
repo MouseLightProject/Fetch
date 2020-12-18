@@ -659,7 +659,8 @@ Error:
   }
 
   bool C843Stage::prepareForCut( unsigned axis)
-  { const long pid[]={0x1,0x2,0x3};
+  { 
+    const long pid[]={0x1,0x2,0x3};
     double vals[3]={0};
     CHKJMP(axis==0 || axis==1); // x or y
     { const char a=axis?'2':'1';
@@ -676,11 +677,13 @@ Error:
     }
     return true;
   Error:
-    cut_mode_active_=false;
+    cut_mode_active_ = false;
     return false;
   }
+
   bool C843Stage::doneWithCut  ( unsigned axis)
-  { const long pid[]={0x1,0x2,0x3};
+  {
+    const long pid[]={0x1,0x2,0x3};
     double vals[3]={0};
     CHKJMP(axis==0 || axis==1); // x or y
     { const char a=axis?'2':'1';
@@ -688,7 +691,7 @@ Error:
       vals[0]=P_;
       vals[1]=I_;
       vals[2]=D_;
-      C843JMP(C843_SPA(handle_,axiscode,pid,vals,NULL));
+      //C843JMP(C843_SPA(handle_,axiscode,pid,vals,NULL));
     }
     cut_mode_active_=false;
     return true;
@@ -1075,15 +1078,18 @@ Error:
     double vals[3] = { 0 };
     CHKJMP(axis == 0 || axis == 1); // x or y
     { const char a = axis ? '2' : '1';
-    const char axiscode[] = { a,a,a,0 };
-    C884JMP(PI_qSPA(m_handle, axiscode, pid, vals, NULL, 0));
+    const char axiscode[] = { a, ' ', a, ' ', a, 0 };
+
+    bool b = PI_qSPA(m_handle, axiscode, pid, vals, NULL, 0);
+    C884JMP(b);// TF FIXME!!
     P_ = vals[0];
     I_ = vals[1];
     D_ = vals[2];
     vals[0] = _config->cut_proportional_gain();
     vals[1] = _config->cut_integration_gain();
     vals[2] = _config->cut_derivative_gain();
-    C884JMP(PI_SPA(m_handle, axiscode, pid, vals, NULL));
+    b = PI_SPA(m_handle, axiscode, pid, vals, NULL);
+    C884JMP(b);// TF FIXME!!
     cut_mode_active_ = true;
     }
     return true;
@@ -1101,7 +1107,7 @@ Error:
     vals[0] = P_;
     vals[1] = I_;
     vals[2] = D_;
-    C884JMP(PI_SPA(m_handle, axiscode, pid, vals, NULL));
+    //C884JMP(PI_SPA(m_handle, axiscode, pid, vals, NULL)); TF FIXME!!
     }
     cut_mode_active_ = false;
     return true;

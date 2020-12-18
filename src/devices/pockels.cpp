@@ -192,10 +192,7 @@ namespace device {
       data[i] = min;      // step to zero at end of scan
   }
 
-  void vDAQPockels::_set_config(Config IN *cfg) {
-    _ao.setChannelId(cfg->ao_channel());
-    _config->set_v_open(cfg->v_open());
-  }
+
 
   //
   // SimulatedPockels
@@ -308,13 +305,12 @@ namespace device {
   }
 
   void Pockels::_set_config( Config IN *cfg )
-  { 
+  { _config = cfg;
     setKind(cfg->kind());
     Guarded_Assert(_vdaq||_nidaq||_simulated); // at least one device was instanced
     if (_vdaq)     _vdaq->_set_config(cfg->mutable_vdaq());
     if (_nidaq)     _nidaq->_set_config(cfg->mutable_nidaq());
     if (_simulated) _simulated->_set_config(cfg->mutable_simulated());    
-    _config = cfg;
   }
 
   void Pockels::_set_config( const Config &cfg )

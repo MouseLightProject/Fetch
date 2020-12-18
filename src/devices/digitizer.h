@@ -227,6 +227,11 @@ namespace fetch
       int16_t *m_pSimBuffer;
       size_t simBufferSizeFrames;
       size_t simBufferFramePtr;
+
+      size_t fctr;
+      bool timeoutOccurred;
+      LARGE_INTEGER last_run;
+      LARGE_INTEGER acq_start;
 	  };
 
     ////////////////////////////////////////////////////////////

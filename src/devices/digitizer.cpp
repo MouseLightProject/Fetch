@@ -838,6 +838,11 @@ namespace fetch
 
         m_pDevice->acqEngine.setAcqParamVolumesPerAcq(nframes);
         m_pDevice->acqEngine.enableStateMachine();
+
+        QueryPerformanceCounter(&acq_start);
+        fctr = 0;
+        timeoutOccurred = 0;
+
         m_pDevice->acqEngine.softTrigger();
       }
       else {
@@ -911,7 +916,12 @@ namespace fetch
       }
       
 
-      while (m_acqRunning && (currentTime.QuadPart < timeoutTime.QuadPart)) {
+      while (m_acqRunning) {
+        if (currentTime.QuadPart > timeoutTime.QuadPart) {
+          timeoutOccurred = 1;
+          break;
+        }
+
         if (m_pDevice) {
           uint64_t nRead = 0;
 
@@ -922,8 +932,15 @@ namespace fetch
           }
 
           uint64_t oc = m_pDevice->acqEngine.getAcqStatusDataFifoOverflowCount();
-          if (oc)
+          if (oc) {
+            LARGE_INTEGER right_now;
+            DWORD dt;
+
+            QueryPerformanceCounter(&right_now);
+            dt = (right_now.QuadPart - last_run.QuadPart) * 1000 / m_pcFrequency;
+
             return 0; //data lost; abort
+          }
 
           if (!m_DiscardNeeded)
             m_channelFifos.read(pData, m_nRecords * m_recordSize * 2, &nRead);
@@ -931,6 +948,7 @@ namespace fetch
           if (nRead){
             m_DiscardNeeded = 1;
             frameAquired = 1;
+            fctr++;
             break;
           }
           else
@@ -954,6 +972,9 @@ namespace fetch
         QueryPerformanceCounter(&currentTime);
       }
 
+      QueryPerformanceCounter(&last_run);
+
+      //debug("%d remain", m_channelFifos.getUnreadCount());
       return frameAquired; // 1 = success
     }
 

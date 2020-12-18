@@ -127,6 +127,9 @@ namespace device {
     timeouts.WriteTotalTimeoutConstant = 10;
     Guarded_Assert_WinErr(SetCommTimeouts(_h, &timeouts));
 
+    // query amplitude
+    int a = qAMP();
+
     CHKLBL(AMP(_config->amplitude()), EAMP);
     _lastAttachedPort = c.port();
     stop(); // In case it was turned on via another serial interface (e.g. PuTTY). Want consistent initial state.
@@ -170,11 +173,15 @@ namespace device {
 
   unsigned int SerialControlVibratome::on_detach()
   {
+    unsigned int r = 0;
+
     if (m_pDevice)
       delete m_pDevice;
     m_pDevice = NULL;
 
-    stop(); 
+    if (_h != INVALID_HANDLE_VALUE) {
+      stop();
+    }
     return _close(); 
   }
 
@@ -253,7 +260,10 @@ Error:
   int SerialControlVibratome::_write(const char *buf, int n)
   { BOOL ok;
     DWORD nn;
+    DWORD e;
     Guarded_Assert_WinErr__NoPanic( ok=WriteFile(_h,buf,n,&nn,NULL) );
+    if (!ok)
+      e = GetLastError();
     CHK(n==nn);
     return ok;
 Error:
