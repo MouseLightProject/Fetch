@@ -29,7 +29,9 @@ message vDAQPockels
 
 message SimulatedPockels
 {
-  optional double v_open = 1 [default=0.0];
+  optional  double    v_lim_max   = 1 [default=2.0];          // safety limit - high value
+  optional  double    v_lim_min   = 2 [default=0.0];          // safety limit - low  value
+  optional double     v_open      = 3 [default=0.0];
 }
 
 message Target3d //DGA added for use as target position
