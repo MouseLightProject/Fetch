@@ -174,6 +174,10 @@ namespace vdaq {
     void doReset();
 
     REG_U32_RW(UsrTestPatternReq, 56);
+    REG_U32_RW(VgaSettingsReg, 8);
+
+    REG_U32_CommandV(programVga12, 4, 0xFFFFFF12);
+    REG_U32_CommandV(programVga34, 4, 0xFFFFFF34);
 
   protected:
     REG_U32_RW(CalDataRaw, 60);

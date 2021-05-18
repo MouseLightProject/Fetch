@@ -77,6 +77,11 @@ bool vdaq::Device::initMsadc() {
     success = verifyMsadcData();
   } while (!success && (tries++ < 100));
 
+  // set input range to 2Vpp, filter BW to 30 MHz
+  msadc.setVgaSettingsReg(15551);
+  msadc.programVga12();
+  msadc.programVga34();
+
   return success;
 }
 
